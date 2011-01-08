@@ -148,47 +148,73 @@ void benchmark_build(const std::vector<Key> &keys, marisa::UInt32 num_tries,
 }
 
 void benchmark_restore(const marisa::Trie &trie,
+    const std::vector<Key> &keys,
     const std::vector<marisa::UInt32> &key_ids) {
   Clock cl;
   std::string key;
   for (std::size_t i = 0; i < key_ids.size(); ++i) {
+    key.clear();
     trie.restore(key_ids[i], &key);
+    if (key != keys[i].first) {
+      std::cerr << "error: restore() failed" << std::endl;
+      return;
+    }
   }
   print_time_info(key_ids.size(), cl.elasped());
 }
 
 void benchmark_lookup(const marisa::Trie &trie,
-    const std::vector<Key> &keys) {
+    const std::vector<Key> &keys,
+    const std::vector<marisa::UInt32> &key_ids) {
   Clock cl;
   for (std::size_t i = 0; i < keys.size(); ++i) {
-    trie.lookup(keys[i].first);
+    marisa::UInt32 key_id = trie.lookup(keys[i].first);
+    if (key_id != key_ids[i]) {
+      std::cerr << "error: lookup() failed" << std::endl;
+      return;
+    }
   }
   print_time_info(keys.size(), cl.elasped());
 }
 
 void benchmark_find(const marisa::Trie &trie,
-    const std::vector<Key> &keys) {
+    const std::vector<Key> &keys,
+    const std::vector<marisa::UInt32> &key_ids) {
   Clock cl;
   for (std::size_t i = 0; i < keys.size(); ++i) {
-    trie.find(keys[i].first);
+    marisa::UInt32 num_keys = trie.find(keys[i].first);
+    if (num_keys == 0) {
+      std::cerr << "error: find() failed" << std::endl;
+      return;
+    }
   }
   print_time_info(keys.size(), cl.elasped());
 }
 
 void benchmark_predict_breadth_first(const marisa::Trie &trie,
-    const std::vector<Key> &keys) {
+    const std::vector<Key> &keys,
+    const std::vector<marisa::UInt32> &key_ids) {
   Clock cl;
   for (std::size_t i = 0; i < keys.size(); ++i) {
-    trie.predict(keys[i].first);
+    marisa::UInt32 num_keys = trie.predict(keys[i].first);
+    if (num_keys == 0) {
+      std::cerr << "error: predict() failed" << std::endl;
+      return;
+    }
   }
   print_time_info(keys.size(), cl.elasped());
 }
 
 void benchmark_predict_depth_first(const marisa::Trie &trie,
-    const std::vector<Key> &keys) {
+    const std::vector<Key> &keys,
+    const std::vector<marisa::UInt32> &key_ids) {
   Clock cl;
   for (std::size_t i = 0; i < keys.size(); ++i) {
-    trie.predict(keys[i].first, NULL, NULL);
+    marisa::UInt32 num_keys = trie.predict(keys[i].first, NULL, NULL);
+    if (num_keys == 0) {
+      std::cerr << "error: predict() failed" << std::endl;
+      return;
+    }
   }
   print_time_info(keys.size(), cl.elasped());
 }
@@ -198,11 +224,11 @@ void benchmark(const std::vector<Key> &keys, marisa::UInt32 num_tries) {
   marisa::Trie trie;
   std::vector<marisa::UInt32> key_ids;
   benchmark_build(keys, num_tries, &trie, &key_ids);
-  benchmark_restore(trie, key_ids);
-  benchmark_lookup(trie, keys);
-  benchmark_find(trie, keys);
-  benchmark_predict_breadth_first(trie, keys);
-  benchmark_predict_depth_first(trie, keys);
+  benchmark_restore(trie, keys, key_ids);
+  benchmark_lookup(trie, keys, key_ids);
+  benchmark_find(trie, keys, key_ids);
+  benchmark_predict_breadth_first(trie, keys, key_ids);
+  benchmark_predict_depth_first(trie, keys, key_ids);
   std::printf("\n");
 }
 
@@ -229,7 +255,7 @@ int benchmark(const char * const *args, std::size_t num_args) {
   }
   std::printf("------+--------+---------+-------+"
       "-------+-------+-------+-------+-------\n");
-  for (marisa::UInt32 i = 1; i < max_num_tries; ++i) {
+  for (marisa::UInt32 i = 1; i <= max_num_tries; ++i) {
     benchmark(keys, i);
   }
   std::printf("------+--------+---------+-------+"
