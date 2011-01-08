@@ -1,0 +1,292 @@
+#summary インタフェース
+#labels Featured
+
+= インタフェース =
+
+libmarisa を利用するときは，`marisa.h` をインクルードし，`marisa::Trie` というクラスを用いることになります．また，キーの ID として使用する型（`unsigned __int32` もしくは `uint32_t`）には，`marisa::UInt32` という別名が与えられています．以下，`marisa::Trie` の解説になっています．対応するヘッダは `marisa/trie.h` です．
+
+<wiki:toc max_depth="3" />
+
+----
+
+== コンストラクタ ==
+
+{{{
+Trie();
+}}}
+
+`marisa::Trie` のコンストラクタはメンバを初期化するだけであり，例外を投げることはありません．
+
+----
+
+== 構築 ==
+
+=== `build()` ===
+
+{{{
+void build(const std::vector<const char *> &keys,
+    std::vector<UInt32> *key_ids = NULL, UInt32 max_num_tries = 3,
+    bool patricia = true, bool tail = true, bool freq_order = true);
+void build(const std::vector<char *> &keys,
+    std::vector<UInt32> *key_ids = NULL, UInt32 max_num_tries = 3,
+    bool patricia = true, bool tail = true, bool freq_order = true);
+void build(const std::vector<std::string> &keys,
+    std::vector<UInt32> *key_ids = NULL, UInt32 max_num_tries = 3,
+    bool patricia = true, bool tail = true, bool freq_order = true);
+}}}
+
+{{{
+void build(const std::vector<std::pair<const char *, double> > &keys,
+    std::vector<UInt32> *key_ids = NULL, UInt32 max_num_tries = 3,
+    bool patricia = true, bool tail = true, bool weight_order = true);
+void build(const std::vector<std::pair<char *, double> > &keys,
+    std::vector<UInt32> *key_ids = NULL, UInt32 max_num_tries = 3,
+    bool patricia = true, bool tail = true, bool weight_order = true);
+void build(const std::vector<std::pair<std::string, double> > &keys,
+    std::vector<UInt32> *key_ids = NULL, UInt32 max_num_tries = 3,
+    bool patricia = true, bool tail = true, bool weight_order = true);
+}}}
+
+新しい辞書を構築します．構築の途中でメモリの確保に失敗した場合，オブジェクトには変更を加えず，`std::bad_alloc` を投げるようになっています．
+
+第 1 引数の `keys` については，`const char *`, `char *`, `std::string`，およびに `double` との `std::pair` が使えるようになっています．`const char *` と `char *` は `NULL` 文字を終端として扱うので，バイナリのキーを渡すことはできません．バイナリのキーが必要なときは `std::string` を使ってください．`build()` は与えられたキー集合を内部で整列するようになっているので，あらかじめ整列しておく必要はありません．
+
+※ バイナリのキーについては，一部制限があります．第 5 引数である `tail` の説明を参照してください．
+
+第 2 引数の `key_ids` は，各キーに割り当てられた ID を受け取るための引数です．有効なポインタを渡しておけば，`keys[i]` のキー ID が `key_ids[i]` に格納されます．ID がいらないときは `NULL` を渡してください．
+
+第 3 引数の `max_num_tries` は辞書を構成するトライの数を制限するための引数です．単語やフレーズの集合から辞書を構築するのであれば，デフォルトの引数である `3` が妥当な設定になることが経験的に分かっています．見出し語・品詞・読みなどをつなげて登録する場合，`10` 程度の大きな値を指定することにより，辞書のサイズをさらに小さくすることができます．適切な設定については，付属のツールである `marisa-benchmark` を使って調べることができます．
+
+第 4 引数の `patricia` は，Patricia Trie と Prefix Trie の切り替えに関するフラグです．`true` であれば Patricia Trie になり，`false` であれば Prefix Trie になります．Patricia の方が優秀なので，あえて Prefix Trie に切り替える理由はほとんどありません．
+
+第 5 引数の `tail` は，Prefix Trie および Prefix Trie に格納しきれなかった部分を文字列として持つか，Trie として持つかを切り替えるためのフラグです．`true` であれば文字列化し，`false` であればトライ化します．ただし，残りに `NULL` 文字が含まれている場合，`tail` が `true` であってもトライ化がおこなわれます．このとき，辞書を構成するトライの数が `max_num_tries + 1` になるので注意してください．
+
+第 6 引数の `weight_order` は，ノードの並びを切り替えるためのフラグです．`true` であれば重み順になり，`false` であればラベル順になります．重みについては，`keys` の要素が `std::pair` であれば，`second` に格納されている値を使います． `std::pair` でなければ，各キーに対して `1.0` が与えられます．同じキーが複数ある場合，重みは加算されるようになっています．例えば，各キーの出現頻度を指定した上で重み順にすると，辿ることになりやすいノードを前方に配置し，検索時間を短縮することができます．
+
+----
+
+== 入出力 ==
+
+=== `mmap()`, `map()` ===
+
+{{{
+bool mmap(Mapper *mapper, const char *filename,
+    long offset = 0, int whence = SEEK_SET);
+bool map(const void *ptr);
+bool map(const void *ptr, std::size_t size);
+bool map(Mapper *mapper);
+}}}
+
+Memory mapped I/O によりアドレス空間に割り当てられたデータやメモリ上に展開されたデータから辞書を復元します．データの変更やメモリの解放は致命的なエラーにつながるので注意してください．
+
+`mmap()` は Memory mapped I/O により割り当てたデータを `mapper` に関連付けるようになっています．呼び出し側では，辞書だけでなく `mapper` も維持しておく必要があるので注意してください．
+
+`offset` と `whence` は，`std::fseek()` の第 2 引数および第 3 引数と同じ役割を果たします．
+
+=== `load()`, `read()` ===
+
+{{{
+bool load(const char *filename, long offset = 0, int whence = SEEK_SET);
+bool read(int fd);
+bool read(::FILE *file);
+bool read(std::istream *stream);
+bool read(Reader *reader);
+}}}
+
+辞書をファイルなどから入力します．入力元の指定には，ファイル名だけでなく，ファイルディスクリプタや `std::FILE *`, `std::istream *` も利用できます．
+
+`offset` と `whence` は，ファイルを開いた後で呼び出す std::fseek() の第 2 引数と第 3 引数になります．
+
+=== `save()`, `write()` ===
+
+{{{
+bool save(const char *filename, bool trunc_flag = true,
+    long offset = 0, int whence = SEEK_SET) const;
+bool write(int fd) const;
+bool write(::FILE *file) const;
+bool write(std::ostream *stream) const;
+bool write(Writer *writer) const;
+}}}
+
+辞書をファイルなどに出力します．出力先の指定には，ファイル名だけでなく，ファイルディスクリプタや `std::FILE *`, `std::istream *` も利用できます．
+
+`trunc_flag` はファイルの切り詰めをおこなうかどうかを指定するフラグです．`true` にであれば切り詰めをおこない，`false` であれば古い内容を残して上書きします．
+
+`offset` と `whence` は，ファイルを開いた後で呼び出す `std::fseek()` の第 2 引数と第 3 引数になります．
+
+----
+
+== 検索 ==
+
+=== `operator[]()` ===
+
+{{{
+std::string operator[](UInt32 key_id) const;
+}}}
+
+ID からキーを復元します．正体は `restore()` です．呼び出しのたびに `std::string` のオブジェクトを作成するので，オーバーヘッドが大きくなります．繰り返し呼び出す場合，第 2 引数を受け取る `restore()` の利用を検討してください．
+
+{{{
+UInt32 operator[](const char *str) const;
+UInt32 operator[](const std::string &str) const;
+}}}
+
+キーから ID を求めます．正体は `lookup()` です．
+
+=== `restore()` ===
+
+{{{
+std::string restore(UInt32 key_id) const;
+void restore(UInt32 key_id, std::string *key) const;
+}}}
+
+ID からキーを復元します．範囲外の ID を指定したときの動作は未定義です．`std::string` のオブジェクトを返す前者の方が使いやすいものの，オーバーヘッドは大きくなります．パフォーマンスを重視するときは後者の利用を検討してください．
+
+=== `lookup()` ===
+
+{{{
+UInt32 lookup(const char *str) const;
+UInt32 lookup(const char *ptr, std::size_t length) const;
+UInt32 lookup(const std::string &str) const;
+}}}
+
+キーから ID を求めます．未登録のキーを指定した場合，`lookup()` の返り値は `notfound()` の返り値（`NOTFOUND` も同じ）と等しくなります．
+
+=== `find()`, `find_first()`, `find_last()` ===
+
+{{{
+UInt32 find(const char *str,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::size_t> *key_lengths = NULL) const;
+UInt32 find(const char *ptr, std::size_t length,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::size_t> *key_lengths = NULL) const;
+UInt32 find(const std::string &str,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::size_t> *key_lengths = NULL) const;
+}}}
+
+指定された文字列の前方部分列と一致するキーを検索します．返り値は一致したキーの数です．一致するキーが見つかったときは，`key_ids` と `key_lengths` の末尾に，それぞれキーの ID と長さが追加されます．ID や長さがいらないときは `NULL` を渡してください．
+
+{{{
+UInt32 find_first(const char *str,
+    std::size_t *key_length = NULL) const;
+UInt32 find_first(const char *ptr, std::size_t length,
+    std::size_t *key_length = NULL) const;
+UInt32 find_first(const std::string &str,
+    std::size_t *key_length = NULL) const;
+}}}
+
+指定された文字列の前方部分列と一致するキーを検索して，最初に見つかった（一番短い）キーの ID を返します．`key_length` が `NULL` でなければ，見つかったキーの長さが格納されるようになっています．見つからなければ，返り値は `NOTFOUND` になり，`key_length` は変更されません．
+
+{{{
+UInt32 find_last(const char *str,
+    std::size_t *key_length = NULL) const;
+UInt32 find_last(const char *ptr, std::size_t length,
+    std::size_t *key_length = NULL) const;
+UInt32 find_last(const std::string &str,
+    std::size_t *key_length = NULL) const;
+}}}
+
+指定された文字列の前方部分列と一致するキーを検索して，最後に見つかった（一番長い）キーの ID を返します．`key_length` が `NULL` でなければ，見つかったキーの長さが格納されるようになっています．見つからなければ，返り値は `NOTFOUND` になり，`key_length` は変更されません．
+
+=== `find_callback()` ===
+
+{{{
+// bool callback(UInt32 key_id, std::size_t key_length);
+template <typename T>
+UInt32 find_callback(const char *str, T callback) const;
+template <typename T>
+UInt32 find_callback(const char *ptr, std::size_t length,
+    T callback) const;
+template <typename T>
+UInt32 find_callback(const std::string &str, T callback) const;
+}}}
+
+指定された文字列の前方部分列と一致するキーを検索し，キーが見つかるたびにコールバック関数を呼び出します．コールバック関数の第 1 引数にはキーの ID，第 2 引数にはキーの長さが渡されます．また，コールバック関数の返り値が `0` あるいは `false` であれば，検索を中断します．返り値はコールバック関数を呼び出した回数になります．
+
+=== `predict()` ===
+
+{{{
+UInt32 predict(const char *str,
+    std::vector<UInt32> *key_ids = NULL) const;
+UInt32 predict(const char *ptr, std::size_t length,
+    std::vector<UInt32> *key_ids = NULL) const;
+UInt32 predict(const std::string &str,
+    std::vector<UInt32> *key_ids = NULL) const;
+}}}
+
+指定された文字列で始まるキーの数を返します．該当するキーの ID が `key_ids` に追加されるようになっています．ID がいらないときは `key_ids` を `NULL` にしてください．
+
+キーを復元する必要がないという特徴を利用して，手抜きな探索をおこないます．結果として，`key_ids` に追加される ID は幅優先（昇順）になります．後述の `predict()` と比べると，機能は制限されるものの，探索時間は短くなります．
+
+深さ優先な ID が欲しいときやキーを復元したいときは，後述の `predict()` を利用してください．
+
+{{{
+UInt32 predict(const char *str,
+    std::vector<UInt32> *key_ids, std::vector<std::string> *keys) const;
+UInt32 predict(const char *ptr, std::size_t length,
+    std::vector<UInt32> *key_ids, std::vector<std::string> *keys) const;
+UInt32 predict(const std::string &str,
+    std::vector<UInt32> *key_ids, std::vector<std::string> *keys) const;
+}}}
+
+指定された文字列で始まるキーの数を返します．該当するキーの ID が `key_ids` に追加されるだけでなく，復元されたキーが `keys` に追加されるようになっています．ID がいらないときは `key_ids` を `NULL` に，キーがいらないときは `keys` を `NULL` にしてください．
+
+=== `predict_callback()` ===
+
+{{{
+// bool callback(UInt32 key_id, const std::string &key);
+template <typename T>
+UInt32 predict_callback(const char *str, T callback) const;
+template <typename T>
+UInt32 predict_callback(const char *ptr, std::size_t length,
+    T callback) const;
+template <typename T>
+UInt32 predict_callback(const std::string &str, T callback) const;
+}}}
+
+指定された文字列で始まるキーを求めて辞書を探索し，該当するキーが見つかるたびにコールバック関数を呼び出します．コールバック関数の第 1 引数にはキーの ID，第 2 引数には復元されたキーが渡されます．また，コールバック関数の返り値が `0` あるいは `false` であれば，探索を中断します．返り値はコールバック関数を呼び出した回数になります．
+
+----
+
+== その他 ==
+
+=== `num_keys()`, `num_tries()`, `num_nodes()`, `size()` ===
+
+{{{
+UInt32 num_keys() const;
+UInt32 num_tries() const;
+UInt32 num_nodes() const;
+std::size_t size() const;
+}}}
+
+それぞれ，キー数，トライ数，ノード数，ファイルに出力したときのサイズ（バイト数）を返します．
+
+=== `clear()`, `swap()` ===
+
+{{{
+void clear();
+}}}
+
+辞書の内容を破棄し，初期状態に戻します．実際には，新しいオブジェクトを作成して，そのオブジェクトと現在のオブジェクトの内容を交換するようになっています．
+
+{{{
+void swap(Trie *rhs);
+}}}
+
+オブジェクトの中身を交換します．例外は発生しないようになっています．
+
+=== `notfound()`, `mismatch()` ===
+
+{{{
+static UInt32 notfound();
+static std::size_t mismatch();
+
+static const UInt32 NOTFOUND = static_cast<UInt32>(-1);
+static const std::size_t MISMATCH = static_cast<std::size_t>(-2);
+}}}
+
+`notfound()` と `mismatch()` は，それぞれ `NOTFOUND` と `MISMATCH` を返します．`NOTFOUND` と `notfound()` のどちらを使うのかは気分次第です．
+
+`NOTFOUND` はキーが見つからなかったことを示す定数です．`MISMATCH` は，内部で使用されている定数であり，今のところ，外部からは用なしの存在です．
