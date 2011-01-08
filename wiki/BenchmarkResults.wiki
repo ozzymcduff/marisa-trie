@@ -1,8 +1,6 @@
 #summary ベンチマーク
 #labels Featured
 
-<wiki:toc max_depth="2" />
-
 = ベンチマーク =
 
 いくつかのキー集合に対して，`marisa-benchmark` を実行してみました．実行環境は以下のとおりです．
@@ -10,6 +8,8 @@
 || *CPU*        || Core 2 Duo U9600 1.60GHz    ||
 || *OS*         || 64-bit Ubuntu Desktop 10.04 ||
 || *コンパイラ* || gcc version 4.4.3           ||
+
+<wiki:toc max_depth="2" />
 
 == 英語版 Wikipedia タイトル ==
 
