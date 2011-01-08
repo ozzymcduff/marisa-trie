@@ -1,0 +1,98 @@
+#summary ツール
+#labels Featured
+
+= ツール =
+
+marisa-trie には 5 つのコマンドラインツールが含まれています．ツールの機能は，辞書の構築，辞書からの検索，およびに辞書のベンチマークとなっています．各ツールにはヘルプを表示するオプション（`-h`）があるので，有効に利用してください．
+
+<wiki:toc max_depth="2" />
+
+== `marisa-build` ==
+
+与えられたキー集合から辞書を構築するツールです．libmarisa の `marisa::Trie::build()` と対応します．
+
+{{{
+$ marisa-build -h
+Usage: marisa-build [OPTION]... [FILE]...
+
+Options:
+  -n, --max-num-tries=[N]  limits the number of tries to N (default: 3)
+  -P, --patricia-trie  build patricia tries (default)
+  -p, --prefix-trie    build prefix tries
+  -T, --with-tail      build a dictionary with TAIL (default)
+  -t, --without-tail   build a dictionary without TAIL
+  -w, --weight-order   arranges siblings in weight order (default)
+  -l, --label-order    arranges siblings in label order
+  -o, --output=[FILE]  write tries to FILE (default: stdout)
+  -h, --help           print this help
+}}}
+
+== `marisa-lookup` ==
+
+完全一致検索をおこなうツールです．libmarisa の `marisa::Trie::lookup()` と対応します．
+
+{{{
+$ marisa-lookup -h
+Usage: marisa-lookup [OPTION]... DIC
+
+Options:
+  -m, --mmap-dictionary  use memory-mapped I/O to load a dictionary (default)
+  -r, --read-dictionary  read an entire dictionary into memory
+  -h, --help             print this help
+}}}
+
+== `marisa-find` ==
+
+与えられた文字列の前半部分に一致するキーを検索するツールです．libmarisa の `marisa::Trie::find()` と対応します．
+
+{{{
+$ marisa-find -h
+Usage: marisa-find [OPTION]... DIC
+
+Options:
+  -n, --max-num-results=[N]  limits the number of results to N (default: 10)
+                             0: no limit
+  -a, --find-all         find all prefix keys (default)
+  -f, --find-first       find a shortest prefix key
+  -l, --find-last        find a longest prefix key
+  -m, --mmap-dictionary  use memory-mapped I/O to load a dictionary (default)
+  -r, --read-dictionary  read an entire dictionary into memory
+  -h, --help             print this help
+}}}
+
+== `marisa-predict` ==
+
+与えられた文字列で始まるキーを求めるツールです．libmarisa の `marisa::Trie::predict()` と対応します．
+
+{{{
+$ marisa-predict -h
+Usage: marisa-predict [OPTION]... DIC
+
+Options:
+  -n, --max-num-results=[N]  limits the number of outputs to N (default: 10)
+                             0: no limit
+  -m, --mmap-dictionary  use memory-mapped I/O to load a dictionary (default)
+  -r, --read-dictionary  read an entire dictionary into memory
+  -h, --help             print this help
+}}}
+
+== `marisa-benchmark` ==
+
+与えられたキー集合について，トライの数を変化させつつ，辞書のサイズや構築・検索時間を調査するツールです．どのような設定が適切かを調べるのに使えます．
+
+{{{
+$ marisa-benchmark -h
+Usage: marisa-benchmark [OPTION]... [FILE]...
+
+Options:
+  -n, --max-num-tries=[N]  limits the number of tries to N (default: 10)
+  -P, --patricia-trie  build patricia tries (default)
+  -p, --prefix-trie    build prefix tries
+  -T, --with-tail      build a dictionary with TAIL (default)
+  -t, --without-tail   build a dictionary without TAIL
+  -w, --weight-order   arranges siblings in weight order (default)
+  -l, --label-order    arranges siblings in label order
+  -S, --print-speed    print speed [1000 keys/s] (default)
+  -s, --print-time     print time [us/key]
+  -h, --help           print this help
+}}}
