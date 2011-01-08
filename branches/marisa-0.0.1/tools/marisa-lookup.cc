@@ -1,0 +1,98 @@
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+#include <marisa.h>
+
+#include "./cmdopt.h"
+
+namespace {
+
+bool mmap_flag = true;
+
+void print_help(const char *cmd) {
+  std::cerr << "Usage: " << cmd << " [OPTION]... [FILE]...\n\n"
+      "Options:\n"
+      "  -m, --mmap-dictionary  use memory-mapped I/O to load a dictionary"
+      " (default)\n"
+      "  -r, --read-dictionary  read an entire dictionary into memory\n"
+      "  -h, --help             print this help\n"
+      << std::endl;
+}
+
+int lookup(const char * const *args, std::size_t num_args) {
+  if (num_args == 0) {
+    std::cerr << "error: tries are not specified" << std::endl;
+    return 10;
+  } else if (num_args > 1) {
+    std::cerr << "error: more than one tries are specified" << std::endl;
+    return 11;
+  }
+
+  marisa::Trie trie;
+  marisa::Mapper mapper;
+  if (mmap_flag) {
+    if (!trie.mmap(&mapper, args[0])) {
+      std::cerr << "error: failed to mmap tries: " << args[0] << std::endl;
+      return 20;
+    }
+  } else {
+    if (!trie.load(args[0])) {
+      std::cerr << "error: failed to load tries: " << args[0] << std::endl;
+      return 21;
+    }
+  }
+
+  std::string str;
+  while (std::getline(std::cin, str)) {
+    marisa::UInt32 key_id = trie.lookup(str);
+    if (key_id != trie.notfound()) {
+      std::cout << key_id << '\t' << str << '\n';
+    } else {
+      std::cout << "-1\t" << str << '\n';
+    }
+    if (!std::cout) {
+      std::cerr << "error: failed to write results to standard output"
+          << std::endl;
+      return 30;
+    }
+  }
+
+  return 0;
+}
+
+}  // namespace
+
+int main(int argc, char *argv[]) {
+  std::ios::sync_with_stdio(false);
+
+  ::cmdopt_option long_options[] = {
+    { "mmap-dictionary", 0, NULL, 'm' },
+    { "read-dictionary", 0, NULL, 'r' },
+    { "help", 0, NULL, 'h' },
+    { NULL, 0, NULL, 0 }
+  };
+  ::cmdopt_t cmdopt;
+  ::cmdopt_init(&cmdopt, argc, argv, "mrh", long_options);
+  int label;
+  while ((label = ::cmdopt_get(&cmdopt)) != -1) {
+    switch (label) {
+      case 'm': {
+        mmap_flag = true;
+        break;
+      }
+      case 'r': {
+        mmap_flag = false;
+        break;
+      }
+      case 'h': {
+        print_help(argv[0]);
+        return 0;
+      }
+      default: {
+        return 1;
+      }
+    }
+  }
+  return lookup(cmdopt.argv + cmdopt.optind, cmdopt.argc - cmdopt.optind);
+}

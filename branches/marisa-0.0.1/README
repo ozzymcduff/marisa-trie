@@ -1,0 +1,45 @@
+Project name:
+  marisa-trie
+  http://code.google.com/p/marisa-trie/
+
+Project summary:
+  Nesting Patricia -> Matryoshka Patricia -> Matricia -> Marisa.
+
+Description:
+  marisa-trie provides a C++ library and command line tools for a nesting
+  patricia that is designed as a static and space efficient dictionary
+  structure. A nesting patricia enables not only a simple lookup but also a
+  prefix search and a predictive search, as well as a trie does.
+
+   * A prefix search is to find keys from prefixes of a given query.
+   * A predictive search is to find keys starting with a given query.
+
+  One of the advantages of marisa-trie is in its space efficiency. See below
+  for the size of dictionaries built with various trie implementations.
+
+   * Input
+    * Source: enwiki-20100622-all-titles-in-ns0
+    * Number of keys: 7,967,237
+    * Total size: 160,340,531 bytes
+
+  || *Implementation* || *Size (bytes)* || *Remarks*                   ||
+  || darts-clone      ||    303,413.248 || Compacted double-array trie ||
+  || tx-trie          ||    102,802,911 || LOUDS-based trie            ||
+  || marisa-trie      ||     41,304,635 || Nesting patricia trie       ||
+
+  The marisa-trie dictionary is remakably compact in these implementations and
+  its size is only 1/4 of the input size.
+
+Version control system:
+  Subversion
+
+Source code license:
+  New BSD License
+
+Project labels:
+  Nesting
+  Patricia
+  Trie
+  Static
+  Dictionary
+  CPlusPlus
