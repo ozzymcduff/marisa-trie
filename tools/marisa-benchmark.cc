@@ -181,9 +181,11 @@ void benchmark_find(const marisa::Trie &trie,
     const std::vector<Key> &keys,
     const std::vector<marisa::UInt32> &key_ids) {
   Clock cl;
+  std::vector<marisa::UInt32> found_key_ids;
   for (std::size_t i = 0; i < keys.size(); ++i) {
-    marisa::UInt32 num_keys = trie.find(keys[i].first);
-    if (num_keys == 0) {
+    found_key_ids.clear();
+    marisa::UInt32 num_keys = trie.find(keys[i].first, &found_key_ids);
+    if ((num_keys == 0) || (found_key_ids.back() != key_ids[i])) {
       std::cerr << "error: find() failed" << std::endl;
       return;
     }
@@ -195,9 +197,11 @@ void benchmark_predict_breadth_first(const marisa::Trie &trie,
     const std::vector<Key> &keys,
     const std::vector<marisa::UInt32> &key_ids) {
   Clock cl;
+  std::vector<marisa::UInt32> found_key_ids;
   for (std::size_t i = 0; i < keys.size(); ++i) {
-    marisa::UInt32 num_keys = trie.predict(keys[i].first);
-    if (num_keys == 0) {
+    found_key_ids.clear();
+    marisa::UInt32 num_keys = trie.predict(keys[i].first, &found_key_ids);
+    if ((num_keys == 0) || (found_key_ids.front() != key_ids[i])) {
       std::cerr << "error: predict() failed" << std::endl;
       return;
     }
@@ -209,9 +213,12 @@ void benchmark_predict_depth_first(const marisa::Trie &trie,
     const std::vector<Key> &keys,
     const std::vector<marisa::UInt32> &key_ids) {
   Clock cl;
+  std::vector<marisa::UInt32> found_key_ids;
   for (std::size_t i = 0; i < keys.size(); ++i) {
-    marisa::UInt32 num_keys = trie.predict(keys[i].first, NULL, NULL);
-    if (num_keys == 0) {
+    found_key_ids.clear();
+    marisa::UInt32 num_keys = trie.predict(
+        keys[i].first, &found_key_ids, NULL);
+    if ((num_keys == 0) || (found_key_ids.front() != key_ids[i])) {
       std::cerr << "error: predict() failed" << std::endl;
       return;
     }
