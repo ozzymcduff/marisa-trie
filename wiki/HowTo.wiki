@@ -1,4 +1,5 @@
 #summary 使い方
+#labels Featured
 
 = 使い方 =
 
