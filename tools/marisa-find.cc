@@ -21,7 +21,7 @@ FindMode find_mode = FIND_ALL;
 bool mmap_flag = true;
 
 void print_help(const char *cmd) {
-  std::cerr << "Usage: " << cmd << " [OPTION]... [FILE]...\n\n"
+  std::cerr << "Usage: " << cmd << " [OPTION]... DIC\n\n"
       "Options:\n"
       "  -n, --max-num-results=[N]  limits the number of results to N"
       " (default: 10)\n"

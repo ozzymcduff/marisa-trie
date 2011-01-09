@@ -11,7 +11,7 @@ namespace {
 bool mmap_flag = true;
 
 void print_help(const char *cmd) {
-  std::cerr << "Usage: " << cmd << " [OPTION]... [FILE]...\n\n"
+  std::cerr << "Usage: " << cmd << " [OPTION]... DIC\n\n"
       "Options:\n"
       "  -m, --mmap-dictionary  use memory-mapped I/O to load a dictionary"
       " (default)\n"

@@ -14,7 +14,6 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
-
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -37,7 +36,7 @@ TESTS = base-test$(EXEEXT) rank-test$(EXEEXT) popcount-test$(EXEEXT) \
 	range-test$(EXEEXT) query-test$(EXEEXT) cell-test$(EXEEXT) \
 	io-test$(EXEEXT) vector-test$(EXEEXT) intvector-test$(EXEEXT) \
 	bitvector-test$(EXEEXT) tail-test$(EXEEXT) trie-test$(EXEEXT)
-noinst_PROGRAMS = $(am__EXEEXT_1)
+check_PROGRAMS = $(am__EXEEXT_1)
 subdir = tests
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -53,7 +52,6 @@ am__EXEEXT_1 = base-test$(EXEEXT) rank-test$(EXEEXT) \
 	query-test$(EXEEXT) cell-test$(EXEEXT) io-test$(EXEEXT) \
 	vector-test$(EXEEXT) intvector-test$(EXEEXT) \
 	bitvector-test$(EXEEXT) tail-test$(EXEEXT) trie-test$(EXEEXT)
-PROGRAMS = $(noinst_PROGRAMS)
 am_base_test_OBJECTS = base-test.$(OBJEXT)
 base_test_OBJECTS = $(am_base_test_OBJECTS)
 base_test_DEPENDENCIES = ../lib/libmarisa.a
@@ -287,8 +285,8 @@ $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 
-clean-noinstPROGRAMS:
-	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
+clean-checkPROGRAMS:
+	-test -z "$(check_PROGRAMS)" || rm -f $(check_PROGRAMS)
 base-test$(EXEEXT): $(base_test_OBJECTS) $(base_test_DEPENDENCIES) 
 	@rm -f base-test$(EXEEXT)
 	$(CXXLINK) $(base_test_OBJECTS) $(base_test_LDADD) $(LIBS)
@@ -546,9 +544,10 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile
 installdirs:
 install: install-am
 install-exec: install-exec-am
@@ -577,7 +576,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-noinstPROGRAMS mostlyclean-am
+clean-am: clean-checkPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -647,7 +646,7 @@ uninstall-am:
 .MAKE: check-am install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-TESTS check-am clean \
-	clean-generic clean-noinstPROGRAMS ctags distclean \
+	clean-checkPROGRAMS clean-generic ctags distclean \
 	distclean-compile distclean-generic distclean-tags distdir dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-data install-data-am install-dvi install-dvi-am \
