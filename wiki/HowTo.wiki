@@ -1,0 +1,181 @@
+#summary 使い方
+
+= 使い方 =
+
+marisa-trie の基本的な使い方に関するドキュメントです．
+
+<wiki:toc max_depth="3" />
+
+----
+
+== ビルド・インストール ==
+
+=== `gcc` ===
+
+`g++` および `make` がインストールされている環境であれば，`configure`, `make` という一般的な組み合わせでビルド・インストールできます．
+
+{{{
+$ wget http://marisa-trie.googlecode.com/files/marisa-0.0.1.tar.gz
+...
+$ tar zxf marisa-0.0.1.tar.gz
+$ cd marisa-0.0.1/
+$ ./configure
+...
+$ make
+...
+$ make check
+...
+$ sudo make install
+...
+}}}
+
+=== Visual Studio ===
+
+Visual Studio 2008 のソリューション（`.sln`）およびプロジェクト（`.proj`）が `vs2008/` 以下にあります．Visual Studio 2008 以降であれば，`vs2008/vs2008.sln` を開いてビルドできるようになっています．
+
+Visual Studio 2008 より古い環境では，新しくプロジェクトを作る必要があると思います．プロジェクトを作成すれば問題なくビルドできるはずですが，テストしていないので断言はできません．
+
+----
+
+== ツール ==
+
+marisa-trie に含まれるツールは，`marisa-build`, `marisa-lookup`, `marisa-find`, `marisa-predict`, `marisa-benchmark` の 5 つであり，以下のように動作します．
+
+{{{
+$ gzip -cd jawiki-20101102-all-titles-in-ns0.gz | marisa-build > jawiki.dic
+#keys: 1146584
+#tries: 3
+#nodes: 2264302
+size: 6522558
+
+$ marisa-lookup jawiki.dic
+あ
+2578	あ
+
+$ marisa-find jawiki.dic 
+トライ
+3 found
+2462	ト	トライ
+132331	トラ	トライ
+500091	トライ	トライ
+
+$ marisa-predict -n 3 jawiki.dic
+あ
+2342 found
+2578	あ	あ
+134977	あい	あ
+855840	あいち健康の森	あ
+
+$ gzip -cd jawiki-20101102-all-titles-in-ns0.gz | marisa-benchmark -n 3
+max. #tries: 3
+patricia: on
+tail: on
+weight order: on
+#keys: 1146584
+total length: 23809474
+------+--------+---------+-------+-------+-------+-------+-------+-------
+#tries   #nodes      size   build restore  lookup    find predict predict
+                                                          breadth   depth
+                  [bytes]   [K/s]   [K/s]   [K/s]   [K/s]   [K/s]   [K/s]
+------+--------+---------+-------+-------+-------+-------+-------+-------
+     1  1564294   9850413  340.23  796.24  721.12  666.62  597.18  446.14
+     2  2087639   7056712  311.57  412.44  380.92  366.32  344.32  184.34
+     3  2264302   6522558  299.37  360.56  334.28  321.17  304.13  151.26
+------+--------+---------+-------+-------+-------+-------+-------+-------
+}}}
+
+ListOfTools がツールに関するもう少し詳しいドキュメントになっています．また，いくつかのキー集合に対するベンチマークの結果が BenchmarkResults にあります．
+
+----
+
+== ライブラリ ==
+
+marisa-trie のライブラリである libmarisa を用いるサンプルコードです．このサンプルでは，4 種類のキーを登録した辞書を構築し，構築された辞書からの検索をおこなっています．
+
+{{{
+// sample.cc
+#include <iostream>
+#include <string>
+#include <vector>
+
+// libmarisa の利用に必要なヘッダです．
+#include <marisa.h>
+
+int main() {
+  // キー集合を整列しておく必要はなく，重複があっても特に問題ありません．
+  // ただし，重複はキーの重みとして扱われるので，重複しているキーに対応する
+  // ノードは前方に配置されやすくなります．
+  std::vector<std::string> keys;
+  keys.push_back("apple");
+  keys.push_back("android");
+  keys.push_back("market");
+  keys.push_back("app");
+  keys.push_back("android");
+
+  // 辞書のクラスは marisa::Trie であり，build() という関数を使って辞書を
+  // 構築するようになっています．第 1 引数はキー集合を渡すための引数，
+  // 第 2 引数はキー ID を受け取るための引数です．キー ID が不要であれば，
+  // 第 2 引数は省略することができます．
+  marisa::Trie trie;
+  std::vector<marisa::UInt32> key_ids;
+  trie.build(keys, &key_ids);
+
+  // lookup() はキー ID からキーを復元する関数であり，restore() はキーから
+  // キー ID を得る関数です．
+  std::cout << "lookup() and restore():\n";
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    std::cout << '(' << keys[i] << ", " << key_ids[i] << ") <-> ("
+        << trie.lookup(keys[i]) << ", " << trie.restore(key_ids[i]) << ")\n";
+  }
+  std::cout << std::flush;
+
+  // find() は第 1 引数として渡された文字列の前方部分列に一致するキーを検索する
+  // 関数です．返り値は見つかったキーの数であり，各キーの ID は第 2 引数として
+  // 渡したベクタの末尾に追加されます．
+  std::cout << "find(\"apple\"):\n";
+  std::vector<marisa::UInt32> found_key_ids;
+  marisa::UInt32 num_keys = trie.find("apple", &found_key_ids);
+  std::cout << num_keys << " keys found -";
+  for (marisa::UInt32 i = 0; i < num_keys; ++i) {
+    std::cout << " (" << found_key_ids[i] << ", "
+        << trie.restore(found_key_ids[i]) << ')';
+  }
+  std::cout << std::endl;
+
+  // predict() は第 1 引数として渡された文字列で始まるキーを検索する関数です．
+  // 返り値は見つかったキーの数であり，各キーの ID および文字列は，それぞれ
+  // 第 2 引数と第 3 引数に渡したベクタの末尾に追加されます．
+  std::cout << "predict(\"a\"):\n";
+  std::vector<std::string> found_keys;
+  found_key_ids.clear();
+  num_keys = trie.predict("a", &found_key_ids, &found_keys);
+  std::cout << num_keys << " keys predicted - ";
+  for (marisa::UInt32 i = 0; i < num_keys; ++i) {
+    std::cout << " (" << found_key_ids[i] << ", "
+        << trie.restore(found_key_ids[i]) << ')';
+  }
+  std::cout << std::endl;
+
+  return 0;
+}
+}}}
+
+ビルドするときは，libmarisa をリンクする必要があります．
+
+{{{
+$ g++ sample.cc -lmarisa
+
+$ ./a.out
+lookup() and restore():
+(apple, 3) <-> (3, apple)
+(android, 1) <-> (1, android)
+(market, 0) <-> (0, market)
+(app, 2) <-> (2, app)
+(android, 1) <-> (1, android)
+find("apple"):
+2 keys found - (2, app) (3, apple)
+predict("a"):
+3 keys predicted -  (1, android) (2, app) (3, apple)
+}}}
+
+ライブラリのインタフェースに関する詳しい説明は LibraryInterface にあります．
