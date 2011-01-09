@@ -7,6 +7,8 @@ marisa-trie には 5 つのコマンドラインツールが含まれていま�
 
 <wiki:toc max_depth="2" />
 
+----
+
 == `marisa-build` ==
 
 与えられたキー集合から辞書を構築するツールです．libmarisa の `marisa::Trie::build()` と対応します．
@@ -27,6 +29,8 @@ Options:
   -h, --help           print this help
 }}}
 
+----
+
 == `marisa-lookup` ==
 
 完全一致検索をおこなうツールです．libmarisa の `marisa::Trie::lookup()` と対応します．
@@ -40,6 +44,8 @@ Options:
   -r, --read-dictionary  read an entire dictionary into memory
   -h, --help             print this help
 }}}
+
+----
 
 == `marisa-find` ==
 
@@ -60,6 +66,8 @@ Options:
   -h, --help             print this help
 }}}
 
+----
+
 == `marisa-predict` ==
 
 与えられた文字列で始まるキーを求めるツールです．libmarisa の `marisa::Trie::predict()` と対応します．
@@ -75,6 +83,8 @@ Options:
   -r, --read-dictionary  read an entire dictionary into memory
   -h, --help             print this help
 }}}
+
+----
 
 == `marisa-benchmark` ==
 

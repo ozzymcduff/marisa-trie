@@ -17,7 +17,7 @@ TESTS = \
   tail-test \
   trie-test
 
-noinst_PROGRAMS = $(TESTS)
+check_PROGRAMS = $(TESTS)
 
 base_test_SOURCES = base-test.cc
 base_test_LDADD = ../lib/libmarisa.a

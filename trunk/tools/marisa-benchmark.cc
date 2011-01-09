@@ -42,15 +42,15 @@ void print_help(const char *cmd) {
   std::cerr << "Usage: " << cmd << " [OPTION]... [FILE]...\n\n"
       "Options:\n"
       "  -n, --max-num-tries=[N]  limits the number of tries to N"
-      " (default: 3)\n"
+      " (default: 10)\n"
       "  -P, --patricia-trie  build patricia tries (default)\n"
       "  -p, --prefix-trie    build prefix tries\n"
       "  -T, --with-tail      build a dictionary with TAIL (default)\n"
       "  -t, --without-tail   build a dictionary without TAIL\n"
       "  -w, --weight-order   arranges siblings in weight order (default)\n"
       "  -l, --label-order    arranges siblings in label order\n"
-      "  -S, --print-speed    print speed [K/s] (default)\n"
-      "  -s, --print-time     print time [ms]\n"
+      "  -S, --print-speed    print speed [1000 keys/s] (default)\n"
+      "  -s, --print-time     print time [us/key]\n"
       "  -h, --help           print this help\n"
       << std::endl;
 }
