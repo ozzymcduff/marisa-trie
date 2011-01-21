@@ -1,7 +1,7 @@
 #ifndef MARISA_RANGE_H_
 #define MARISA_RANGE_H_
 
-#include "./base.h"
+#include "base.h"
 
 namespace marisa {
 

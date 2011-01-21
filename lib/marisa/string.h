@@ -1,26 +1,24 @@
 #ifndef MARISA_STRING_H_
 #define MARISA_STRING_H_
 
-#include <cstring>
-#include <string>
-
-#include "./base.h"
+#include "base.h"
 
 namespace marisa {
-
-class RString;
 
 class String {
  public:
   String() : ptr_(NULL), length_(0) {}
-  explicit String(const char *str) : ptr_(str), length_(std::strlen(str)) {}
-  String(const char *ptr, std::size_t length) : ptr_(ptr), length_(length) {}
-  explicit String(const std::string &str)
-      : ptr_(str.c_str()), length_(str.length()) {}
-  explicit String(const RString &str);
+  explicit String(const char *str) : ptr_(str), length_(0) {
+    while (str[length_] != '\0') {
+      ++length_;
+    }
+  }
+  String(const char *ptr, std::size_t length)
+      : ptr_(ptr), length_(length) {}
   String(const String &str) : ptr_(str.ptr_), length_(str.length_) {}
 
   String substr(std::size_t pos, std::size_t length) const {
+    MARISA_DEBUG_IF(pos + length > length_, MARISA_PARAM_ERROR);
     return String(ptr_ + pos, length);
   }
 
@@ -31,6 +29,7 @@ class String {
   }
 
   UInt8 operator[](std::size_t i) const {
+    MARISA_DEBUG_IF(i >= length_, MARISA_PARAM_ERROR);
     return ptr_[i];
   }
 
@@ -80,12 +79,15 @@ inline bool operator>(const String &lhs, const String &rhs) {
 
 class RString {
  public:
-  RString() : ptr_(static_cast<const char *>(NULL) - 1), length_(0) {}
+  RString()
+      : ptr_(static_cast<const char *>(NULL) - 1), length_(0) {}
   explicit RString(const String &str)
       : ptr_(str.ptr() + str.length() - 1), length_(str.length()) {}
-  RString(const RString &str) : ptr_(str.ptr_), length_(str.length_) {}
+  RString(const RString &str)
+      : ptr_(str.ptr_), length_(str.length_) {}
 
   RString substr(std::size_t pos, std::size_t length) const {
+    MARISA_DEBUG_IF(pos + length > length_, MARISA_PARAM_ERROR);
     RString str(*this);
     str.ptr_ -= pos;
     str.length_ = length;
@@ -99,6 +101,7 @@ class RString {
   }
 
   UInt8 operator[](std::size_t i) const {
+    MARISA_DEBUG_IF(i >= length_, MARISA_PARAM_ERROR);
     return *(ptr_ - i);
   }
 
@@ -113,9 +116,6 @@ class RString {
   const char *ptr_;
   std::size_t length_;
 };
-
-inline String::String(const RString &str)
-    : ptr_(str.ptr()), length_(str.length()) {}
 
 inline bool operator==(const RString &lhs, const RString &rhs) {
   if (lhs.length() != rhs.length()) {

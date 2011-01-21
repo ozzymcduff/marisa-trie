@@ -32,7 +32,7 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 TESTS = base-test$(EXEEXT) rank-test$(EXEEXT) popcount-test$(EXEEXT) \
-	config-test$(EXEEXT) string-test$(EXEEXT) key-test$(EXEEXT) \
+	progress-test$(EXEEXT) string-test$(EXEEXT) key-test$(EXEEXT) \
 	range-test$(EXEEXT) query-test$(EXEEXT) cell-test$(EXEEXT) \
 	io-test$(EXEEXT) vector-test$(EXEEXT) intvector-test$(EXEEXT) \
 	bitvector-test$(EXEEXT) tail-test$(EXEEXT) trie-test$(EXEEXT)
@@ -47,7 +47,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__EXEEXT_1 = base-test$(EXEEXT) rank-test$(EXEEXT) \
-	popcount-test$(EXEEXT) config-test$(EXEEXT) \
+	popcount-test$(EXEEXT) progress-test$(EXEEXT) \
 	string-test$(EXEEXT) key-test$(EXEEXT) range-test$(EXEEXT) \
 	query-test$(EXEEXT) cell-test$(EXEEXT) io-test$(EXEEXT) \
 	vector-test$(EXEEXT) intvector-test$(EXEEXT) \
@@ -61,9 +61,6 @@ bitvector_test_DEPENDENCIES = ../lib/libmarisa.a
 am_cell_test_OBJECTS = cell-test.$(OBJEXT)
 cell_test_OBJECTS = $(am_cell_test_OBJECTS)
 cell_test_DEPENDENCIES = ../lib/libmarisa.a
-am_config_test_OBJECTS = config-test.$(OBJEXT)
-config_test_OBJECTS = $(am_config_test_OBJECTS)
-config_test_DEPENDENCIES = ../lib/libmarisa.a
 am_intvector_test_OBJECTS = intvector-test.$(OBJEXT)
 intvector_test_OBJECTS = $(am_intvector_test_OBJECTS)
 intvector_test_DEPENDENCIES = ../lib/libmarisa.a
@@ -76,6 +73,9 @@ key_test_DEPENDENCIES = ../lib/libmarisa.a
 am_popcount_test_OBJECTS = popcount-test.$(OBJEXT)
 popcount_test_OBJECTS = $(am_popcount_test_OBJECTS)
 popcount_test_DEPENDENCIES = ../lib/libmarisa.a
+am_progress_test_OBJECTS = progress-test.$(OBJEXT)
+progress_test_OBJECTS = $(am_progress_test_OBJECTS)
+progress_test_DEPENDENCIES = ../lib/libmarisa.a
 am_query_test_OBJECTS = query-test.$(OBJEXT)
 query_test_OBJECTS = $(am_query_test_OBJECTS)
 query_test_DEPENDENCIES = ../lib/libmarisa.a
@@ -107,17 +107,17 @@ CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
 SOURCES = $(base_test_SOURCES) $(bitvector_test_SOURCES) \
-	$(cell_test_SOURCES) $(config_test_SOURCES) \
-	$(intvector_test_SOURCES) $(io_test_SOURCES) \
-	$(key_test_SOURCES) $(popcount_test_SOURCES) \
+	$(cell_test_SOURCES) $(intvector_test_SOURCES) \
+	$(io_test_SOURCES) $(key_test_SOURCES) \
+	$(popcount_test_SOURCES) $(progress_test_SOURCES) \
 	$(query_test_SOURCES) $(range_test_SOURCES) \
 	$(rank_test_SOURCES) $(string_test_SOURCES) \
 	$(tail_test_SOURCES) $(trie_test_SOURCES) \
 	$(vector_test_SOURCES)
 DIST_SOURCES = $(base_test_SOURCES) $(bitvector_test_SOURCES) \
-	$(cell_test_SOURCES) $(config_test_SOURCES) \
-	$(intvector_test_SOURCES) $(io_test_SOURCES) \
-	$(key_test_SOURCES) $(popcount_test_SOURCES) \
+	$(cell_test_SOURCES) $(intvector_test_SOURCES) \
+	$(io_test_SOURCES) $(key_test_SOURCES) \
+	$(popcount_test_SOURCES) $(progress_test_SOURCES) \
 	$(query_test_SOURCES) $(range_test_SOURCES) \
 	$(rank_test_SOURCES) $(string_test_SOURCES) \
 	$(tail_test_SOURCES) $(trie_test_SOURCES) \
@@ -226,8 +226,8 @@ rank_test_SOURCES = rank-test.cc
 rank_test_LDADD = ../lib/libmarisa.a
 popcount_test_SOURCES = popcount-test.cc
 popcount_test_LDADD = ../lib/libmarisa.a
-config_test_SOURCES = config-test.cc
-config_test_LDADD = ../lib/libmarisa.a
+progress_test_SOURCES = progress-test.cc
+progress_test_LDADD = ../lib/libmarisa.a
 string_test_SOURCES = string-test.cc
 string_test_LDADD = ../lib/libmarisa.a
 key_test_SOURCES = key-test.cc
@@ -296,9 +296,6 @@ bitvector-test$(EXEEXT): $(bitvector_test_OBJECTS) $(bitvector_test_DEPENDENCIES
 cell-test$(EXEEXT): $(cell_test_OBJECTS) $(cell_test_DEPENDENCIES) 
 	@rm -f cell-test$(EXEEXT)
 	$(CXXLINK) $(cell_test_OBJECTS) $(cell_test_LDADD) $(LIBS)
-config-test$(EXEEXT): $(config_test_OBJECTS) $(config_test_DEPENDENCIES) 
-	@rm -f config-test$(EXEEXT)
-	$(CXXLINK) $(config_test_OBJECTS) $(config_test_LDADD) $(LIBS)
 intvector-test$(EXEEXT): $(intvector_test_OBJECTS) $(intvector_test_DEPENDENCIES) 
 	@rm -f intvector-test$(EXEEXT)
 	$(CXXLINK) $(intvector_test_OBJECTS) $(intvector_test_LDADD) $(LIBS)
@@ -311,6 +308,9 @@ key-test$(EXEEXT): $(key_test_OBJECTS) $(key_test_DEPENDENCIES)
 popcount-test$(EXEEXT): $(popcount_test_OBJECTS) $(popcount_test_DEPENDENCIES) 
 	@rm -f popcount-test$(EXEEXT)
 	$(CXXLINK) $(popcount_test_OBJECTS) $(popcount_test_LDADD) $(LIBS)
+progress-test$(EXEEXT): $(progress_test_OBJECTS) $(progress_test_DEPENDENCIES) 
+	@rm -f progress-test$(EXEEXT)
+	$(CXXLINK) $(progress_test_OBJECTS) $(progress_test_LDADD) $(LIBS)
 query-test$(EXEEXT): $(query_test_OBJECTS) $(query_test_DEPENDENCIES) 
 	@rm -f query-test$(EXEEXT)
 	$(CXXLINK) $(query_test_OBJECTS) $(query_test_LDADD) $(LIBS)
@@ -342,11 +342,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitvector-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cell-test.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intvector-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/key-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/popcount-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/progress-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/query-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/range-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rank-test.Po@am__quote@

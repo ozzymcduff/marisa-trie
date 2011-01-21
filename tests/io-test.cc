@@ -1,5 +1,7 @@
 #ifdef _MSC_VER
 #include <io.h>
+#else
+#include <unistd.h>
 #endif  // _MSC_VER
 
 #include <sys/types.h>
@@ -8,6 +10,7 @@
 
 #include <cassert>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 
 #include <marisa/io.h>
@@ -17,75 +20,93 @@ namespace {
 void TestFilename() {
   {
     marisa::Writer writer;
-    assert(writer.open("io-test.dat"));
+    writer.open("io-test.dat");
     marisa::UInt32 value = 123;
-    assert(writer.write(value));
-    std::vector<double> vec;
-    vec.push_back(234);
-    vec.push_back(345);
-    vec.push_back(456);
-    assert(writer.write(vec));
+    writer.write(value);
+    writer.write(value);
+    double values[] = { 345, 456 };
+    writer.write(values, 2);
+    try {
+      writer.write(values, 1U << 30);
+      assert(false);
+    } catch (const marisa::Exception &ex) {
+      assert(ex.status() == MARISA_SIZE_ERROR);
+    }
   }
 
   {
     marisa::Writer writer;
-    assert(writer.open("io-test.dat", false, 4, SEEK_SET));
-    marisa::UInt32 value = 4;
-    assert(writer.write(value));
+    writer.open("io-test.dat", false, 4, SEEK_SET);
+    marisa::UInt32 value = 234;
+    writer.write(value);
   }
 
   {
     marisa::Writer writer;
-    assert(writer.open("io-test.dat", false, 0, SEEK_END));
+    writer.open("io-test.dat", false, 0, SEEK_END);
     double value = 567;
-    assert(writer.write(value));
+    writer.write(value);
   }
 
   {
     marisa::Reader reader;
-    assert(reader.open("io-test.dat"));
+    reader.open("io-test.dat");
     marisa::UInt32 value;
-    assert(reader.read(&value));
+    reader.read(&value);
     assert(value == 123);
-    std::vector<double> vec;
-    assert(reader.read(&vec));
-    assert(vec.size() == 4);
-    assert(vec[0] == 234);
-    assert(vec[1] == 345);
-    assert(vec[2] == 456);
-    assert(vec[3] == 567);
+    reader.read(&value);
+    assert(value == 234);
+    double values[3];
+    reader.read(values, 3);
+    assert(values[0] == 345);
+    assert(values[1] == 456);
+    assert(values[2] == 567);
     char byte;
-    assert(!reader.read(&byte));
+    try {
+      reader.read(&byte);
+      assert(false);
+    } catch (const marisa::Exception &ex) {
+      assert(ex.status() == MARISA_IO_ERROR);
+    }
   }
 
   {
     marisa::Mapper mapper;
-    assert(mapper.open("io-test.dat"));
+    mapper.open("io-test.dat");
     marisa::UInt32 value;
-    assert(mapper.map(&value));
+    mapper.map(&value);
     assert(value == 123);
-    const double *objs;
-    marisa::UInt32 num_objs;
-    assert(mapper.map(&objs, &num_objs));
-    assert(num_objs == 4);
-    assert(objs[0] == 234);
-    assert(objs[1] == 345);
-    assert(objs[2] == 456);
-    assert(objs[3] == 567);
+    mapper.map(&value);
+    assert(value == 234);
+    const double *values;
+    mapper.map(&values, 3);
+    assert(values[0] == 345);
+    assert(values[1] == 456);
+    assert(values[2] == 567);
     char byte;
-    assert(!mapper.map(&byte));
+    try {
+      mapper.map(&byte);
+      assert(false);
+    } catch (const marisa::Exception &ex) {
+      assert(ex.status() == MARISA_IO_ERROR);
+    }
   }
 
   {
     marisa::Writer writer;
-    assert(writer.open("io-test.dat"));
+    writer.open("io-test.dat");
   }
 
   {
     marisa::Reader reader;
-    assert(reader.open("io-test.dat"));
+    reader.open("io-test.dat");
     char byte;
-    assert(!reader.read(&byte));
+    try {
+      reader.read(&byte);
+      assert(false);
+    } catch (const marisa::Exception &ex) {
+      assert(ex.status() == MARISA_IO_ERROR);
+    }
   }
 }
 
@@ -102,12 +123,9 @@ void TestFd() {
 #endif  // _MSC_VER
     marisa::Writer writer(fd);
     marisa::UInt32 value = 345;
-    assert(writer.write(value));
-    std::vector<double> vec;
-    vec.push_back(456);
-    vec.push_back(567);
-    vec.push_back(678);
-    assert(writer.write(vec));
+    writer.write(value);
+    double values[] = { 456, 567, 678 };
+    writer.write(values, 3);
 #ifdef _MSC_VER
     assert(::_close(fd) == 0);
 #else  // _MSC_VER
@@ -126,16 +144,20 @@ void TestFd() {
 #endif  // _MSC_VER
     marisa::Reader reader(fd);
     marisa::UInt32 value;
-    assert(reader.read(&value));
+    reader.read(&value);
     assert(value == 345);
-    std::vector<double> vec;
-    assert(reader.read(&vec));
-    assert(vec.size() == 3);
-    assert(vec[0] == 456);
-    assert(vec[1] == 567);
-    assert(vec[2] == 678);
+    double values[3];
+    reader.read(values, 3);
+    assert(values[0] == 456);
+    assert(values[1] == 567);
+    assert(values[2] == 678);
     char byte;
-    assert(!reader.read(&byte));
+    try {
+      reader.read(&byte);
+      assert(false);
+    } catch (const marisa::Exception &ex) {
+      assert(ex.status() == MARISA_IO_ERROR);
+    }
 #ifdef _MSC_VER
     assert(::_close(fd) == 0);
 #else  // _MSC_VER
@@ -155,12 +177,9 @@ void TestFile() {
 #endif  // _MSC_VER
     marisa::Writer writer(file);
     marisa::UInt32 value = 345;
-    assert(writer.write(value));
-    std::vector<double> vec;
-    vec.push_back(456);
-    vec.push_back(567);
-    vec.push_back(678);
-    assert(writer.write(vec));
+    writer.write(value);
+    double values[3] = { 456, 567, 678 };
+    writer.write(values, 3);
     assert(std::fclose(file) == 0);
   }
 
@@ -174,47 +193,54 @@ void TestFile() {
 #endif  // _MSC_VER
     marisa::Reader reader(file);
     marisa::UInt32 value;
-    assert(reader.read(&value));
+    reader.read(&value);
     assert(value == 345);
-    std::vector<double> vec;
-    assert(reader.read(&vec));
-    assert(vec.size() == 3);
-    assert(vec[0] == 456);
-    assert(vec[1] == 567);
-    assert(vec[2] == 678);
+    double values[3];
+    reader.read(values, 3);
+    assert(values[0] == 456);
+    assert(values[1] == 567);
+    assert(values[2] == 678);
     char byte;
-    assert(!reader.read(&byte));
+    try {
+      reader.read(&byte);
+      assert(false);
+    } catch (const marisa::Exception &ex) {
+      assert(ex.status() == MARISA_IO_ERROR);
+    }
     assert(std::fclose(file) == 0);
   }
 }
 
 void TestStream() {
   {
-    std::ofstream stream("io-test.dat", std::ios::binary);
-    marisa::Writer writer(&stream);
-    marisa::UInt32 value = 456;
-    assert(writer.write(value));
-    std::vector<double> vec;
-    vec.push_back(567);
-    vec.push_back(678);
-    vec.push_back(789);
-    assert(writer.write(vec));
+    std::ofstream file("io-test.dat", std::ios::binary);
+    assert(file.is_open());
+    marisa::Writer writer(&file);
+    marisa::UInt32 value = 345;
+    writer.write(value);
+    double values[3] = { 456, 567, 678 };
+    writer.write(values, 3);
   }
 
   {
-    std::ifstream stream("io-test.dat", std::ios::binary);
-    marisa::Reader reader(&stream);
+    std::ifstream file("io-test.dat", std::ios::binary);
+    assert(file.is_open());
+    marisa::Reader reader(&file);
     marisa::UInt32 value;
-    assert(reader.read(&value));
-    assert(value == 456);
-    std::vector<double> vec;
-    assert(reader.read(&vec));
-    assert(vec.size() == 3);
-    assert(vec[0] == 567);
-    assert(vec[1] == 678);
-    assert(vec[2] == 789);
+    reader.read(&value);
+    assert(value == 345);
+    double values[3];
+    reader.read(values, 3);
+    assert(values[0] == 456);
+    assert(values[1] == 567);
+    assert(values[2] == 678);
     char byte;
-    assert(!reader.read(&byte));
+    try {
+      reader.read(&byte);
+      assert(false);
+    } catch (const marisa::Exception &ex) {
+      assert(ex.status() == MARISA_IO_ERROR);
+    }
   }
 }
 

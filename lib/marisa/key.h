@@ -1,7 +1,7 @@
 #ifndef MARISA_KEY_H_
 #define MARISA_KEY_H_
 
-#include "./string.h"
+#include "string.h"
 
 namespace marisa {
 
@@ -9,9 +9,6 @@ template <typename T>
 class Key {
  public:
   Key() : str_(), weight_(0.0), id_(0), terminal_(0) {}
-  Key(const Key &key)
-      : str_(key.str_), weight_(key.weight_),
-        id_(key.id_), terminal_(key.terminal_) {}
 
   void set_str(const T &str) {
     str_ = str;

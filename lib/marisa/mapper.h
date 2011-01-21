@@ -1,48 +1,38 @@
 #ifndef MARISA_MAPPER_H_
 #define MARISA_MAPPER_H_
 
-#include <stdio.h>
+#include <cstdio>
 
-#include "./base.h"
+#include "base.h"
 
 namespace marisa {
 
 class Mapper {
  public:
   Mapper();
-  explicit Mapper(const void *ptr);
   Mapper(const void *ptr, std::size_t size);
   ~Mapper();
 
+  void open(const char *filename, long offset = 0, int whence = SEEK_SET);
+
+  template <typename T>
+  void map(T *obj) {
+    MARISA_THROW_IF(obj == NULL, MARISA_PARAM_ERROR);
+    const void *ptr = map_data(sizeof(T));
+    *obj = *static_cast<const T *>(ptr);
+  }
+
+  template <typename T>
+  void map(const T **objs, std::size_t num_objs) {
+    MARISA_THROW_IF((objs == NULL) && (num_objs != 0), MARISA_PARAM_ERROR);
+    MARISA_THROW_IF(num_objs > (MARISA_UINT32_MAX / sizeof(T)),
+        MARISA_SIZE_ERROR);
+    const void *ptr = map_data(sizeof(T) * num_objs);
+    *objs = static_cast<const T *>(ptr);
+  }
+
   bool is_open() const {
     return ptr_ != NULL;
-  }
-
-  bool open(const char *filename, long offset = 0, int whence = SEEK_SET);
-
-  template <typename T>
-  bool map(T *obj) {
-    const void *ptr = map_data(sizeof(T));
-    if (ptr == NULL) {
-      return false;
-    }
-    *obj = *static_cast<const T *>(ptr);
-    return true;
-  }
-
-  template <typename T>
-  bool map(const T **objs, UInt32 *num_objs) {
-    UInt32 temp_num_objs = 0;
-    if (!map(&temp_num_objs)) {
-      return false;
-    }
-    const void *ptr = map_data(sizeof(T) * temp_num_objs);
-    if (ptr == NULL) {
-      return false;
-    }
-    *objs = static_cast<const T *>(ptr);
-    *num_objs = temp_num_objs;
-    return true;
   }
 
   void clear();
@@ -50,8 +40,8 @@ class Mapper {
 
  private:
   const void *ptr_;
-  std::size_t avail_;
   void *origin_;
+  std::size_t avail_;
   std::size_t size_;
 #if defined _WIN32 || defined _WIN64
   void *file_;
@@ -60,7 +50,7 @@ class Mapper {
   int fd_;
 #endif  // defined _WIN32 || defined _WIN64
 
-  bool seek(long offset, int whence);
+  void seek(long offset, int whence);
 
   const void *map_data(std::size_t size);
 

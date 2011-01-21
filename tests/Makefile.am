@@ -4,7 +4,7 @@ TESTS = \
   base-test \
   rank-test \
   popcount-test \
-  config-test \
+  progress-test \
   string-test \
   key-test \
   range-test \
@@ -28,8 +28,8 @@ rank_test_LDADD = ../lib/libmarisa.a
 popcount_test_SOURCES = popcount-test.cc
 popcount_test_LDADD = ../lib/libmarisa.a
 
-config_test_SOURCES = config-test.cc
-config_test_LDADD = ../lib/libmarisa.a
+progress_test_SOURCES = progress-test.cc
+progress_test_LDADD = ../lib/libmarisa.a
 
 string_test_SOURCES = string-test.cc
 string_test_LDADD = ../lib/libmarisa.a

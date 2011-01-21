@@ -1,175 +1,127 @@
 #ifndef MARISA_VECTOR_H_
 #define MARISA_VECTOR_H_
 
-#include "./io.h"
+#include "io.h"
 
 namespace marisa {
 
 template <typename T>
 class Vector {
  public:
-  Vector() : buf_(), ptr_(NULL), num_objs_(0) {}
-  explicit Vector(UInt32 num_objs)
-      : buf_(num_objs), ptr_(get_ptr(buf_)), num_objs_(num_objs) {}
-  Vector(UInt32 num_objs, const T &value)
-      : buf_(num_objs, value), ptr_(get_ptr(buf_)), num_objs_(num_objs) {}
-  Vector(const Vector &vec)
-      : buf_(vec.buf_), ptr_(get_ptr(buf_)), num_objs_(vec.num_objs_) {}
+  Vector();
+  ~Vector();
 
-  bool mmap(Mapper *mapper, const char *filename,
-      long offset = 0, int whence = SEEK_SET) {
-    Mapper temp_mapper;
-    if (!temp_mapper.open(filename, offset, whence) || !map(&temp_mapper)) {
-      return false;
-    }
-    temp_mapper.swap(mapper);
-    return true;
-  }
-  bool map(const void *ptr) {
-    Mapper mapper(ptr);
-    return map(&mapper);
-  }
-  bool map(const void *ptr, std::size_t size) {
-    Mapper mapper(ptr, size);
-    return map(&mapper);
-  }
-  bool map(Mapper *mapper) {
-    Vector temp;
-    if (!mapper->map(&temp.ptr_, &temp.num_objs_)) {
-      return false;
-    }
-    temp.swap(this);
-    return true;
-  }
+  void mmap(Mapper *mapper, const char *filename,
+      long offset = 0, int whence = SEEK_SET);
+  void map(const void *ptr, std::size_t size);
+  void map(Mapper &mapper);
 
-  bool load(const char *filename, long offset = 0, int whence = SEEK_SET) {
-    Reader reader;
-    if (!reader.open(filename, offset, whence)) {
-      return false;
-    }
-    return read(&reader);
+  void load(const char *filename,
+      long offset = 0, int whence = SEEK_SET);
+  void fread(std::FILE *file);
+  void read(int fd);
+  void read(std::istream &stream);
+  void read(Reader &reader);
+
+  void save(const char *filename, bool trunc_flag = false,
+      long offset = 0, int whence = SEEK_SET) const;
+  void fwrite(std::FILE *file) const;
+  void write(int fd) const;
+  void write(std::ostream &stream) const;
+  void write(Writer &writer) const;
+
+  void push_back(const T &x);
+  void pop_back();
+
+  void resize(std::size_t size);
+  void resize(std::size_t size, const T &x);
+  void reserve(std::size_t capacity);
+  void shrink();
+
+  void fix();
+
+  const T *begin() const {
+    return objs_;
   }
-  bool read(int fd) {
-    Reader reader(fd);
-    return read(&reader);
+  const T *end() const {
+    return objs_ + size_;
   }
-  bool read(::FILE *file) {
-    Reader reader(file);
-    return read(&reader);
+  const T &operator[](std::size_t i) const {
+    MARISA_DEBUG_IF(i > size_, MARISA_PARAM_ERROR);
+    return objs_[i];
   }
-  bool read(std::istream *stream) {
-    Reader reader(stream);
-    return read(&reader);
+  const T &front() const {
+    MARISA_DEBUG_IF(size_ == 0, MARISA_STATE_ERROR);
+    return objs_[0];
   }
-  bool read(Reader *reader) {
-    Vector temp;
-    if (!reader->read(&temp.buf_)) {
-      return false;
-    }
-    temp.ptr_ = get_ptr(temp.buf_);
-    temp.num_objs_ = temp.buf_.size();
-    temp.swap(this);
-    return true;
+  const T &back() const {
+    MARISA_DEBUG_IF(size_ == 0, MARISA_STATE_ERROR);
+    return objs_[size_ - 1];
   }
 
-  bool save(const char *filename, bool trunc_flag = false,
-    long offset = 0, int whence = SEEK_SET) const {
-    Writer writer;
-    if (!writer.open(filename, trunc_flag, offset, whence)) {
-      return false;
-    }
-    return write(&writer);
+  T *begin() {
+    MARISA_DEBUG_IF(fixed_, MARISA_STATE_ERROR);
+    return buf_;
   }
-  bool write(int fd) const {
-    Writer writer(fd);
-    return write(&writer);
+  T *end() {
+    MARISA_DEBUG_IF(fixed_, MARISA_STATE_ERROR);
+    return buf_ + size_;
   }
-  bool write(::FILE *file) const {
-    Writer writer(file);
-    return write(&writer);
-  }
-  bool write(std::ostream *stream) const {
-    Writer writer(stream);
-    return write(&writer);
-  }
-  bool write(Writer *writer) const {
-    return writer->write(ptr_, num_objs_);
-  }
-
-  void push_back(const T &value) {
-    buf_.push_back(value);
-    ptr_ = &buf_[0];
-    num_objs_ = buf_.size();
-  }
-
-  void shrink() {
-    if (buf_.size() != buf_.capacity()) {
-      Vector(*this).swap(this);
-    }
-  }
-
-  const T &operator[](UInt32 i) const {
-    return ptr_[i];
-  }
-  T &operator[](UInt32 i) {
+  T &operator[](std::size_t i) {
+    MARISA_DEBUG_IF(fixed_, MARISA_STATE_ERROR);
+    MARISA_DEBUG_IF(i > size_, MARISA_PARAM_ERROR);
     return buf_[i];
   }
-
-  const T &front() const {
-    return ptr_[0];
-  }
   T &front() {
-    return buf_.front();
-  }
-
-  const T &back() const {
-    return ptr_[num_objs_ - 1];
+    MARISA_DEBUG_IF(fixed_ || (size_ == 0), MARISA_STATE_ERROR);
+    return buf_[0];
   }
   T &back() {
-    return buf_.back();
+    MARISA_DEBUG_IF(fixed_ || (size_ == 0), MARISA_STATE_ERROR);
+    return buf_[size_ - 1];
   }
 
-  UInt32 num_objs() const {
-    return num_objs_;
-  }
-  std::size_t capacity() const {
-    return buf_.capacity();
-  }
   bool empty() const {
-    return num_objs_ == 0;
+    return size_ == 0;
   }
   std::size_t size() const {
-    return (sizeof(T) * num_objs_) + sizeof(num_objs_);
+    return size_;
+  }
+  std::size_t capacity() const {
+    return capacity_;
+  }
+  bool fixed() const {
+    return fixed_;
+  }
+  std::size_t total_size() const {
+    return (sizeof(T) * size_) + sizeof(size_);
   }
 
   void clear() {
     Vector().swap(this);
   }
-  void swap(Vector *rhs) {
-    buf_.swap(rhs->buf_);
+  void swap(Vector *rhs);
 
-    const T *temp_ptr = ptr_;
-    ptr_ = rhs->ptr_;
-    rhs->ptr_ = temp_ptr;
-
-    UInt32 temp_num_objs = num_objs_;
-    num_objs_ = rhs->num_objs_;
-    rhs->num_objs_ = temp_num_objs;
+  static std::size_t max_size() {
+    return (MARISA_UINT32_MAX - sizeof(size_)) / sizeof(T);
   }
 
  private:
-  std::vector<T> buf_;
-  const T *ptr_;
-  UInt32 num_objs_;
+  T *buf_;
+  const T *objs_;
+  UInt32 size_;
+  UInt32 capacity_;
+  bool fixed_;
 
-  static const T *get_ptr(const std::vector<T> &buf) {
-    return buf.empty() ? NULL : &buf[0];
-  }
+  void realloc(std::size_t new_capacity);
 
-  // Disallows assignment.
+  // Disallows copy and assignment.
+  Vector(const Vector &);
   Vector &operator=(const Vector &);
 };
 
 }  // namespace marisa
+
+#include "vector-inline.h"
 
 #endif  // MARISA_VECTOR_H_

@@ -1,7 +1,5 @@
-#include <algorithm>
-
-#include "./bitvector.h"
-#include "./popcount.h"
+#include "bitvector.h"
+#include "popcount.h"
 
 namespace marisa {
 namespace {
@@ -156,15 +154,17 @@ const UInt8 SelectTable[8][256] = {
 }  // namespace
 
 BitVector::BitVector()
-    : blocks_(), num_bits_(0), ranks_(), select0s_(), select1s_() {}
+    : blocks_(), size_(0), ranks_(), select0s_(), select1s_() {}
 
 void BitVector::build() {
-  Vector<Rank> ranks((num_bits_ + 511) / 512);
+  Vector<Rank> ranks;
+  const UInt32 num_blocks = (size_ / 512) + (((size_ % 512) != 0) ? 1 : 0);
+  ranks.resize(num_blocks);
   Vector<UInt32> select0s;
   Vector<UInt32> select1s;
   UInt32 num_0s = 0;
   UInt32 num_1s = 0;
-  for (UInt32 i = 0; i < num_bits_; ++i) {
+  for (UInt32 i = 0; i < size_; ++i) {
     if ((i % 64) == 0) {
       UInt32 rank_id = i / 512;
       switch ((i / 64) % 8) {
@@ -214,9 +214,9 @@ void BitVector::build() {
       ++num_0s;
     }
   }
-  if ((num_bits_ % 512) != 0) {
-    UInt32 rank_id = (num_bits_ - 1) / 512;
-    switch (((num_bits_ - 1) / 64) % 8) {
+  if ((size_ % 512) != 0) {
+    UInt32 rank_id = (size_ - 1) / 512;
+    switch (((size_ - 1) / 64) % 8) {
       case 0: {
         ranks[rank_id].set_rel1(num_1s - ranks[rank_id].abs());
       }
@@ -241,8 +241,8 @@ void BitVector::build() {
       }
     }
   }
-  select0s.push_back(num_bits_);
-  select1s.push_back(num_bits_);
+  select0s.push_back(size_);
+  select1s.push_back(size_);
   select0s.shrink();
   select1s.shrink();
 
@@ -252,108 +252,94 @@ void BitVector::build() {
   select1s_.swap(&select1s);
 }
 
-bool BitVector::mmap(Mapper *mapper, const char *filename,
+void BitVector::mmap(Mapper *mapper, const char *filename,
     long offset, int whence) {
+  MARISA_THROW_IF(mapper == NULL, MARISA_PARAM_ERROR);
   Mapper temp_mapper;
-  if (!temp_mapper.open(filename, offset, whence) || !map(&temp_mapper)) {
-    return false;
-  }
+  temp_mapper.open(filename, offset, whence);
+  map(temp_mapper);
   temp_mapper.swap(mapper);
-  return true;
 }
 
-bool BitVector::map(const void *ptr) {
-  Mapper mapper(ptr);
-  return map(&mapper);
-}
-
-bool BitVector::map(const void *ptr, std::size_t size) {
+void BitVector::map(const void *ptr, std::size_t size) {
   Mapper mapper(ptr, size);
-  return map(&mapper);
+  map(mapper);
 }
 
-bool BitVector::map(Mapper *mapper) {
+void BitVector::map(Mapper &mapper) {
   BitVector temp;
-  if (!temp.blocks_.map(mapper) ||
-      !mapper->map(&temp.num_bits_) ||
-      !temp.ranks_.map(mapper) ||
-      !temp.select0s_.map(mapper) ||
-      !temp.select1s_.map(mapper)) {
-    return false;
-  }
+  temp.blocks_.map(mapper);
+  mapper.map(&temp.size_);
+  temp.ranks_.map(mapper);
+  temp.select0s_.map(mapper);
+  temp.select1s_.map(mapper);
   temp.swap(this);
-  return true;
 }
 
-bool BitVector::load(const char *filename, long offset, int whence) {
+void BitVector::load(const char *filename,
+    long offset, int whence) {
   Reader reader;
-  if (!reader.open(filename, offset, whence)) {
-    return false;
-  }
-  return read(&reader);
+  reader.open(filename, offset, whence);
+  read(reader);
 }
 
-bool BitVector::read(int fd) {
-  Reader reader(fd);
-  return read(&reader);
-}
-
-bool BitVector::read(::FILE *file) {
+void BitVector::fread(std::FILE *file) {
   Reader reader(file);
-  return read(&reader);
+  read(reader);
 }
 
-bool BitVector::read(std::istream *stream) {
-  Reader reader(stream);
-  return read(&reader);
+void BitVector::read(int fd) {
+  Reader reader(fd);
+  read(reader);
 }
 
-bool BitVector::read(Reader *reader) {
+void BitVector::read(std::istream &stream) {
+  Reader reader(&stream);
+   read(reader);
+}
+
+void BitVector::read(Reader &reader) {
   BitVector temp;
-  if (!temp.blocks_.read(reader) ||
-      !reader->read(&temp.num_bits_) ||
-      !temp.ranks_.read(reader) ||
-      !temp.select0s_.read(reader) ||
-      !temp.select1s_.read(reader)) {
-    return false;
-  }
+  temp.blocks_.read(reader);
+  reader.read(&temp.size_);
+  temp.ranks_.read(reader);
+  temp.select0s_.read(reader);
+  temp.select1s_.read(reader);
   temp.swap(this);
-  return true;
 }
 
-bool BitVector::save(const char *filename, bool trunc_flag,
+void BitVector::save(const char *filename, bool trunc_flag,
     long offset, int whence) const {
   Writer writer;
-  if (!writer.open(filename, trunc_flag, offset, whence)) {
-    return false;
-  }
-  return write(&writer);
+  writer.open(filename, trunc_flag, offset, whence);
+  write(writer);
 }
 
-bool BitVector::write(int fd) const {
-  Writer writer(fd);
-  return write(&writer);
-}
-
-bool BitVector::write(::FILE *file) const {
+void BitVector::fwrite(std::FILE *file) const {
   Writer writer(file);
-  return write(&writer);
+  write(writer);
 }
 
-bool BitVector::write(std::ostream *stream) const {
-  Writer writer(stream);
-  return write(&writer);
+void BitVector::write(int fd) const {
+  Writer writer(fd);
+  write(writer);
 }
 
-bool BitVector::write(Writer *writer) const {
-  return blocks_.write(writer) &&
-      writer->write(num_bits_) &&
-      ranks_.write(writer) &&
-      select0s_.write(writer) &&
-      select1s_.write(writer);
+void BitVector::write(std::ostream &stream) const {
+  Writer writer(&stream);
+  write(writer);
+}
+
+void BitVector::write(Writer &writer) const {
+  blocks_.write(writer);
+  writer.write(size_);
+  ranks_.write(writer);
+  select0s_.write(writer);
+  select1s_.write(writer);
 }
 
 UInt32 BitVector::rank1(UInt32 i) const {
+  MARISA_DEBUG_IF(i > size_, MARISA_PARAM_ERROR);
   const Rank &rank = ranks_[i / 512];
   UInt32 offset = rank.abs();
   switch ((i / 64) % 8) {
@@ -388,11 +374,10 @@ UInt32 BitVector::rank1(UInt32 i) const {
   }
   switch ((i / 32) % 2) {
     case 1: {
-      offset += PopCount(blocks_[(i / 32) - 1]);
+      offset += PopCount(blocks_[(i / 32) - 1]).lo32();
     }
     case 0: {
-      offset += PopCount(blocks_[i / 32]
-          & ((static_cast<UInt32>(1) << (i % 32)) - 1));
+      offset += PopCount(blocks_[i / 32] & ((1U << (i % 32)) - 1)).lo32();
       break;
     }
   }
@@ -401,6 +386,7 @@ UInt32 BitVector::rank1(UInt32 i) const {
 
 UInt32 BitVector::select0(UInt32 i) const {
   UInt32 select_id = i / 512;
+  MARISA_DEBUG_IF((select_id + 1) >= select0s_.size(), MARISA_PARAM_ERROR);
   if ((i % 512) == 0) {
     return select0s_[select_id];
   }
@@ -478,6 +464,7 @@ UInt32 BitVector::select0(UInt32 i) const {
 
 UInt32 BitVector::select1(UInt32 i) const {
   UInt32 select_id = i / 512;
+  MARISA_DEBUG_IF((select_id + 1) >= select1s_.size(), MARISA_PARAM_ERROR);
   if ((i % 512) == 0) {
     return select1s_[select_id];
   }
@@ -558,8 +545,9 @@ void BitVector::clear() {
 }
 
 void BitVector::swap(BitVector *rhs) {
+  MARISA_THROW_IF(rhs == NULL, MARISA_PARAM_ERROR);
   blocks_.swap(&rhs->blocks_);
-  std::swap(num_bits_, rhs->num_bits_);
+  Swap(&size_, &rhs->size_);
   ranks_.swap(&rhs->ranks_);
   select0s_.swap(&rhs->select0s_);
   select1s_.swap(&rhs->select1s_);

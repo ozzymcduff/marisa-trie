@@ -10,10 +10,7 @@
 #include <unistd.h>
 #endif  // defined _WIN32 || defined _WIN64
 
-#include <algorithm>
-#include <limits>
-
-#include "./mapper.h"
+#include "mapper.h"
 
 #ifdef max
 #undef max
@@ -23,28 +20,22 @@ namespace marisa {
 
 #if defined _WIN32 || defined _WIN64
 Mapper::Mapper()
-    : ptr_(NULL), avail_(0),
-      origin_(NULL), size_(0), file_(NULL), map_(NULL) {}
-
-Mapper::Mapper(const void *ptr)
-    : ptr_(ptr), avail_(std::numeric_limits<std::size_t>::max()),
-      origin_(NULL), size_(0), file_(NULL), map_(NULL) {}
+    : ptr_(NULL), origin_(NULL), avail_(0), size_(0),
+      file_(NULL), map_(NULL) {}
 
 Mapper::Mapper(const void *ptr, std::size_t size)
-    : ptr_(ptr), avail_(size),
-      origin_(NULL), size_(0), file_(NULL), map_(NULL) {}
+    : ptr_(ptr), origin_(NULL), avail_(size), size_(0),
+      file_(NULL), map_(NULL) {
+  MARISA_THROW_IF(ptr != NULL) && (size != 0), MARISA_PARAM_ERROR);
+}
 #else  // defined _WIN32 || defined _WIN64
 Mapper::Mapper()
-    : ptr_(NULL), avail_(0),
-      origin_(MAP_FAILED), size_(0), fd_(-1) {}
-
-Mapper::Mapper(const void *ptr)
-    : ptr_(ptr), avail_(std::numeric_limits<std::size_t>::max()),
-      origin_(MAP_FAILED), size_(0), fd_(-1) {}
+    : ptr_(NULL), origin_(MAP_FAILED), avail_(0), size_(0), fd_(-1) {}
 
 Mapper::Mapper(const void *ptr, std::size_t size)
-    : ptr_(ptr), avail_(size),
-      origin_(MAP_FAILED), size_(0), fd_(-1) {}
+    : ptr_(ptr), origin_(MAP_FAILED), avail_(size), size_(0), fd_(-1) {
+  MARISA_THROW_IF((ptr != NULL) && (size != 0), MARISA_PARAM_ERROR);
+}
 #endif  // defined _WIN32 || defined _WIN64
 
 #if defined _WIN32 || defined _WIN64
@@ -74,80 +65,56 @@ Mapper::~Mapper() {
 #endif  // defined _WIN32 || defined _WIN64
 
 #if defined _WIN32 || defined _WIN64
-bool Mapper::open(const char *filename, long offset, int whence) {
-  if (is_open()) {
-    return false;
-  }
-
-  Mapper temp;
+void Mapper::open(const char *filename, long offset, int whence) {
+  MARISA_THROW_IF(is_open(), MARISA_STATE_ERROR);
+  MARISA_THROW_IF(filename == NULL, MARISA_PARAM_ERROR);
 
   struct __stat64 st;
   if (::_stat64(filename, &st) != 0) {
-    return false;
+    MARISA_THROW(MARISA_IO_ERROR);
   }
-  UInt64 file_size = st.st_size;
-  if (file_size > std::numeric_limits<std::size_t>::max()) {
-    return false;
-  }
-  temp.size_ = static_cast<std::size_t>(file_size);
+  const UInt64 file_size = st.st_size;
+  MARISA_THROW_IF(file_size > MARISA_UINT32_MAX, MARISA_SIZE_ERROR);
+
+  Mapper temp;
+  temp.size_ = (std::size_t)file_size;
 
   temp.file_ = ::CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ,
     NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-  if (temp.file_ == NULL) {
-    return false;
-  }
+  MARISA_THROW_IF(temp.file_ == NULL, MARISA_IO_ERROR);
 
   temp.map_ = ::CreateFileMapping(temp.file_, NULL, PAGE_READONLY, 0, 0, NULL);
-  if (temp.map_ == NULL) {
-    return false;
-  }
+  MARISA_THROW_IF(temp.map_ == NULL, MARISA_IO_ERROR);
 
   temp.origin_ = ::MapViewOfFile(temp.map_, FILE_MAP_READ, 0, 0, 0);
-  if (temp.origin_ == NULL) {
-    return false;
-  }
+  MARISA_THROW_IF(temp.origin_ == NULL, MARISA_IO_ERROR);
 
-  if (!temp.seek(offset, whence)) {
-    return false;
-  }
-
+  temp.seek(offset, whence);
   temp.swap(this);
-  return true;
 }
 #else  // defined _WIN32 || defined _WIN64
-bool Mapper::open(const char *filename, long offset, int whence) {
-  if (is_open()) {
-    return false;
-  }
-
-  Mapper temp;
+void Mapper::open(const char *filename, long offset, int whence) {
+  MARISA_THROW_IF(is_open(), MARISA_STATE_ERROR);
+  MARISA_THROW_IF(filename == NULL, MARISA_PARAM_ERROR);
 
   struct stat st;
   if (::stat(filename, &st) != 0) {
-    return false;
+    MARISA_THROW(MARISA_IO_ERROR);
   }
   UInt64 file_size = st.st_size;
-  if (file_size > std::numeric_limits<std::size_t>::max()) {
-    return false;
-  }
-  temp.size_ = static_cast<std::size_t>(file_size);
+  MARISA_THROW_IF(file_size > MARISA_UINT32_MAX, MARISA_SIZE_ERROR);
+
+  Mapper temp;
+  temp.size_ = (std::size_t)file_size;
 
   temp.fd_ = ::open(filename, O_RDONLY);
-  if (temp.fd_ == -1) {
-    return false;
-  }
+  MARISA_THROW_IF(temp.fd_ == -1, MARISA_IO_ERROR);
 
   temp.origin_ = ::mmap(NULL, temp.size_, PROT_READ, MAP_SHARED, temp.fd_, 0);
-  if (temp.origin_ == MAP_FAILED) {
-    return false;
-  }
+  MARISA_THROW_IF(temp.origin_ == MAP_FAILED, MARISA_IO_ERROR);
 
-  if (!temp.seek(offset, whence)) {
-    return false;
-  }
-
+  temp.seek(offset, whence);
   temp.swap(this);
-  return true;
 }
 #endif  // defined _WIN32 || defined _WIN64
 
@@ -156,52 +123,45 @@ void Mapper::clear() {
 }
 
 void Mapper::swap(Mapper *rhs) {
-  std::swap(ptr_, rhs->ptr_);
-  std::swap(avail_, rhs->avail_);
-  std::swap(origin_, rhs->origin_);
-  std::swap(size_, rhs->size_);
+  MARISA_THROW_IF(rhs == NULL, MARISA_PARAM_ERROR);
+  Swap(&ptr_, &rhs->ptr_);
+  Swap(&avail_, &rhs->avail_);
+  Swap(&origin_, &rhs->origin_);
+  Swap(&size_, &rhs->size_);
 #if defined _WIN32 || defined _WIN64
-  std::swap(file_, rhs->file_);
-  std::swap(map_, rhs->map_);
+  Swap(&file_, &rhs->file_);
+  Swap(&map_, &rhs->map_);
 #else  // defined _WIN32 || defined _WIN64
-  std::swap(fd_, rhs->fd_);
+  Swap(&fd_, &rhs->fd_);
 #endif  // defined _WIN32 || defined _WIN64
 }
 
-bool Mapper::seek(long offset, int whence) {
+void Mapper::seek(long offset, int whence) {
   switch (whence) {
     case SEEK_SET:
     case SEEK_CUR: {
-      if ((offset < 0) ||
-          (static_cast<unsigned long>(offset) > size_)) {
-        return false;
-      }
+      MARISA_THROW_IF((offset < 0) || ((unsigned long)offset > size_),
+          MARISA_IO_ERROR);
       ptr_ = static_cast<const UInt8 *>(origin_) + offset;
-      avail_ = size_ - offset;
-      return true;
+      avail_ = (std::size_t)(size_ - offset);
+      return;
     }
     case SEEK_END: {
-      if ((offset > 0) ||
-          (static_cast<unsigned long>(-offset) > size_)) {
-        return false;
-      }
+      MARISA_THROW_IF((offset > 0) || ((unsigned long)-offset > size_),
+          MARISA_IO_ERROR);
       ptr_ = static_cast<const UInt8 *>(origin_) + size_ + offset;
-      avail_ = -offset;
-      return true;
+      avail_ = (std::size_t)-offset;
+      return;
     }
     default: {
-      return false;
+      MARISA_THROW(MARISA_PARAM_ERROR);
     }
   }
 }
 
 const void *Mapper::map_data(std::size_t size) {
-  if (!is_open()) {
-    return NULL;
-  }
-  if (size > avail_) {
-    return NULL;
-  }
+  MARISA_THROW_IF(!is_open(), MARISA_STATE_ERROR);
+  MARISA_THROW_IF(size > avail_, MARISA_IO_ERROR);
   ptr_ = static_cast<const UInt8 *>(ptr_) + size;
   avail_ -= size;
   return static_cast<const UInt8 *>(ptr_) - size;

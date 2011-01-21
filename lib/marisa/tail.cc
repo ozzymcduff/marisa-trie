@@ -2,119 +2,102 @@
 #include <functional>
 #include <utility>
 
-#include "./tail.h"
+#include "tail.h"
 
 namespace marisa {
 
 Tail::Tail() : buf_() {}
 
-bool Tail::build(const std::vector<const char *> &keys,
-    std::vector<UInt32> *offsets) {
-  return build_tail(keys, offsets);
+void Tail::build(const Vector<String> &keys,
+    Vector<UInt32> *offsets, int mode) {
+  switch (mode) {
+    case MARISA_BINARY_TAIL: {
+      build_binary_tail(keys, offsets);
+      return;
+    }
+    case MARISA_TEXT_TAIL: {
+      build_text_tail(keys, offsets);
+      return;
+    }
+    default: {
+      MARISA_THROW(MARISA_PARAM_ERROR);
+    }
+  }
 }
 
-bool Tail::build(const std::vector<char *> &keys,
-    std::vector<UInt32> *offsets) {
-  return build_tail(keys, offsets);
-}
-
-bool Tail::build(const std::vector<std::string> &keys,
-    std::vector<UInt32> *offsets) {
-  return build_tail(keys, offsets);
-}
-
-bool Tail::build(const std::vector<String> &keys,
-    std::vector<UInt32> *offsets) {
-  return build_tail(keys, offsets);
-}
-
-bool Tail::mmap(Mapper *mapper, const char *filename,
+void Tail::mmap(Mapper *mapper, const char *filename,
     long offset, int whence) {
+  if (mapper == NULL) {
+    MARISA_THROW(MARISA_PARAM_ERROR);
+  }
   Mapper temp_mapper;
-  if (!temp_mapper.open(filename, offset, whence) || !map(&temp_mapper)) {
-    return false;
-  }
+  temp_mapper.open(filename, offset, whence);
+  map(temp_mapper);
   temp_mapper.swap(mapper);
-  return true;
 }
 
-bool Tail::map(const void *ptr) {
-  Mapper mapper(ptr);
-  return map(&mapper);
-}
-
-bool Tail::map(const void *ptr, std::size_t size) {
+void Tail::map(const void *ptr, std::size_t size) {
   Mapper mapper(ptr, size);
-  return map(&mapper);
+  map(mapper);
 }
 
-bool Tail::map(Mapper *mapper) {
+void Tail::map(Mapper &mapper) {
   Tail temp;
-  if (!temp.buf_.map(mapper)) {
-    return false;
-  }
+  temp.buf_.map(mapper);
   temp.swap(this);
-  return true;
 }
 
-bool Tail::load(const char *filename, long offset, int whence) {
+void Tail::load(const char *filename, long offset, int whence) {
   Reader reader;
-  if (!reader.open(filename, offset, whence)) {
-    return false;
-  }
-  return read(&reader);
+  reader.open(filename, offset, whence);
+  read(reader);
 }
 
-bool Tail::read(int fd) {
-  Reader reader(fd);
-  return read(&reader);
-}
-
-bool Tail::read(::FILE *file) {
+void Tail::fread(::FILE *file) {
   Reader reader(file);
-  return read(&reader);
+  read(reader);
 }
 
-bool Tail::read(std::istream *stream) {
-  Reader reader(stream);
-  return read(&reader);
+void Tail::read(int fd) {
+  Reader reader(fd);
+  read(reader);
 }
 
-bool Tail::read(Reader *reader) {
+void Tail::read(std::istream &stream) {
+  Reader reader(&stream);
+  read(reader);
+}
+
+void Tail::read(Reader &reader) {
   Tail temp;
-  if (!temp.buf_.read(reader)) {
-    return false;
-  }
+  temp.buf_.read(reader);
   temp.swap(this);
-  return true;
 }
 
-bool Tail::save(const char *filename, bool trunc_flag,
+void Tail::save(const char *filename, bool trunc_flag,
     long offset, int whence) const {
   Writer writer;
-  if (!writer.open(filename, trunc_flag, offset, whence)) {
-    return false;
-  }
-  return write(&writer);
+  writer.open(filename, trunc_flag, offset, whence);
+  write(writer);
 }
 
-bool Tail::write(int fd) const {
-  Writer writer(fd);
-  return write(&writer);
-}
-
-bool Tail::write(::FILE *file) const {
+void Tail::fwrite(::FILE *file) const {
   Writer writer(file);
-  return write(&writer);
+  write(writer);
 }
 
-bool Tail::write(std::ostream *stream) const {
-  Writer writer(stream);
-  return write(&writer);
+void Tail::write(int fd) const {
+  Writer writer(fd);
+  write(writer);
 }
 
-bool Tail::write(Writer *writer) const {
-  return buf_.write(writer);
+void Tail::write(std::ostream &stream) const {
+  Writer writer(&stream);
+  write(writer);
+}
+
+void Tail::write(Writer &writer) const {
+  buf_.write(writer);
 }
 
 void Tail::clear() {
@@ -125,38 +108,65 @@ void Tail::swap(Tail *rhs) {
   buf_.swap(&rhs->buf_);
 }
 
-template <typename T>
-bool Tail::build_tail(const std::vector<T> &keys,
-    std::vector<UInt32> *offsets) {
-  typedef std::pair<RString, UInt32> KeyAndID;
-
+void Tail::build_binary_tail(const Vector<String> &keys,
+    Vector<UInt32> *offsets) {
   if (keys.empty()) {
-    buf_.clear();
-    if (offsets != NULL) {
-      std::vector<UInt32>().swap(*offsets);
-    }
-    return true;
+    build_empty_tail(offsets);
+    return;
   }
-
-  std::vector<KeyAndID> pairs(keys.size());
-  for (std::size_t i = 0; i < keys.size(); ++i) {
-    String str(keys[i]);
-    for (std::size_t j = 0; j < str.length(); ++j) {
-      if (str[j] == '\0') {
-        return false;
-      }
-    }
-    pairs[i].first = RString(str);
-    pairs[i].second = i;
-  }
-  std::sort(pairs.begin(), pairs.end(), std::greater<KeyAndID>());
 
   Vector<UInt8> buf;
-  std::vector<UInt32> temp_offsets(pairs.size(), 0);
-  KeyAndID dummy_key;
-  const KeyAndID *last = &dummy_key;
+  buf.push_back('\0');
+
+  Vector<UInt32> temp_offsets;
+  temp_offsets.resize(keys.size() + 1);
+
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    temp_offsets[i] = buf.size();
+    for (std::size_t j = 0; j < keys[i].length(); ++j) {
+      buf.push_back(keys[i][j]);
+    }
+  }
+  temp_offsets.back() = buf.size();
+  buf.shrink();
+
+  if (offsets != NULL) {
+    temp_offsets.swap(offsets);
+  }
+  buf_.swap(&buf);
+}
+
+void Tail::build_text_tail(const Vector<String> &keys,
+    Vector<UInt32> *offsets) {
+  if (keys.empty()) {
+    build_empty_tail(offsets);
+    return;
+  }
+
+  typedef std::pair<RString, UInt32> KeyIdPair;
+  Vector<KeyIdPair> pairs;
+  pairs.resize(keys.size());
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    for (std::size_t j = 0; j < keys[i].length(); ++j) {
+      if (keys[i][j] == '\0') {
+        MARISA_THROW(MARISA_PARAM_ERROR);
+      }
+    }
+    pairs[i].first = RString(keys[i]);
+    pairs[i].second = i;
+  }
+  std::sort(pairs.begin(), pairs.end(), std::greater<KeyIdPair>());
+
+  Vector<UInt8> buf;
+  buf.push_back('T');
+
+  Vector<UInt32> temp_offsets;
+  temp_offsets.resize(pairs.size(), 1);
+
+  const KeyIdPair dummy_key;
+  const KeyIdPair *last = &dummy_key;
   for (std::size_t i = 0; i < pairs.size(); ++i) {
-    const KeyAndID &cur = pairs[i];
+    const KeyIdPair &cur = pairs[i];
     std::size_t match = 0;
     while ((match < cur.first.length()) && (match < last->first.length()) &&
         last->first[match] == cur.first[match]) {
@@ -166,7 +176,7 @@ bool Tail::build_tail(const std::vector<T> &keys,
       temp_offsets[cur.second] = temp_offsets[last->second]
           + (last->first.length() - match);
     } else {
-      temp_offsets[cur.second] = buf.num_objs();
+      temp_offsets[cur.second] = buf.size();
       for (std::size_t j = 1; j <= cur.first.length(); ++j) {
         buf.push_back(cur.first[cur.first.length() - j]);
       }
@@ -177,10 +187,16 @@ bool Tail::build_tail(const std::vector<T> &keys,
   buf.shrink();
 
   if (offsets != NULL) {
-    offsets->swap(temp_offsets);
+    temp_offsets.swap(offsets);
   }
   buf_.swap(&buf);
-  return true;
+}
+
+void Tail::build_empty_tail(Vector<UInt32> *offsets) {
+  buf_.clear();
+  if (offsets != NULL) {
+    offsets->clear();
+  }
 }
 
 }  // namespace marisa

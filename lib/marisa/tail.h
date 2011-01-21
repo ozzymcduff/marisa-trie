@@ -1,8 +1,8 @@
 #ifndef MARISA_TAIL_H_
 #define MARISA_TAIL_H_
 
-#include "./string.h"
-#include "./vector.h"
+#include "string.h"
+#include "vector.h"
 
 namespace marisa {
 
@@ -10,46 +10,44 @@ class Tail {
  public:
   Tail();
 
-  bool build(const std::vector<const char *> &keys,
-      std::vector<UInt32> *offsets);
-  bool build(const std::vector<char *> &keys,
-      std::vector<UInt32> *offsets);
-  bool build(const std::vector<std::string> &keys,
-      std::vector<UInt32> *offsets);
-  bool build(const std::vector<String> &keys,
-      std::vector<UInt32> *offsets);
+  void build(const Vector<String> &keys,
+      Vector<UInt32> *offsets, int mode);
 
-  bool mmap(Mapper *mapper, const char *filename,
+  void mmap(Mapper *mapper, const char *filename,
       long offset = 0, int whence = SEEK_SET);
-  bool map(const void *ptr);
-  bool map(const void *ptr, std::size_t size);
-  bool map(Mapper *mapper);
+  void map(const void *ptr, std::size_t size);
+  void map(Mapper &mapper);
 
-  bool load(const char *filename, long offset = 0, int whence = SEEK_SET);
-  bool read(int fd);
-  bool read(::FILE *file);
-  bool read(std::istream *stream);
-  bool read(Reader *reader);
+  void load(const char *filename,
+      long offset = 0, int whence = SEEK_SET);
+  void fread(::FILE *file);
+  void read(int fd);
+  void read(std::istream &stream);
+  void read(Reader &reader);
 
-  bool save(const char *filename, bool trunc_flag = true,
+  void save(const char *filename, bool trunc_flag = true,
       long offset = 0, int whence = SEEK_SET) const;
-  bool write(int fd) const;
-  bool write(::FILE *file) const;
-  bool write(std::ostream *stream) const;
-  bool write(Writer *writer) const;
+  void fwrite(::FILE *file) const;
+  void write(int fd) const;
+  void write(std::ostream &stream) const;
+  void write(Writer &writer) const;
 
-  const UInt8 *operator[](UInt32 offset) const {
+  const UInt8 *operator[](std::size_t offset) const {
+    MARISA_DEBUG_IF(offset >= buf_.size(), MARISA_PARAM_ERROR);
     return &buf_[offset];
   }
 
-  UInt32 num_objs() const {
-    return buf_.num_objs();
+  int mode() const {
+    return (buf_.front() == '\0') ? MARISA_BINARY_TAIL : MARISA_TEXT_TAIL;
   }
   bool empty() const {
     return buf_.empty();
   }
   std::size_t size() const {
     return buf_.size();
+  }
+  std::size_t total_size() const {
+    return buf_.total_size();
   }
 
   void clear();
@@ -58,9 +56,11 @@ class Tail {
  private:
   Vector<UInt8> buf_;
 
-  template <typename T>
-  bool build_tail(const std::vector<T> &keys,
-      std::vector<UInt32> *offsets);
+  void build_binary_tail(const Vector<String> &keys,
+      Vector<UInt32> *offsets);
+  void build_text_tail(const Vector<String> &keys,
+      Vector<UInt32> *offsets);
+  void build_empty_tail(Vector<UInt32> *offsets);
 
   // Disallows copy and assignment.
   Tail(const Tail &);

@@ -1,4 +1,5 @@
 #include <cassert>
+#include <string>
 
 #include <marisa/string.h>
 
@@ -27,7 +28,7 @@ int main() {
   assert(rstr[2] == s[0]);
 
   std::string s2 = "defg";
-  str = marisa::String(s2);
+  str = marisa::String(s2.c_str(), (marisa::UInt32)s2.length());
   assert(str.ptr() == s2.c_str());
   assert(str.length() == 4);
   assert(str[0] == s2[0]);

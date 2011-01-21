@@ -1,7 +1,7 @@
 #ifndef MARISA_CELL_H_
 #define MARISA_CELL_H_
 
-#include "./base.h"
+#include "base.h"
 
 namespace marisa {
 

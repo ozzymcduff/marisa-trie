@@ -15,10 +15,11 @@ namespace {
 
 typedef std::pair<std::string, double> Key;
 
-marisa::UInt32 max_num_tries = 10;
-bool patricia_flag = true;
-bool tail_flag = true;
-bool weight_order_flag = true;
+int param_min_num_tries = 1;
+int param_max_num_tries = 10;
+int param_trie = MARISA_DEFAULT_TRIE;
+int param_tail = MARISA_DEFAULT_TAIL;
+int param_order = MARISA_DEFAULT_ORDER;
 bool speed_flag = true;
 
 class Clock {
@@ -41,11 +42,14 @@ class Clock {
 void print_help(const char *cmd) {
   std::cerr << "Usage: " << cmd << " [OPTION]... [FILE]...\n\n"
       "Options:\n"
+      "  -N, --min-num-tries=[N]  limits the number of tries to N"
+      " (default: 1)\n"
       "  -n, --max-num-tries=[N]  limits the number of tries to N"
       " (default: 10)\n"
       "  -P, --patricia-trie  build patricia tries (default)\n"
       "  -p, --prefix-trie    build prefix tries\n"
-      "  -T, --with-tail      build a dictionary with TAIL (default)\n"
+      "  -T, --text-tail      build a dictionary with text TAIL (default)\n"
+      "  -b, --binary-tail    build a dictionary with binary TAIL\n"
       "  -t, --without-tail   build a dictionary without TAIL\n"
       "  -w, --weight-order   arranges siblings in weight order (default)\n"
       "  -l, --label-order    arranges siblings in label order\n"
@@ -56,24 +60,44 @@ void print_help(const char *cmd) {
 }
 
 void print_config() {
-  std::cout << "max. #tries: " << max_num_tries << std::endl;
+  std::cout << "max. #tries: " << param_min_num_tries
+      << " - " << param_max_num_tries << std::endl;
 
-  if (patricia_flag) {
-    std::cout << "patricia: on" << std::endl;
-  } else {
-    std::cout << "patricia: off" << std::endl;
+  switch (param_trie) {
+    case MARISA_PATRICIA_TRIE: {
+      std::cout << "trie: patricia" << std::endl;
+      break;
+    }
+    case MARISA_PREFIX_TRIE: {
+      std::cout << "trie: prefix" << std::endl;
+      break;
+    }
   }
 
-  if (tail_flag) {
-    std::cout << "tail: on" << std::endl;
-  } else {
-    std::cout << "tail: off" << std::endl;
+  switch (param_tail) {
+    case MARISA_WITHOUT_TAIL: {
+      std::cout << "tail: no" << std::endl;
+      break;
+    }
+    case MARISA_BINARY_TAIL: {
+      std::cout << "tail: binary" << std::endl;
+      break;
+    }
+    case MARISA_TEXT_TAIL: {
+      std::cout << "tail: text" << std::endl;
+      break;
+    }
   }
 
-  if (weight_order_flag) {
-    std::cout << "weight order: on" << std::endl;
-  } else {
-    std::cout << "weight order: off" << std::endl;
+  switch (param_order) {
+    case MARISA_LABEL_ORDER: {
+      std::cout << "order: label" << std::endl;
+      break;
+    }
+    case MARISA_WEIGHT_ORDER: {
+      std::cout << "order: weight" << std::endl;
+      break;
+    }
   }
 }
 
@@ -137,13 +161,13 @@ int read_keys(const char * const *args, std::size_t num_args,
   return 0;
 }
 
-void benchmark_build(const std::vector<Key> &keys, marisa::UInt32 num_tries,
+void benchmark_build(const std::vector<Key> &keys, int num_tries,
     marisa::Trie *trie, std::vector<marisa::UInt32> *key_ids) {
   Clock cl;
-  trie->build(keys, key_ids, num_tries,
-      patricia_flag, tail_flag, weight_order_flag);
-  std::printf(" %8lu", static_cast<unsigned long>(trie->num_nodes()));
-  std::printf(" %9lu", static_cast<unsigned long>(trie->size()));
+  trie->build(keys, key_ids, num_tries
+      | param_trie | param_tail | param_order);
+  std::printf(" %8lu", (unsigned long)trie->num_nodes());
+  std::printf(" %9lu", (unsigned long)trie->total_size());
   print_time_info(keys.size(), cl.elasped());
 }
 
@@ -200,7 +224,8 @@ void benchmark_predict_breadth_first(const marisa::Trie &trie,
   std::vector<marisa::UInt32> found_key_ids;
   for (std::size_t i = 0; i < keys.size(); ++i) {
     found_key_ids.clear();
-    marisa::UInt32 num_keys = trie.predict(keys[i].first, &found_key_ids);
+    marisa::UInt32 num_keys = trie.predict_breadth_first(
+        keys[i].first, &found_key_ids);
     if ((num_keys == 0) || (found_key_ids.front() != key_ids[i])) {
       std::cerr << "error: predict() failed" << std::endl;
       return;
@@ -216,7 +241,7 @@ void benchmark_predict_depth_first(const marisa::Trie &trie,
   std::vector<marisa::UInt32> found_key_ids;
   for (std::size_t i = 0; i < keys.size(); ++i) {
     found_key_ids.clear();
-    marisa::UInt32 num_keys = trie.predict(
+    marisa::UInt32 num_keys = trie.predict_depth_first(
         keys[i].first, &found_key_ids, NULL);
     if ((num_keys == 0) || (found_key_ids.front() != key_ids[i])) {
       std::cerr << "error: predict() failed" << std::endl;
@@ -226,20 +251,22 @@ void benchmark_predict_depth_first(const marisa::Trie &trie,
   print_time_info(keys.size(), cl.elasped());
 }
 
-void benchmark(const std::vector<Key> &keys, marisa::UInt32 num_tries) {
+void benchmark(const std::vector<Key> &keys, int num_tries) {
   std::printf("%6d", num_tries);
   marisa::Trie trie;
   std::vector<marisa::UInt32> key_ids;
   benchmark_build(keys, num_tries, &trie, &key_ids);
-  benchmark_restore(trie, keys, key_ids);
-  benchmark_lookup(trie, keys, key_ids);
-  benchmark_find(trie, keys, key_ids);
-  benchmark_predict_breadth_first(trie, keys, key_ids);
-  benchmark_predict_depth_first(trie, keys, key_ids);
+  if (!trie.empty()) {
+    benchmark_restore(trie, keys, key_ids);
+    benchmark_lookup(trie, keys, key_ids);
+    benchmark_find(trie, keys, key_ids);
+    benchmark_predict_breadth_first(trie, keys, key_ids);
+    benchmark_predict_depth_first(trie, keys, key_ids);
+  }
   std::printf("\n");
 }
 
-int benchmark(const char * const *args, std::size_t num_args) {
+int benchmark(const char * const *args, std::size_t num_args) try {
   std::vector<Key> keys;
   int ret = read_keys(args, num_args, &keys);
   if (ret != 0) {
@@ -262,12 +289,16 @@ int benchmark(const char * const *args, std::size_t num_args) {
   }
   std::printf("------+--------+---------+-------+"
       "-------+-------+-------+-------+-------\n");
-  for (marisa::UInt32 i = 1; i <= max_num_tries; ++i) {
+  for (int i = param_min_num_tries; i <= param_max_num_tries; ++i) {
     benchmark(keys, i);
   }
   std::printf("------+--------+---------+-------+"
       "-------+-------+-------+-------+-------\n");
   return 0;
+} catch (const marisa::Exception &ex) {
+  std::cerr << ex.filename() << ':' << ex.line()
+      << ": " << ex.what() << std::endl;
+  return -1;
 }
 
 }  // namespace
@@ -290,43 +321,58 @@ int main(int argc, char *argv[]) {
     { NULL, 0, NULL, 0 }
   };
   ::cmdopt_t cmdopt;
-  ::cmdopt_init(&cmdopt, argc, argv, "n:PpTtwlSso:h", long_options);
+  ::cmdopt_init(&cmdopt, argc, argv, "N:n:PpTbtwlSso:h", long_options);
   int label;
   while ((label = ::cmdopt_get(&cmdopt)) != -1) {
     switch (label) {
+      case 'N': {
+        char *end_of_value;
+        long value = std::strtol(cmdopt.optarg, &end_of_value, 10);
+        if ((*end_of_value != '\0') || (value <= 0) ||
+            (value > MARISA_MAX_NUM_TRIES)) {
+          std::cerr << "error: option `-n' with an invalid argument: "
+              << cmdopt.optarg << std::endl;
+        }
+        param_min_num_tries = (int)value;
+        break;
+      }
       case 'n': {
         char *end_of_value;
         long value = std::strtol(cmdopt.optarg, &end_of_value, 10);
         if ((*end_of_value != '\0') || (value <= 0) ||
-            (static_cast<unsigned long>(value) > 0xFFFFFFFFUL)) {
+            (value > MARISA_MAX_NUM_TRIES)) {
           std::cerr << "error: option `-n' with an invalid argument: "
               << cmdopt.optarg << std::endl;
         }
-        max_num_tries = static_cast<marisa::UInt32>(value);
+        param_max_num_tries = (int)value;
         break;
       }
       case 'P': {
-        patricia_flag = true;
+        param_trie = MARISA_PATRICIA_TRIE;
         break;
       }
       case 'p': {
-        patricia_flag = false;
+        param_trie = MARISA_PREFIX_TRIE;
         break;
       }
       case 'T': {
-        tail_flag = true;
+        param_tail = MARISA_TEXT_TAIL;
+        break;
+      }
+      case 'b': {
+        param_tail = MARISA_BINARY_TAIL;
         break;
       }
       case 't': {
-        tail_flag = false;
+        param_tail = MARISA_WITHOUT_TAIL;
         break;
       }
       case 'w': {
-        weight_order_flag = true;
+        param_order = MARISA_WEIGHT_ORDER;
         break;
       }
       case 'l': {
-        weight_order_flag = false;
+        param_order = MARISA_LABEL_ORDER;
         break;
       }
       case 'S': {
