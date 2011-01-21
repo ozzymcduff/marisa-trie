@@ -1,22 +1,19 @@
 #ifndef MARISA_POPCOUNT_H_
 #define MARISA_POPCOUNT_H_
 
-#include "./base.h"
+#include "base.h"
 
 namespace marisa {
 
 class PopCount {
  public:
-  PopCount(UInt32 x) : value_(x) {
-    value_ = (value_ & 0x55555555U) + ((value_ >> 1) & 0x55555555U);
-    value_ = (value_ & 0x33333333U) + ((value_ >> 2) & 0x33333333U);
-    value_ = (value_ + (value_ >> 4)) & 0x0F0F0F0FU;
-    value_ += value_ << 8;
-    value_ += value_ << 16;
-  }
-
-  operator UInt32() const {
-    return lo32();
+  PopCount(UInt32 x) : value_() {
+    x = (x & 0x55555555U) + ((x >> 1) & 0x55555555U);
+    x = (x & 0x33333333U) + ((x >> 2) & 0x33333333U);
+    x = (x + (x >> 4)) & 0x0F0F0F0FU;
+    x += x << 8;
+    x += x << 16;
+    value_ = x;
   }
 
   UInt32 lo8() const {

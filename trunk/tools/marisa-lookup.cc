@@ -32,13 +32,19 @@ int lookup(const char * const *args, std::size_t num_args) {
   marisa::Trie trie;
   marisa::Mapper mapper;
   if (mmap_flag) {
-    if (!trie.mmap(&mapper, args[0])) {
-      std::cerr << "error: failed to mmap tries: " << args[0] << std::endl;
+    try {
+      trie.mmap(&mapper, args[0]);
+    } catch (const marisa::Exception &ex) {
+      std::cerr << ex.filename() << ':' << ex.line() << ": " << ex.what()
+          << ": failed to mmap tries: " << args[0] << std::endl;
       return 20;
     }
   } else {
-    if (!trie.load(args[0])) {
-      std::cerr << "error: failed to load tries: " << args[0] << std::endl;
+    try {
+      trie.load(args[0]);
+    } catch (const marisa::Exception &ex) {
+      std::cerr << ex.filename() << ':' << ex.line() << ": " << ex.what()
+          << ": failed to load tries: " << args[0] << std::endl;
       return 21;
     }
   }

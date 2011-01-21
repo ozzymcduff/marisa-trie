@@ -3,14 +3,12 @@
 
 #include <string>
 
-#include "./base.h"
+#include "base.h"
 
 namespace marisa {
 
 class Query {
  public:
-  explicit Query(const std::string &str)
-      : ptr_(str.c_str()), length_(str.length()) {}
   Query(const char *ptr, std::size_t length) : ptr_(ptr), length_(length) {}
   Query(const Query &query) : ptr_(query.ptr_), length_(query.length_) {}
 
@@ -19,9 +17,11 @@ class Query {
   }
 
   UInt8 operator[](std::size_t i) const {
+    MARISA_DEBUG_IF(i >= length_, MARISA_PARAM_ERROR);
     return ptr_[i];
   }
   bool ends_at(std::size_t i) const {
+    MARISA_DEBUG_IF(i > length_, MARISA_PARAM_ERROR);
     return i == length_;
   }
 

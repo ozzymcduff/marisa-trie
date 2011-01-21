@@ -21,13 +21,11 @@ int main() {
   assert(marisa::PopCount(0).lo16() == 0);
   assert(marisa::PopCount(0).lo24() == 0);
   assert(marisa::PopCount(0).lo32() == 0);
-  assert(marisa::PopCount(0) == 0);
 
   assert(marisa::PopCount(0xFFFFFFFFU).lo8() == 8);
   assert(marisa::PopCount(0xFFFFFFFFU).lo16() == 16);
   assert(marisa::PopCount(0xFFFFFFFFU).lo24() == 24);
   assert(marisa::PopCount(0xFFFFFFFFU).lo32() == 32);
-  assert(marisa::PopCount(0xFFFFFFFFU) == 32);
 
   for (std::size_t i = 0; i < 1000; ++i) {
     marisa::UInt32 value = std::rand();
@@ -36,7 +34,6 @@ int main() {
     assert(popcount.lo16() == Count(value & 0xFFFFU));
     assert(popcount.lo24() == Count(value & 0xFFFFFFU));
     assert(popcount.lo32() == Count(value));
-    assert(popcount == Count(value));
   }
   return 0;
 }

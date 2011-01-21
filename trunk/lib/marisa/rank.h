@@ -1,7 +1,7 @@
 #ifndef MARISA_RANK_H_
 #define MARISA_RANK_H_
 
-#include "./base.h"
+#include "base.h"
 
 namespace marisa {
 
@@ -38,25 +38,25 @@ class Rank {
     return abs_;
   }
   UInt32 rel1() const {
-    return rel_lo_ & 0x7F;
+    return rel_lo_ & 0x7FU;
   }
   UInt32 rel2() const {
-    return (rel_lo_ >> 7) & 0xFF;
+    return (rel_lo_ >> 7) & 0xFFU;
   }
   UInt32 rel3() const {
-    return (rel_lo_ >> 15) & 0xFF;
+    return (rel_lo_ >> 15) & 0xFFU;
   }
   UInt32 rel4() const {
     return rel_lo_ >> 23;
   }
   UInt32 rel5() const {
-    return rel_hi_ & 0x1FF;
+    return rel_hi_ & 0x1FFU;
   }
   UInt32 rel6() const {
-    return (rel_hi_ >> 9) & 0x1FF;
+    return (rel_hi_ >> 9) & 0x1FFU;
   }
   UInt32 rel7() const {
-    return (rel_hi_ >> 18) & 0x1FF;
+    return (rel_hi_ >> 18) & 0x1FFU;
   }
 
  private:

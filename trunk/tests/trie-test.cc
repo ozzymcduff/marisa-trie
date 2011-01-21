@@ -35,9 +35,10 @@ class PredictCallback {
   PredictCallback(const PredictCallback &callback)
       : key_ids_(callback.key_ids_), keys_(callback.keys_) {}
 
-  bool operator()(marisa::UInt32 key_id, const std::string &key) const {
+  bool operator()(marisa::UInt32 key_id, const char *key,
+      std::size_t key_length) const {
     key_ids_->push_back(key_id);
-    keys_->push_back(key);
+    keys_->push_back(std::string(key, key_length));
     return true;
   }
 
@@ -54,7 +55,7 @@ void TestTrie() {
   assert(trie.num_keys() == 0);
   assert(trie.num_tries() == 0);
   assert(trie.num_nodes() == 0);
-  assert(trie.size() == (sizeof(marisa::UInt32) * 22));
+  assert(trie.total_size() == (sizeof(marisa::UInt32) * 22));
 
   std::vector<std::string> keys;
   trie.build(keys);
@@ -69,7 +70,7 @@ void TestTrie() {
   keys.push_back("app");
 
   std::vector<marisa::UInt32> key_ids;
-  trie.build(keys, &key_ids, 0, false, false, false);
+  trie.build(keys, &key_ids, 1 | MARISA_WITHOUT_TAIL | MARISA_LABEL_ORDER);
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 1);
   assert(trie.num_nodes() == 11);
@@ -81,18 +82,25 @@ void TestTrie() {
   assert(key_ids[3] == 3);
   assert(key_ids[4] == 2);
 
+  char key_buf[256];
+  std::size_t key_length;
   for (std::size_t i = 0; i < keys.size(); ++i) {
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(keys[i] == key_buf);
   }
 
   trie.clear();
   assert(trie.num_keys() == 0);
   assert(trie.num_tries() == 0);
   assert(trie.num_nodes() == 0);
-  assert(trie.size() == (sizeof(marisa::UInt32) * 22));
+  assert(trie.total_size() == (sizeof(marisa::UInt32) * 22));
 
-  trie.build(keys, &key_ids, 1, false, false, true);
+  trie.build(keys, &key_ids, 1 | MARISA_WITHOUT_TAIL | MARISA_WEIGHT_ORDER);
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 1);
   assert(trie.num_nodes() == 11);
@@ -135,11 +143,27 @@ void TestTrie() {
   assert(lengths.size() == 1);
   assert(lengths[0] == 3);
 
+  ids.clear();
+  lengths.clear();
   assert(trie.find_callback("anderson", FindCallback(&ids, &lengths)) == 1);
-  assert(ids.size() == 4);
-  assert(ids[3] == trie["and"]);
-  assert(lengths.size() == 2);
-  assert(lengths[1] == 3);
+  assert(ids.size() == 1);
+  assert(ids[0] == trie["and"]);
+  assert(lengths.size() == 1);
+  assert(lengths[0] == 3);
+
+  assert(trie.predict("") == 4);
+  assert(trie.predict("a") == 3);
+  assert(trie.predict("ap") == 2);
+  assert(trie.predict("app") == 2);
+  assert(trie.predict("appl") == 1);
+  assert(trie.predict("apple") == 1);
+  assert(trie.predict("appleX") == 0);
+  assert(trie.predict("an") == 1);
+  assert(trie.predict("and") == 1);
+  assert(trie.predict("andX") == 0);
+  assert(trie.predict("B") == 1);
+  assert(trie.predict("BX") == 0);
+  assert(trie.predict("X") == 0);
 
   ids.clear();
   assert(trie.predict("a", &ids) == 3);
@@ -168,18 +192,40 @@ void TestPrefixTrie() {
 
   marisa::Trie trie;
   std::vector<marisa::UInt32> key_ids;
-  trie.build(keys, &key_ids, 1, false, true, false);
+  trie.build(keys, &key_ids, 1 | MARISA_PREFIX_TRIE
+      | MARISA_TEXT_TAIL | MARISA_LABEL_ORDER);
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 1);
   assert(trie.num_nodes() == 7);
 
+  char key_buf[256];
+  std::size_t key_length;
   for (std::size_t i = 0; i < keys.size(); ++i) {
     assert(key_ids[i] == i);
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(keys[i] == key_buf);
   }
 
-  trie.build(keys, &key_ids, 2, false, false, true);
+  trie.restore(key_ids[0], NULL, 0, &key_length);
+  assert(key_length == keys[0].length());
+  try {
+    trie.restore(key_ids[0], NULL, 5, &key_length);
+    assert(false);
+  } catch (const marisa::Exception &ex) {
+    assert(ex.status() == MARISA_PARAM_ERROR);
+  }
+  trie.restore(key_ids[0], key_buf, 5, &key_length);
+  assert(key_length == keys[0].length());
+  trie.restore(key_ids[0], key_buf, 6, &key_length);
+  assert(key_length == keys[0].length());
+
+  trie.build(keys, &key_ids, 2 | MARISA_PREFIX_TRIE
+      | MARISA_WITHOUT_TAIL | MARISA_WEIGHT_ORDER);
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 2);
   assert(trie.num_nodes() == 16);
@@ -188,9 +234,28 @@ void TestPrefixTrie() {
     assert(key_ids[i] == i);
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(keys[i] == key_buf);
   }
 
-  trie.build(keys, &key_ids, 2, false, true, false);
+  trie.restore(key_ids[0], NULL, 0, &key_length);
+  assert(key_length == keys[0].length());
+  try {
+    trie.restore(key_ids[0], NULL, 5, &key_length);
+    assert(false);
+  } catch (const marisa::Exception &ex) {
+    assert(ex.status() == MARISA_PARAM_ERROR);
+  }
+  trie.restore(key_ids[0], key_buf, 5, &key_length);
+  assert(key_length == keys[0].length());
+  trie.restore(key_ids[0], key_buf, 6, &key_length);
+  assert(key_length == keys[0].length());
+
+  trie.build(keys, &key_ids, 2 | MARISA_PREFIX_TRIE
+      | MARISA_TEXT_TAIL | MARISA_LABEL_ORDER);
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 2);
   assert(trie.num_nodes() == 14);
@@ -199,13 +264,18 @@ void TestPrefixTrie() {
     assert(key_ids[i] == i);
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(keys[i] == key_buf);
   }
 
-  assert(trie.save("trie-test.dat"));
+  trie.save("trie-test.dat");
 
   trie.clear();
   marisa::Mapper mapper;
-  assert(trie.mmap(&mapper, "trie-test.dat"));
+  trie.mmap(&mapper, "trie-test.dat");
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 2);
   assert(trie.num_nodes() == 14);
@@ -214,13 +284,18 @@ void TestPrefixTrie() {
     assert(key_ids[i] == i);
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(keys[i] == key_buf);
   }
 
   std::stringstream stream;
-  assert(trie.write(&stream));
+  trie.write(stream);
 
   trie.clear();
-  assert(trie.read(&stream));
+  trie.read(stream);
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 2);
   assert(trie.num_nodes() == 14);
@@ -229,9 +304,15 @@ void TestPrefixTrie() {
     assert(key_ids[i] == i);
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(keys[i] == key_buf);
   }
 
-  trie.build(keys, &key_ids, 3, false, false, true);
+  trie.build(keys, &key_ids, 3 | MARISA_PREFIX_TRIE
+      | MARISA_WITHOUT_TAIL | MARISA_WEIGHT_ORDER);
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 3);
   assert(trie.num_nodes() == 19);
@@ -240,6 +321,11 @@ void TestPrefixTrie() {
     assert(key_ids[i] == i);
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(keys[i] == key_buf);
   }
 
   assert(trie["ca"] == trie.notfound());
@@ -262,13 +348,24 @@ void TestPrefixTrie() {
   assert(ids[0] == trie["car"]);
   assert(ids[1] == trie["caster"]);
 
-  std::vector<std::string> strs;
-  assert(trie.predict_callback("", PredictCallback(&ids, &strs)) == 4);
-  assert(ids.size() == 6);
+  assert(trie.predict("ca", &ids, NULL, 1) == 1);
+  assert(ids.size() == 3);
   assert(ids[2] == trie["car"]);
-  assert(ids[3] == trie["caster"]);
-  assert(ids[4] == trie["after"]);
-  assert(ids[5] == trie["bar"]);
+
+  ids.clear();
+  std::vector<std::string> strs;
+  assert(trie.predict("ca", &ids, &strs, 1) == 1);
+  assert(ids.size() == 1);
+  assert(ids[0] == trie["car"]);
+  assert(strs[0] == "car");
+
+  strs.clear();
+  assert(trie.predict_callback("", PredictCallback(&ids, &strs)) == 4);
+  assert(ids.size() == 5);
+  assert(ids[1] == trie["car"]);
+  assert(ids[2] == trie["caster"]);
+  assert(ids[3] == trie["after"]);
+  assert(ids[4] == trie["bar"]);
   assert(strs[0] == "car");
   assert(strs[1] == "caster");
   assert(strs[2] == "after");
@@ -285,7 +382,7 @@ void TestPatriciaTrie() {
 
   marisa::Trie trie;
   std::vector<marisa::UInt32> key_ids;
-  trie.build(keys, &key_ids, 1, true, true);
+  trie.build(keys, &key_ids, 1);
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 1);
   assert(trie.num_nodes() == 7);
@@ -297,12 +394,19 @@ void TestPatriciaTrie() {
   assert(key_ids[3] == 0);
   assert(key_ids[4] == 0);
 
+  char key_buf[256];
+  std::size_t key_length;
   for (std::size_t i = 0; i < keys.size(); ++i) {
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(keys[i] == key_buf);
   }
 
-  trie.build(keys, &key_ids, 2, true, false);
+  trie.build(keys, &key_ids, 2 | MARISA_WITHOUT_TAIL);
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 2);
   assert(trie.num_nodes() == 17);
@@ -310,9 +414,14 @@ void TestPatriciaTrie() {
   for (std::size_t i = 0; i < keys.size(); ++i) {
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(keys[i] == key_buf);
   }
 
-  trie.build(keys, &key_ids, 2, true, true);
+  trie.build(keys, &key_ids, 2);
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 2);
   assert(trie.num_nodes() == 14);
@@ -320,9 +429,14 @@ void TestPatriciaTrie() {
   for (std::size_t i = 0; i < keys.size(); ++i) {
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(keys[i] == key_buf);
   }
 
-  trie.build(keys, &key_ids, 3, true, false);
+  trie.build(keys, &key_ids, 3 | MARISA_WITHOUT_TAIL);
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 3);
   assert(trie.num_nodes() == 20);
@@ -330,13 +444,18 @@ void TestPatriciaTrie() {
   for (std::size_t i = 0; i < keys.size(); ++i) {
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(keys[i] == key_buf);
   }
 
   std::stringstream stream;
-  trie.write(&stream);
+  trie.write(stream);
   trie.clear();
 
-  trie.read(&stream);
+  trie.read(stream);
   assert(trie.num_keys() == 4);
   assert(trie.num_tries() == 3);
   assert(trie.num_nodes() == 20);
@@ -344,6 +463,11 @@ void TestPatriciaTrie() {
   for (std::size_t i = 0; i < keys.size(); ++i) {
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(keys[i] == key_buf);
   }
 }
 
@@ -383,11 +507,13 @@ void TestEmptyString() {
   assert(lengths.size() == 1);
   assert(lengths[0] == 0);
 
+  ids.clear();
+  lengths.clear();
   assert(trie.find_callback("xyz", FindCallback(&ids, &lengths)) == 1);
-  assert(ids.size() == 3);
-  assert(ids[2] == trie[""]);
-  assert(lengths.size() == 2);
-  assert(lengths[1] == 0);
+  assert(ids.size() == 1);
+  assert(ids[0] == trie[""]);
+  assert(lengths.size() == 1);
+  assert(lengths[0] == 0);
 
   ids.clear();
   assert(trie.predict("xyz", &ids) == 0);
@@ -413,29 +539,68 @@ void TestBinaryKey() {
 
   marisa::Trie trie;
   std::vector<marisa::UInt32> key_ids;
-  trie.build(keys, &key_ids, 1, false, false);
+  trie.build(keys, &key_ids, 1 | MARISA_WITHOUT_TAIL);
   assert(trie.num_keys() == 1);
   assert(trie.num_tries() == 1);
   assert(trie.num_nodes() == 8);
 
   assert(key_ids.size() == 1);
+  char key_buf[256];
+  std::size_t key_length;
   for (std::size_t i = 0; i < keys.size(); ++i) {
     assert(key_ids[i] == i);
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(std::string(key_buf, key_length) == keys[i]);
   }
 
-  trie.build(keys, &key_ids, 1, false, true);
+  trie.build(keys, &key_ids, 1 | MARISA_PREFIX_TRIE | MARISA_BINARY_TAIL);
   assert(trie.num_keys() == 1);
-  assert(trie.num_tries() == 2);
-  assert(trie.num_nodes() == 10);
+  assert(trie.num_tries() == 1);
+  assert(trie.num_nodes() == 2);
 
   assert(key_ids.size() == 1);
   for (std::size_t i = 0; i < keys.size(); ++i) {
     assert(key_ids[i] == i);
     assert(trie[keys[i]] == key_ids[i]);
     assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(std::string(key_buf, key_length) == keys[i]);
   }
+
+  trie.build(keys, &key_ids, 1 | MARISA_PREFIX_TRIE | MARISA_TEXT_TAIL);
+  assert(trie.num_keys() == 1);
+  assert(trie.num_tries() == 1);
+  assert(trie.num_nodes() == 2);
+
+  assert(key_ids.size() == 1);
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    assert(key_ids[i] == i);
+    assert(trie[keys[i]] == key_ids[i]);
+    assert(trie[key_ids[i]] == keys[i]);
+
+    trie.restore(key_ids[i], key_buf,
+        (marisa::UInt32)sizeof(key_buf), &key_length);
+    assert(key_length == keys[i].length());
+    assert(std::string(key_buf, key_length) == keys[i]);
+  }
+
+  std::vector<marisa::UInt32> ids;
+  assert(trie.predict_breadth_first("", &ids) == 1);
+  assert(ids[0] == key_ids[0]);
+
+  ids.clear();
+  std::vector<std::string> strs;
+  assert(trie.predict_depth_first("NP", &ids, &strs) == 1);
+  assert(ids[0] == key_ids[0]);
+  assert(strs[0] == keys[0]);
 }
 
 }  // namespace

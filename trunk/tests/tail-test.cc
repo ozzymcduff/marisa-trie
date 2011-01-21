@@ -5,116 +5,150 @@
 
 int main() {
   marisa::Tail tail;
-  assert(tail.num_objs() == 0);
+  assert(tail.size() == 0);
   assert(tail.empty());
-  assert(tail.size() == sizeof(marisa::UInt32));
+  assert(tail.total_size() == sizeof(marisa::UInt32));
 
-  std::vector<std::string> keys;
+  marisa::Vector<marisa::String> keys;
 
-  assert(tail.build(keys, NULL));
-  assert(tail.num_objs() == 0);
+  tail.build(keys, NULL, MARISA_BINARY_TAIL);
+  assert(tail.size() == 0);
   assert(tail.empty());
-  assert(tail.size() == sizeof(marisa::UInt32));
+  assert(tail.total_size() == sizeof(marisa::UInt32));
 
-  keys.push_back("");
+  tail.build(keys, NULL, MARISA_TEXT_TAIL);
+  assert(tail.size() == 0);
+  assert(tail.empty());
+  assert(tail.total_size() == sizeof(marisa::UInt32));
 
-  std::vector<marisa::UInt32> offsets;
-  assert(tail.build(keys, &offsets));
+  keys.push_back(marisa::String(""));
 
-  assert(tail.num_objs() == 1);
+  marisa::Vector<marisa::UInt32> offsets;
+  tail.build(keys, &offsets, MARISA_BINARY_TAIL);
+
+  assert(tail.size() == 1);
+  assert(tail.mode() == MARISA_BINARY_TAIL);
   assert(!tail.empty());
-  assert(tail.size() == (sizeof(marisa::UInt32) + 1));
-  assert(offsets.size() == 1);
-  assert(offsets[0] == 0);
-  assert(keys[0] == reinterpret_cast<const char *>(tail[offsets[0]]));
+  assert(tail.total_size() == (sizeof(marisa::UInt32) + tail.size()));
+  assert(offsets.size() == keys.size() + 1);
+  assert(offsets[0] == 1);
+  assert(offsets[1] == tail.size());
 
-  keys.clear();
-  char binary_key[] = { 'N', 'P', '\0', 'T', 'r', 'i', 'e' };
-  keys.push_back(std::string(binary_key, sizeof(binary_key)));
-  assert(!tail.build(keys, &offsets));
+  tail.build(keys, &offsets, MARISA_TEXT_TAIL);
 
-  keys.clear();
-  keys.push_back("abc");
-  keys.push_back("bc");
-  keys.push_back("abc");
-  keys.push_back("c");
-  keys.push_back("ABC");
-  keys.push_back("AB");
-
-  assert(tail.build(keys, NULL));
-  assert(tail.num_objs() == 11);
+  assert(tail.size() == 2);
+  assert(tail.mode() == MARISA_TEXT_TAIL);
   assert(!tail.empty());
-  assert(tail.size() == (sizeof(marisa::UInt32) + 11));
-
-  assert(tail.build(keys, &offsets));
-  assert(tail.num_objs() == 11);
-  assert(!tail.empty());
-  assert(tail.size() == (sizeof(marisa::UInt32) + 11));
+  assert(tail.total_size() == (sizeof(marisa::UInt32) + tail.size()));
   assert(offsets.size() == keys.size());
-  for (std::size_t i = 0; i < keys.size(); ++i) {
-    assert(keys[i] == reinterpret_cast<const char *>(tail[offsets[i]]));
+  assert(offsets[0] == 1);
+  assert(*tail[offsets[0]] == '\0');
+
+  const char binary_key[] = { 'N', 'P', '\0', 'T', 'r', 'i', 'e' };
+  keys[0] = marisa::String(binary_key, sizeof(binary_key));
+  try {
+    tail.build(keys, &offsets, MARISA_TEXT_TAIL);
+    assert(false);
+  } catch (const marisa::Exception &ex) {
+    assert(ex.status() == MARISA_PARAM_ERROR);
   }
 
-  assert(tail.save("tail-test.dat"));
+  tail.build(keys, &offsets, MARISA_BINARY_TAIL);
+
+  assert(tail.size() == sizeof(binary_key) + 1);
+  assert(tail.mode() == MARISA_BINARY_TAIL);
+  assert(!tail.empty());
+  assert(tail.total_size() == (sizeof(marisa::UInt32) + tail.size()));
+  assert(offsets.size() == keys.size() + 1);
+  assert(offsets[0] == 1);
+  assert(offsets[1] == tail.size());
+
+  keys.clear();
+  keys.push_back(marisa::String("abc"));
+  keys.push_back(marisa::String("bc"));
+  keys.push_back(marisa::String("abc"));
+  keys.push_back(marisa::String("c"));
+  keys.push_back(marisa::String("ABC"));
+  keys.push_back(marisa::String("AB"));
+
+  tail.build(keys, NULL, MARISA_BINARY_TAIL);
+  assert(tail.size() == 15);
+  assert(tail.mode() == MARISA_BINARY_TAIL);
+  assert(!tail.empty());
+  assert(tail.total_size() == (sizeof(marisa::UInt32) + tail.size()));
+
+  tail.build(keys, &offsets, MARISA_BINARY_TAIL);
+  assert(tail.size() == 15);
+  assert(tail.mode() == MARISA_BINARY_TAIL);
+  assert(!tail.empty());
+  assert(tail.total_size() == (sizeof(marisa::UInt32) + tail.size()));
+  assert(offsets.size() == 7);
+  for (marisa::UInt32 i = 0; i < keys.size(); ++i) {
+    assert(marisa::String(reinterpret_cast<const char *>(tail[offsets[i]]),
+        offsets[i + 1] - offsets[i]) == keys[i]);
+  }
+
+  tail.build(keys, NULL, MARISA_TEXT_TAIL);
+  assert(tail.size() == 12);
+  assert(tail.mode() == MARISA_TEXT_TAIL);
+  assert(!tail.empty());
+  assert(tail.total_size() == (sizeof(marisa::UInt32) + tail.size()));
+
+  tail.build(keys, &offsets, MARISA_TEXT_TAIL);
+  assert(tail.size() == 12);
+  assert(tail.mode() == MARISA_TEXT_TAIL);
+  assert(!tail.empty());
+  assert(tail.total_size() == (sizeof(marisa::UInt32) + tail.size()));
+  assert(offsets.size() == keys.size());
+  for (marisa::UInt32 i = 0; i < keys.size(); ++i) {
+    assert(marisa::String(reinterpret_cast<const char *>(
+        tail[offsets[i]])) == keys[i]);
+  }
+
+  tail.save("tail-test.dat");
 
   tail.clear();
-  assert(tail.num_objs() == 0);
+  assert(tail.size() == 0);
   assert(tail.empty());
-  assert(tail.size() == sizeof(marisa::UInt32));
+  assert(tail.total_size() == sizeof(marisa::UInt32));
 
   marisa::Mapper mapper;
-  assert(tail.mmap(&mapper, "tail-test.dat"));
+  tail.mmap(&mapper, "tail-test.dat");
 
-  assert(tail.num_objs() == 11);
+  assert(tail.size() == 12);
+  assert(tail.mode() == MARISA_TEXT_TAIL);
   assert(!tail.empty());
-  assert(tail.size() == sizeof(marisa::UInt32) + 11);
-  for (std::size_t i = 0; i < keys.size(); ++i) {
-    assert(keys[i] == reinterpret_cast<const char *>(tail[offsets[i]]));
+  assert(tail.total_size() == sizeof(marisa::UInt32) + tail.size());
+  for (marisa::UInt32 i = 0; i < keys.size(); ++i) {
+    assert(marisa::String(reinterpret_cast<const char *>(
+        tail[offsets[i]])) == keys[i]);
   }
 
   tail.clear();
-  assert(tail.load("tail-test.dat"));
+  tail.load("tail-test.dat");
 
-  assert(tail.num_objs() == 11);
+  assert(tail.size() == 12);
+  assert(tail.mode() == MARISA_TEXT_TAIL);
   assert(!tail.empty());
-  assert(tail.size() == sizeof(marisa::UInt32) + 11);
-  for (std::size_t i = 0; i < keys.size(); ++i) {
-    assert(keys[i] == reinterpret_cast<const char *>(tail[offsets[i]]));
+  assert(tail.total_size() == sizeof(marisa::UInt32) + tail.size());
+  for (marisa::UInt32 i = 0; i < keys.size(); ++i) {
+    assert(marisa::String(reinterpret_cast<const char *>(
+        tail[offsets[i]])) == keys[i]);
   }
 
   std::stringstream stream;
-  assert(tail.write(&stream));
+  tail.write(stream);
 
   tail.clear();
+  tail.read(stream);
 
-  assert(tail.read(&stream));
-
-  assert(tail.num_objs() == 11);
+  assert(tail.size() == 12);
+  assert(tail.mode() == MARISA_TEXT_TAIL);
   assert(!tail.empty());
-  assert(tail.size() == (sizeof(marisa::UInt32) + 11));
-  for (std::size_t i = 0; i < keys.size(); ++i) {
-    assert(keys[i] == reinterpret_cast<const char *>(tail[offsets[i]]));
-  }
-
-  std::vector<const char *> keys2;
-
-  assert(tail.build(keys2, NULL));
-  assert(tail.num_objs() == 0);
-  assert(tail.empty());
-  assert(tail.size() == sizeof(marisa::UInt32));
-
-  for (std::size_t i = 0; i < keys.size(); ++i) {
-    keys2.push_back(keys[i].c_str());
-  }
-  std::vector<marisa::UInt32> offsets2;
-
-  assert(tail.build(keys2, &offsets2));
-  assert(tail.num_objs() == 11);
-  assert(!tail.empty());
-  assert(tail.size() == (sizeof(marisa::UInt32) + 11));
-  assert(offsets2 == offsets);
-  for (std::size_t i = 0; i < keys2.size(); ++i) {
-    assert(keys[i] == reinterpret_cast<const char *>(tail[offsets2[i]]));
+  assert(tail.total_size() == sizeof(marisa::UInt32) + tail.size());
+  for (marisa::UInt32 i = 0; i < keys.size(); ++i) {
+    assert(marisa::String(reinterpret_cast<const char *>(
+        tail[offsets[i]])) == keys[i]);
   }
 
   return 0;

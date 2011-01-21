@@ -3,6 +3,8 @@ AM_CXXFLAGS = -Wall -Weffc++
 lib_LIBRARIES = libmarisa.a
 
 libmarisa_a_SOURCES = \
+  marisa/base.cc \
+  marisa/progress.cc \
   marisa/reader.cc \
   marisa/writer.cc \
   marisa/mapper.cc \
@@ -19,7 +21,7 @@ libmarisa_include_HEADERS = \
   marisa/base.h \
   marisa/rank.h \
   marisa/popcount.h \
-  marisa/config.h \
+  marisa/progress.h \
   marisa/string.h \
   marisa/key.h \
   marisa/range.h \
@@ -30,6 +32,7 @@ libmarisa_include_HEADERS = \
   marisa/mapper.h \
   marisa/io.h \
   marisa/vector.h \
+  marisa/vector-inline.h \
   marisa/intvector.h \
   marisa/bitvector.h \
   marisa/tail.h \

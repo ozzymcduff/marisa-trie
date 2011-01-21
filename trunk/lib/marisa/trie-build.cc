@@ -1,89 +1,99 @@
 #include <algorithm>
 #include <functional>
 #include <queue>
+#include <stdexcept>
 
-#include "./range.h"
-#include "./trie.h"
+#include "range.h"
+#include "trie.h"
 
 namespace marisa {
 
-void Trie::build(const std::vector<const char *> &keys,
-    std::vector<UInt32> *key_ids, UInt32 max_num_tries,
-    bool patricia, bool tail, bool freq_order) {
-  build_from(keys, key_ids, Config(max_num_tries, patricia, tail, freq_order));
-}
-
-void Trie::build(const std::vector<char *> &keys,
-    std::vector<UInt32> *key_ids, UInt32 max_num_tries,
-    bool patricia, bool tail, bool freq_order) {
-  build_from(keys, key_ids, Config(max_num_tries, patricia, tail, freq_order));
+void Trie::build(const char * const *keys, std::size_t num_keys,
+    const std::size_t *key_lengths, const double *key_weights,
+    UInt32 *key_ids, int flags) {
+  MARISA_THROW_IF((keys == NULL) && (num_keys != 0), MARISA_PARAM_ERROR);
+  Vector<Key<String> > temp_keys;
+  temp_keys.resize(num_keys);
+  for (std::size_t i = 0; i < temp_keys.size(); ++i) {
+    MARISA_THROW_IF(keys[i] == NULL, MARISA_PARAM_ERROR);
+    std::size_t length = 0;
+    if (key_lengths == NULL) {
+      while (keys[i][length] != '\0') {
+        ++length;
+      }
+    } else {
+      length = key_lengths[i];
+    }
+    MARISA_THROW_IF(length > MARISA_MAX_LENGTH, MARISA_SIZE_ERROR);
+    temp_keys[i].set_str(String(keys[i], length));
+    temp_keys[i].set_weight((key_weights != NULL) ? key_weights[i] : 1.0);
+  }
+  build_trie(temp_keys, key_ids, flags);
 }
 
 void Trie::build(const std::vector<std::string> &keys,
-    std::vector<UInt32> *key_ids, UInt32 max_num_tries,
-    bool patricia, bool tail, bool freq_order) {
-  build_from(keys, key_ids, Config(max_num_tries, patricia, tail, freq_order));
-}
-
-void Trie::build(const std::vector<std::pair<const char *, double> > &keys,
-    std::vector<UInt32> *key_ids, UInt32 max_num_tries,
-    bool patricia, bool tail, bool weight_order) {
-  build_from(keys, key_ids,
-      Config(max_num_tries, patricia, tail, weight_order));
-}
-
-void Trie::build(const std::vector<std::pair<char *, double> > &keys,
-    std::vector<UInt32> *key_ids, UInt32 max_num_tries,
-    bool patricia, bool tail, bool weight_order) {
-  build_from(keys, key_ids,
-      Config(max_num_tries, patricia, tail, weight_order));
+    std::vector<UInt32> *key_ids, int flags) {
+  Vector<Key<String> > temp_keys;
+  temp_keys.resize(keys.size());
+  for (std::size_t i = 0; i < temp_keys.size(); ++i) {
+    MARISA_THROW_IF(keys[i].length() > MARISA_MAX_LENGTH, MARISA_SIZE_ERROR);
+    temp_keys[i].set_str(String(keys[i].c_str(), keys[i].length()));
+    temp_keys[i].set_weight(1.0);
+  }
+  build_trie(temp_keys, key_ids, flags);
 }
 
 void Trie::build(const std::vector<std::pair<std::string, double> > &keys,
-    std::vector<UInt32> *key_ids, UInt32 max_num_tries,
-    bool patricia, bool tail, bool weight_order) {
-  build_from(keys, key_ids,
-      Config(max_num_tries, patricia, tail, weight_order));
-}
-
-template <typename T>
-void Trie::build_from(const std::vector<T> &keys,
-    std::vector<UInt32> *key_ids, const Config &config) {
-  std::vector<Key<String> > temp_keys(keys.size());
+    std::vector<UInt32> *key_ids, int flags) {
+  Vector<Key<String> > temp_keys;
+  temp_keys.resize(keys.size());
   for (std::size_t i = 0; i < temp_keys.size(); ++i) {
-    temp_keys[i].set_str(String(keys[i]));
-    temp_keys[i].set_weight(1.0);
-  }
-  build_trie(temp_keys, key_ids, config);
-}
-
-template <typename T>
-void Trie::build_from(const std::vector<std::pair<T, double> > &keys,
-    std::vector<UInt32> *key_ids, const Config &config) {
-  std::vector<Key<String> > temp_keys(keys.size());
-  for (std::size_t i = 0; i < temp_keys.size(); ++i) {
-    temp_keys[i].set_str(String(keys[i].first));
+    MARISA_THROW_IF(keys[i].first.length() > MARISA_MAX_LENGTH,
+        MARISA_SIZE_ERROR);
+    temp_keys[i].set_str(String(
+        keys[i].first.c_str(), keys[i].first.length()));
     temp_keys[i].set_weight(keys[i].second);
   }
-  build_trie(temp_keys, key_ids, config);
+  build_trie(temp_keys, key_ids, flags);
 }
 
-void Trie::build_trie(std::vector<Key<String> > &keys,
-    std::vector<UInt32> *key_ids, const Config &config) {
-  Trie temp;
-  std::vector<UInt32> terminals;
-  temp.build_trie(keys, &terminals, 0, config);
+void Trie::build_trie(Vector<Key<String> > &keys,
+    std::vector<UInt32> *key_ids, int flags) {
+  if (key_ids == NULL) {
+    build_trie(keys, static_cast<UInt32 *>(NULL), flags);
+    return;
+  }
+  try {
+    std::vector<UInt32> temp_key_ids(keys.size());
+    build_trie(keys, temp_key_ids.empty() ? NULL : &temp_key_ids[0], flags);
+    key_ids->swap(temp_key_ids);
+  } catch (const std::bad_alloc &) {
+    MARISA_THROW(MARISA_MEMORY_ERROR);
+  } catch (const std::length_error &) {
+    MARISA_THROW(MARISA_SIZE_ERROR);
+  }
+}
 
-  std::vector<std::pair<UInt32, UInt32> > pairs(terminals.size());
-  for (std::size_t i = 0; i < pairs.size(); ++i) {
+void Trie::build_trie(Vector<Key<String> > &keys,
+    UInt32 *key_ids, int flags) {
+  Trie temp;
+  Vector<UInt32> terminals;
+  Progress progress(flags);
+  MARISA_THROW_IF(!progress.is_valid(), MARISA_PARAM_ERROR);
+  temp.build_trie(keys, &terminals, progress);
+
+  typedef std::pair<UInt32, UInt32> TerminalIdPair;
+  Vector<TerminalIdPair> pairs;
+  pairs.resize(terminals.size());
+  for (UInt32 i = 0; i < pairs.size(); ++i) {
     pairs[i].first = terminals[i];
     pairs[i].second = i;
   }
-  std::vector<UInt32>().swap(terminals);
+  terminals.clear();
   std::sort(pairs.begin(), pairs.end());
 
   UInt32 node = 0;
-  for (std::size_t i = 0; i < pairs.size(); ++i) {
+  for (UInt32 i = 0; i < pairs.size(); ++i) {
     while (node < pairs[i].first) {
       temp.terminal_flags_.push_back(false);
       ++node;
@@ -91,57 +101,78 @@ void Trie::build_trie(std::vector<Key<String> > &keys,
     temp.terminal_flags_.push_back(true);
     ++node;
   }
-  while (node < temp.labels_.num_objs()) {
+  while (node < temp.labels_.size()) {
     temp.terminal_flags_.push_back(false);
     ++node;
   }
   terminal_flags_.push_back(false);
   temp.terminal_flags_.build();
+  progress.test_total_size(temp.terminal_flags_.total_size());
 
   if (key_ids != NULL) {
-    std::vector<UInt32> temp_key_ids(pairs.size());
-    for (std::size_t i = 0; i < temp_key_ids.size(); ++i) {
-      temp_key_ids[pairs[i].second] = temp.node_to_key_id(pairs[i].first);
+    for (UInt32 i = 0; i < pairs.size(); ++i) {
+      key_ids[pairs[i].second] = temp.node_to_key_id(pairs[i].first);
     }
-    key_ids->swap(temp_key_ids);
   }
+  MARISA_THROW_IF(progress.total_size() != temp.total_size(),
+      MARISA_UNEXPECTED_ERROR);
   temp.swap(this);
 }
 
 template <typename T>
-void Trie::build_trie(std::vector<Key<T> > &keys,
-    std::vector<UInt32> *terminals, UInt32 trie_id, const Config &config) {
-  build_cur(keys, terminals, trie_id, config);
+void Trie::build_trie(Vector<Key<T> > &keys,
+    Vector<UInt32> *terminals, Progress &progress) {
+  build_cur(keys, terminals, progress);
+  progress.test_total_size(louds_.total_size());
+  progress.test_total_size(sizeof(num_keys_));
   if (link_flags_.empty()) {
+    labels_.shrink();
+    link_flags_.build();
+    progress.test_total_size(labels_.total_size());
+    progress.test_total_size(link_flags_.total_size());
+    progress.test_total_size(links_.total_size());
+    progress.test_total_size(tail_.total_size());
     return;
   }
 
-  std::vector<UInt32> next_terminals;
-  build_next(keys, &next_terminals, trie_id, config);
+  Vector<UInt32> next_terminals;
+  build_next(keys, &next_terminals, progress);
 
-  for (std::size_t i = 0; i < next_terminals.size(); ++i) {
-    labels_[link_flags_.select1(i)] = next_terminals[i] % 256;
+  if (has_trie()) {
+    progress.test_total_size(trie_->terminal_flags_.total_size());
+  } else if (tail_.mode() == MARISA_BINARY_TAIL) {
+    labels_.push_back('\0');
+    link_flags_.push_back(true);
+  }
+  link_flags_.build();
+
+  for (UInt32 i = 0; i < next_terminals.size(); ++i) {
+    labels_[link_flags_.select1(i)] = (UInt8)(next_terminals[i] % 256);
     next_terminals[i] /= 256;
   }
   links_.build(next_terminals);
+  labels_.shrink();
+  progress.test_total_size(labels_.total_size());
+  progress.test_total_size(link_flags_.total_size());
+  progress.test_total_size(links_.total_size());
+  progress.test_total_size(tail_.total_size());
 }
 
 template <typename T>
-void Trie::build_cur(std::vector<Key<T> > &keys,
-    std::vector<UInt32> *terminals, UInt32 trie_id, const Config &config) {
+void Trie::build_cur(Vector<Key<T> > &keys,
+    Vector<UInt32> *terminals, Progress &progress) try {
   num_keys_ = sort_keys(keys);
-
   louds_.push_back(true);
   louds_.push_back(false);
   labels_.push_back('\0');
   link_flags_.push_back(false);
 
-  std::vector<Key<T> > rest_keys;
+  Vector<Key<T> > rest_keys;
   std::queue<Range> queue;
-  std::vector<WRange> wranges;
+  Vector<WRange> wranges;
   queue.push(Range(0, keys.size(), 0));
   while (!queue.empty()) {
-    UInt32 node = link_flags_.num_bits() - queue.size();
+    const UInt32 node = link_flags_.size() - (UInt32)queue.size();
     Range range = queue.front();
     queue.pop();
 
@@ -166,13 +197,13 @@ void Trie::build_cur(std::vector<Key<T> > &keys,
       weight += keys[i].weight();
     }
     wranges.push_back(WRange(range, weight));
-    if (config.weight_order()) {
+    if (progress.order() == MARISA_WEIGHT_ORDER) {
       std::stable_sort(wranges.begin(), wranges.end(), std::greater<WRange>());
     }
-    for (std::size_t i = 0; i < wranges.size(); ++i) {
+    for (UInt32 i = 0; i < wranges.size(); ++i) {
       const WRange &wrange = wranges[i];
       UInt32 pos = wrange.pos() + 1;
-      if (config.tail() || !config.is_last_trie(trie_id)) {
+      if ((progress.tail() != MARISA_WITHOUT_TAIL) || !progress.is_last()) {
         while (pos < keys[wrange.begin()].str().length()) {
           UInt32 j;
           for (j = wrange.begin() + 1; j < wrange.end(); ++j) {
@@ -186,7 +217,7 @@ void Trie::build_cur(std::vector<Key<T> > &keys,
           ++pos;
         }
       }
-      if (!config.patricia() &&
+      if ((progress.trie() != MARISA_PATRICIA_TRIE) &&
           (pos != keys[wrange.end() - 1].str().length())) {
         pos = wrange.pos() + 1;
       }
@@ -210,76 +241,88 @@ void Trie::build_cur(std::vector<Key<T> > &keys,
   }
   louds_.push_back(false);
   louds_.build();
-  labels_.shrink();
   if (rest_keys.empty()) {
-    BitVector().swap(&link_flags_);
-  } else {
-    link_flags_.build();
+    link_flags_.clear();
   }
 
   build_terminals(keys, terminals);
-  keys.swap(rest_keys);
+  keys.swap(&rest_keys);
+} catch (const std::bad_alloc &) {
+  MARISA_THROW(MARISA_MEMORY_ERROR);
+} catch (const std::length_error &) {
+  MARISA_THROW(MARISA_SIZE_ERROR);
 }
 
-void Trie::build_next(std::vector<Key<String> > &keys,
-    std::vector<UInt32> *terminals, UInt32 trie_id, const Config &config) {
-  if (config.is_last_trie(trie_id)) {
-    std::vector<String> strs(keys.size());
-    for (std::size_t i = 0; i < strs.size(); ++i) {
+void Trie::build_next(Vector<Key<String> > &keys,
+    Vector<UInt32> *terminals, Progress &progress) {
+  if (progress.is_last()) {
+    Vector<String> strs;
+    strs.resize(keys.size());
+    for (UInt32 i = 0; i < strs.size(); ++i) {
       strs[i] = keys[i].str();
     }
-    if (tail_.build(strs, terminals)) {
-      std::vector<Key<String> >().swap(keys);
-      return;
+    if (progress.tail() == MARISA_TEXT_TAIL) {
+      try {
+        tail_.build(strs, terminals, MARISA_TEXT_TAIL);
+        return;
+      } catch (const Exception &ex) {
+        if (ex.status() != MARISA_PARAM_ERROR) {
+          throw ex;
+        }
+      }
     }
+    tail_.build(strs, terminals, MARISA_BINARY_TAIL);
+    return;
   }
-  std::vector<Key<RString> > rkeys(keys.size());
-  for (std::size_t i = 0; i < rkeys.size(); ++i) {
+  Vector<Key<RString> > rkeys;
+  rkeys.resize(keys.size());
+  for (UInt32 i = 0; i < rkeys.size(); ++i) {
     rkeys[i].set_str(RString(keys[i].str()));
     rkeys[i].set_weight(keys[i].weight());
   }
-  std::vector<Key<String> >().swap(keys);
-  trie_.reset(new Trie);
-  if (config.is_last_trie(trie_id)) {
-    trie_->build_trie(rkeys, terminals, trie_id, Config(config.max_num_tries(),
-        config.patricia(), false, config.weight_order()));
-  } else {
-    trie_->build_trie(rkeys, terminals, trie_id + 1, config);
-  }
+  keys.clear();
+  trie_.reset(new (std::nothrow) Trie);
+  MARISA_THROW_IF(!has_trie(), MARISA_MEMORY_ERROR);
+  trie_->build_trie(rkeys, terminals, ++progress);
 }
 
-void Trie::build_next(std::vector<Key<RString> > &rkeys,
-    std::vector<UInt32> *terminals, UInt32 trie_id, const Config &config) {
-  if (config.is_last_trie(trie_id)) {
-    std::vector<String> strs(rkeys.size());
-    for (std::size_t i = 0; i < strs.size(); ++i) {
-      strs[i] = String(rkeys[i].str());
+void Trie::build_next(Vector<Key<RString> > &rkeys,
+    Vector<UInt32> *terminals, Progress &progress) {
+  if (progress.is_last()) {
+    Vector<String> strs;
+    strs.resize(rkeys.size());
+    for (UInt32 i = 0; i < strs.size(); ++i) {
+      strs[i] = String(rkeys[i].str().ptr(), rkeys[i].str().length());
     }
-    if (tail_.build(strs, terminals)) {
-      std::vector<Key<RString> >().swap(rkeys);
-      return;
+    if (progress.tail() == MARISA_TEXT_TAIL) {
+      try {
+        tail_.build(strs, terminals, MARISA_TEXT_TAIL);
+        return;
+      } catch (const Exception &ex) {
+        if (ex.status() != MARISA_PARAM_ERROR) {
+          throw ex;
+        }
+      }
     }
+    tail_.build(strs, terminals, MARISA_BINARY_TAIL);
+    return;
   }
-  trie_.reset(new Trie);
-  if (config.is_last_trie(trie_id)) {
-    trie_->build_trie(rkeys, terminals, trie_id, Config(config.max_num_tries(),
-        config.patricia(), false, config.weight_order()));
-  } else {
-    trie_->build_trie(rkeys, terminals, trie_id + 1, config);
-  }
+  trie_.reset(new (std::nothrow) Trie);
+  MARISA_THROW_IF(!has_trie(), MARISA_MEMORY_ERROR);
+  trie_->build_trie(rkeys, terminals, ++progress);
 }
 
 template <typename T>
-UInt32 Trie::sort_keys(std::vector<Key<T> > &keys) const {
+UInt32 Trie::sort_keys(Vector<Key<T> > &keys) const {
   if (keys.empty()) {
     return 0;
   }
-  for (std::size_t i = 0; i < keys.size(); ++i) {
+  for (UInt32 i = 0; i < keys.size(); ++i) {
     keys[i].set_id(i);
   }
   std::sort(keys.begin(), keys.end());
   UInt32 count = 1;
-  for (std::size_t i = 1; i < keys.size(); ++i) {
+  for (UInt32 i = 1; i < keys.size(); ++i) {
     if (keys[i - 1].str() != keys[i].str()) {
       ++count;
     }
@@ -288,13 +331,14 @@ UInt32 Trie::sort_keys(std::vector<Key<T> > &keys) const {
 }
 
 template <typename T>
-void Trie::build_terminals(const std::vector<Key<T> > &keys,
-    std::vector<UInt32> *terminals) const {
-  std::vector<UInt32> temp_terminals(keys.size());
-  for (std::size_t i = 0; i < keys.size(); ++i) {
+void Trie::build_terminals(const Vector<Key<T> > &keys,
+    Vector<UInt32> *terminals) const {
+  Vector<UInt32> temp_terminals;
+  temp_terminals.resize(keys.size());
+  for (UInt32 i = 0; i < keys.size(); ++i) {
     temp_terminals[keys[i].id()] = keys[i].terminal();
   }
-  terminals->swap(temp_terminals);
+  temp_terminals.swap(terminals);
 }
 
 }  // namespace marisa

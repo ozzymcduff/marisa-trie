@@ -71,9 +71,10 @@ AR = ar
 ARFLAGS = cru
 libmarisa_a_AR = $(AR) $(ARFLAGS)
 libmarisa_a_LIBADD =
-am_libmarisa_a_OBJECTS = reader.$(OBJEXT) writer.$(OBJEXT) \
-	mapper.$(OBJEXT) intvector.$(OBJEXT) bitvector.$(OBJEXT) \
-	tail.$(OBJEXT) trie.$(OBJEXT) trie-build.$(OBJEXT)
+am_libmarisa_a_OBJECTS = base.$(OBJEXT) progress.$(OBJEXT) \
+	reader.$(OBJEXT) writer.$(OBJEXT) mapper.$(OBJEXT) \
+	intvector.$(OBJEXT) bitvector.$(OBJEXT) tail.$(OBJEXT) \
+	trie.$(OBJEXT) trie-build.$(OBJEXT)
 libmarisa_a_OBJECTS = $(am_libmarisa_a_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -185,6 +186,8 @@ top_srcdir = @top_srcdir@
 AM_CXXFLAGS = -Wall -Weffc++
 lib_LIBRARIES = libmarisa.a
 libmarisa_a_SOURCES = \
+  marisa/base.cc \
+  marisa/progress.cc \
   marisa/reader.cc \
   marisa/writer.cc \
   marisa/mapper.cc \
@@ -200,7 +203,7 @@ libmarisa_include_HEADERS = \
   marisa/base.h \
   marisa/rank.h \
   marisa/popcount.h \
-  marisa/config.h \
+  marisa/progress.h \
   marisa/string.h \
   marisa/key.h \
   marisa/range.h \
@@ -211,6 +214,7 @@ libmarisa_include_HEADERS = \
   marisa/mapper.h \
   marisa/io.h \
   marisa/vector.h \
+  marisa/vector-inline.h \
   marisa/intvector.h \
   marisa/bitvector.h \
   marisa/tail.h \
@@ -294,9 +298,11 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitvector.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intvector.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mapper.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/progress.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tail.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie-build.Po@am__quote@
@@ -316,6 +322,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+base.o: marisa/base.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base.o -MD -MP -MF $(DEPDIR)/base.Tpo -c -o base.o `test -f 'marisa/base.cc' || echo '$(srcdir)/'`marisa/base.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/base.Tpo $(DEPDIR)/base.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa/base.cc' object='base.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base.o `test -f 'marisa/base.cc' || echo '$(srcdir)/'`marisa/base.cc
+
+base.obj: marisa/base.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base.obj -MD -MP -MF $(DEPDIR)/base.Tpo -c -o base.obj `if test -f 'marisa/base.cc'; then $(CYGPATH_W) 'marisa/base.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/base.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/base.Tpo $(DEPDIR)/base.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa/base.cc' object='base.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base.obj `if test -f 'marisa/base.cc'; then $(CYGPATH_W) 'marisa/base.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/base.cc'; fi`
+
+progress.o: marisa/progress.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT progress.o -MD -MP -MF $(DEPDIR)/progress.Tpo -c -o progress.o `test -f 'marisa/progress.cc' || echo '$(srcdir)/'`marisa/progress.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/progress.Tpo $(DEPDIR)/progress.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa/progress.cc' object='progress.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o progress.o `test -f 'marisa/progress.cc' || echo '$(srcdir)/'`marisa/progress.cc
+
+progress.obj: marisa/progress.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT progress.obj -MD -MP -MF $(DEPDIR)/progress.Tpo -c -o progress.obj `if test -f 'marisa/progress.cc'; then $(CYGPATH_W) 'marisa/progress.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/progress.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/progress.Tpo $(DEPDIR)/progress.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa/progress.cc' object='progress.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o progress.obj `if test -f 'marisa/progress.cc'; then $(CYGPATH_W) 'marisa/progress.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/progress.cc'; fi`
 
 reader.o: marisa/reader.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT reader.o -MD -MP -MF $(DEPDIR)/reader.Tpo -c -o reader.o `test -f 'marisa/reader.cc' || echo '$(srcdir)/'`marisa/reader.cc
