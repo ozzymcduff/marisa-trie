@@ -13,24 +13,31 @@ class Rank {
     abs_ = value;
   }
   void set_rel1(UInt32 value) {
+    MARISA_DEBUG_IF(value > 64, MARISA_PARAM_ERROR);
     rel_lo_ = (rel_lo_ & ~0x7FU) | (value & 0x7FU);
   }
   void set_rel2(UInt32 value) {
+    MARISA_DEBUG_IF(value > 128, MARISA_PARAM_ERROR);
     rel_lo_ = (rel_lo_ & ~(0xFFU << 7)) | ((value & 0xFFU) << 7);
   }
   void set_rel3(UInt32 value) {
+    MARISA_DEBUG_IF(value > 192, MARISA_PARAM_ERROR);
     rel_lo_ = (rel_lo_ & ~(0xFFU << 15)) | ((value & 0xFFU) << 15);
   }
   void set_rel4(UInt32 value) {
+    MARISA_DEBUG_IF(value > 256, MARISA_PARAM_ERROR);
     rel_lo_ = (rel_lo_ & ~(0x1FFU << 23)) | ((value & 0x1FFU) << 23);
   }
   void set_rel5(UInt32 value) {
+    MARISA_DEBUG_IF(value > 320, MARISA_PARAM_ERROR);
     rel_hi_ = (rel_hi_ & ~0x1FFU) | (value & 0x1FFU);
   }
   void set_rel6(UInt32 value) {
+    MARISA_DEBUG_IF(value > 384, MARISA_PARAM_ERROR);
     rel_hi_ = (rel_hi_ & ~(0x1FFU << 9)) | ((value & 0x1FFU) << 9);
   }
   void set_rel7(UInt32 value) {
+    MARISA_DEBUG_IF(value > 448, MARISA_PARAM_ERROR);
     rel_hi_ = (rel_hi_ & ~(0x1FFU << 18)) | ((value & 0x1FFU) << 18);
   }
 

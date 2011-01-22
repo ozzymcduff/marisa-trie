@@ -207,6 +207,7 @@ class Exception {
 // To not include <algorithm> only for std::swap().
 template <typename T>
 void Swap(T *lhs, T *rhs) {
+  MARISA_THROW_IF((lhs == NULL) || (rhs == NULL), MARISA_PARAM_ERROR);
   T temp = *lhs;
   *lhs = *rhs;
   *rhs = temp;
