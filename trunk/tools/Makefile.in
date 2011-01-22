@@ -34,7 +34,8 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = marisa-build$(EXEEXT) marisa-lookup$(EXEEXT) \
-	marisa-benchmark$(EXEEXT)
+	marisa-benchmark$(EXEEXT) marisa-find$(EXEEXT) \
+	marisa-predict$(EXEEXT)
 subdir = tools
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -54,9 +55,15 @@ marisa_benchmark_DEPENDENCIES = ../lib/libmarisa.a
 am_marisa_build_OBJECTS = marisa-build.$(OBJEXT) cmdopt.$(OBJEXT)
 marisa_build_OBJECTS = $(am_marisa_build_OBJECTS)
 marisa_build_DEPENDENCIES = ../lib/libmarisa.a
+am_marisa_find_OBJECTS = marisa-find.$(OBJEXT) cmdopt.$(OBJEXT)
+marisa_find_OBJECTS = $(am_marisa_find_OBJECTS)
+marisa_find_DEPENDENCIES = ../lib/libmarisa.a
 am_marisa_lookup_OBJECTS = marisa-lookup.$(OBJEXT) cmdopt.$(OBJEXT)
 marisa_lookup_OBJECTS = $(am_marisa_lookup_OBJECTS)
 marisa_lookup_DEPENDENCIES = ../lib/libmarisa.a
+am_marisa_predict_OBJECTS = marisa-predict.$(OBJEXT) cmdopt.$(OBJEXT)
+marisa_predict_OBJECTS = $(am_marisa_predict_OBJECTS)
+marisa_predict_DEPENDENCIES = ../lib/libmarisa.a
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -71,9 +78,11 @@ CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
 SOURCES = $(marisa_benchmark_SOURCES) $(marisa_build_SOURCES) \
-	$(marisa_lookup_SOURCES)
+	$(marisa_find_SOURCES) $(marisa_lookup_SOURCES) \
+	$(marisa_predict_SOURCES)
 DIST_SOURCES = $(marisa_benchmark_SOURCES) $(marisa_build_SOURCES) \
-	$(marisa_lookup_SOURCES)
+	$(marisa_find_SOURCES) $(marisa_lookup_SOURCES) \
+	$(marisa_predict_SOURCES)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -172,20 +181,15 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -Wall
 AM_CXXFLAGS = -Wall -Weffc++ -I../lib
-
-#  marisa-find \
-#  marisa-predict
 noinst_HEADERS = cmdopt.h
 marisa_build_SOURCES = marisa-build.cc cmdopt.c
 marisa_build_LDADD = ../lib/libmarisa.a
 marisa_lookup_SOURCES = marisa-lookup.cc cmdopt.c
 marisa_lookup_LDADD = ../lib/libmarisa.a
-
-#marisa_find_SOURCES = marisa-find.cc cmdopt.c
-#marisa_find_LDADD = ../lib/libmarisa.a
-
-#marisa_predict_SOURCES = marisa-predict.cc cmdopt.c
-#marisa_predict_LDADD = ../lib/libmarisa.a
+marisa_find_SOURCES = marisa-find.cc cmdopt.c
+marisa_find_LDADD = ../lib/libmarisa.a
+marisa_predict_SOURCES = marisa-predict.cc cmdopt.c
+marisa_predict_LDADD = ../lib/libmarisa.a
 marisa_benchmark_SOURCES = marisa-benchmark.cc cmdopt.c
 marisa_benchmark_LDADD = ../lib/libmarisa.a
 all: all-am
@@ -265,9 +269,15 @@ marisa-benchmark$(EXEEXT): $(marisa_benchmark_OBJECTS) $(marisa_benchmark_DEPEND
 marisa-build$(EXEEXT): $(marisa_build_OBJECTS) $(marisa_build_DEPENDENCIES) 
 	@rm -f marisa-build$(EXEEXT)
 	$(CXXLINK) $(marisa_build_OBJECTS) $(marisa_build_LDADD) $(LIBS)
+marisa-find$(EXEEXT): $(marisa_find_OBJECTS) $(marisa_find_DEPENDENCIES) 
+	@rm -f marisa-find$(EXEEXT)
+	$(CXXLINK) $(marisa_find_OBJECTS) $(marisa_find_LDADD) $(LIBS)
 marisa-lookup$(EXEEXT): $(marisa_lookup_OBJECTS) $(marisa_lookup_DEPENDENCIES) 
 	@rm -f marisa-lookup$(EXEEXT)
 	$(CXXLINK) $(marisa_lookup_OBJECTS) $(marisa_lookup_LDADD) $(LIBS)
+marisa-predict$(EXEEXT): $(marisa_predict_OBJECTS) $(marisa_predict_DEPENDENCIES) 
+	@rm -f marisa-predict$(EXEEXT)
+	$(CXXLINK) $(marisa_predict_OBJECTS) $(marisa_predict_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -278,7 +288,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmdopt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/marisa-benchmark.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/marisa-build.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/marisa-find.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/marisa-lookup.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/marisa-predict.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

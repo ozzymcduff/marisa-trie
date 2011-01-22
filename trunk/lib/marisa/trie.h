@@ -11,6 +11,7 @@
 #include "progress.h"
 #include "key.h"
 #include "query.h"
+#include "container.h"
 #include "intvector.h"
 #include "bitvector.h"
 #include "tail.h"
@@ -64,25 +65,18 @@ class Trie {
   UInt32 lookup(const char *ptr, std::size_t length) const;
   UInt32 lookup(const std::string &str) const;
 
-//  UInt32 find_c(const char *str,,
-//      UInt32 *key_ids, UInt32 *key_lengths, UInt32 max_count) const;
-//  UInt32 find_c(const char *ptr, UInt32 length, UInt32 max_num_results,
-//      UInt32 *key_ids, UInt32 *key_lengths, UInt32 max_count) const;
-//  UInt32 find_c(const std::string &str, UInt32 max_num_results,
-//      UInt32 *key_ids, UInt32 *key_lengths, UInt32 max_count) const;
-
   std::size_t find(const char *str,
       std::vector<UInt32> *key_ids = NULL,
       std::vector<std::size_t> *key_lengths = NULL,
-      std::size_t max_count = MARISA_MAX_NUM_KEYS) const;
+      std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
   std::size_t find(const char *ptr, std::size_t length,
       std::vector<UInt32> *key_ids = NULL,
       std::vector<std::size_t> *key_lengths = NULL,
-      std::size_t max_count = MARISA_MAX_NUM_KEYS) const;
+      std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
   std::size_t find(const std::string &str,
       std::vector<UInt32> *key_ids = NULL,
       std::vector<std::size_t> *key_lengths = NULL,
-      std::size_t max_count = MARISA_MAX_NUM_KEYS) const;
+      std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
 
   UInt32 find_first(const char *str,
       std::size_t *key_length = NULL) const;
@@ -98,7 +92,7 @@ class Trie {
   UInt32 find_last(const std::string &str,
       std::size_t *key_length = NULL) const;
 
-  // bool callback(UInt32 key_id, std::size_t key_length);
+  // int callback(UInt32 key_id, std::size_t key_length);
   template <typename T>
   std::size_t find_callback(const char *str, T callback) const;
   template <typename T>
@@ -110,40 +104,40 @@ class Trie {
   std::size_t predict(const char *str,
       std::vector<UInt32> *key_ids = NULL,
       std::vector<std::string> *keys = NULL,
-      std::size_t max_count = MARISA_MAX_NUM_KEYS) const;
+      std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
   std::size_t predict(const char *ptr, std::size_t length,
       std::vector<UInt32> *key_ids = NULL,
       std::vector<std::string> *keys = NULL,
-      std::size_t max_count = MARISA_MAX_NUM_KEYS) const;
+      std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
   std::size_t predict(const std::string &str,
       std::vector<UInt32> *key_ids = NULL,
       std::vector<std::string> *keys = NULL,
-      std::size_t max_count = MARISA_MAX_NUM_KEYS) const;
+      std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
 
   std::size_t predict_breadth_first(const char *str,
       std::vector<UInt32> *key_ids = NULL,
-      std::size_t max_count = MARISA_MAX_NUM_KEYS) const;
+      std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
   std::size_t predict_breadth_first(const char *ptr, std::size_t length,
       std::vector<UInt32> *key_ids = NULL,
-      std::size_t max_count = MARISA_MAX_NUM_KEYS) const;
+      std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
   std::size_t predict_breadth_first(const std::string &str,
       std::vector<UInt32> *key_ids = NULL,
-      std::size_t max_count = MARISA_MAX_NUM_KEYS) const;
+      std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
 
   std::size_t predict_depth_first(const char *str,
       std::vector<UInt32> *key_ids = NULL,
       std::vector<std::string> *keys = NULL,
-      std::size_t max_count = MARISA_MAX_NUM_KEYS) const;
+      std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
   std::size_t predict_depth_first(const char *ptr, std::size_t length,
       std::vector<UInt32> *key_ids = NULL,
       std::vector<std::string> *keys = NULL,
-      std::size_t max_count = MARISA_MAX_NUM_KEYS) const;
+      std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
   std::size_t predict_depth_first(const std::string &str,
       std::vector<UInt32> *key_ids = NULL,
       std::vector<std::string> *keys = NULL,
-      std::size_t max_count = MARISA_MAX_NUM_KEYS) const;
+      std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
 
-  // bool callback(UInt32 key_id, const char *key, std::size_t key_length);
+  // int callback(UInt32 key_id, const char *key, std::size_t key_length);
   template <typename T>
   std::size_t predict_callback(const char *str, T callback) const;
   template <typename T>
@@ -219,9 +213,9 @@ class Trie {
   template <typename T>
   std::size_t tail_match(UInt32 node, T query, std::size_t pos) const;
 
-  template <typename T>
-  std::size_t find_(T query, std::vector<UInt32> *key_ids,
-      std::vector<std::size_t> *key_lengths, std::size_t max_count) const;
+  template <typename T, typename U, typename V>
+  std::size_t find_(T query, U key_ids, V key_lengths,
+      std::size_t max_num_results) const;
   template <typename T>
   UInt32 find_first_(T query, std::size_t *key_length) const;
   template <typename T>
@@ -229,12 +223,12 @@ class Trie {
   template <typename T, typename U>
   std::size_t find_callback_(T query, U callback) const;
 
-  template <typename T>
-  std::size_t predict_breadth_first_(T query,
-      std::vector<UInt32> *key_ids, std::size_t max_count) const;
-  template <typename T>
-  std::size_t predict_depth_first_(T query, std::vector<UInt32> *key_ids,
-      std::vector<std::string> *keys, std::size_t max_count) const;
+  template <typename T, typename U>
+  std::size_t predict_breadth_first_(T query, U key_ids,
+      std::size_t max_num_results) const;
+  template <typename T, typename U, typename V>
+  std::size_t predict_depth_first_(T query, U key_ids, V keys,
+      std::size_t max_num_results) const;
   template <typename T, typename U>
   std::size_t predict_callback_(T query, U callback) const;
 
@@ -283,15 +277,9 @@ typedef struct marisa_trie_ marisa_trie;
 marisa_status marisa_init(marisa_trie **h);
 marisa_status marisa_end(marisa_trie *h);
 
-marisa_status marisa_easy_build(marisa_trie *h, const char * const *keys,
-    size_t num_keys, marisa_uint32 *key_ids);
-marisa_status marisa_build(marisa_trie *h, const char * const *keys,
+marisa_status build(const char * const *keys, size_t num_keys,
     const size_t *key_lengths, const double *key_weights,
-    size_t num_keys, marisa_uint32 *key_ids);
-marisa_status marisa_build_ex(marisa_trie *h, const char * const *keys,
-    const size_t *key_lengths, const double *key_weights,
-    size_t num_keys, marisa_uint32 *key_ids,
-    marisa_uint32 num_tries, int patricia, int tail, int weight_order);
+    marisa_uint32 *key_ids, int flags);
 
 marisa_status marisa_mmap(marisa_trie *h, const char *filename,
     long offset, int whence);
@@ -324,8 +312,8 @@ marisa_status marisa_find_last(const marisa_trie *h,
     const char *ptr, size_t length,
     marisa_uint32 *key_id, size_t *key_length);
 marisa_status marisa_find_callback(const marisa_trie *h,
-    int (*callback)(marisa_uint32, size_t, void *),
-    void *opaque);
+    int (*callback)(void *, marisa_uint32, size_t),
+    void *first_arg_to_callback);
 
 marisa_status marisa_predict(const marisa_trie *h,
     marisa_uint32 *key_ids, size_t max_num_results, size_t *num_results);
@@ -334,8 +322,8 @@ marisa_status marisa_predict_breadth_first(const marisa_trie *h,
 marisa_status marisa_predict_depth_first(const marisa_trie *h,
     marisa_uint32 *key_ids, size_t max_num_results, size_t *num_results);
 marisa_status marisa_predict_callback(const marisa_trie *h,
-    int (*callback)(marisa_uint32, const char *, size_t, void *),
-    void *last_arg_to_callback);
+    int (*callback)(void *, marisa_uint32, const char *, size_t),
+    void *first_arg_to_callback);
 
 marisa_status marisa_get_num_keys(const marisa_trie *h,
     marisa_uint32 *num_keys);

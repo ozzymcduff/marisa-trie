@@ -1,6 +1,7 @@
 #ifndef MARISA_BASE_H_
 #define MARISA_BASE_H_
 
+// Visual C++ does not provide stdint.h.
 #ifndef _MSC_VER
 #include <stdint.h>
 #endif  // _MSC_VER
@@ -40,50 +41,84 @@ typedef uint64_t marisa_uint64;
 #define MARISA_MAX_LENGTH     (MARISA_UINT32_MAX - 1)
 #define MARISA_MAX_NUM_KEYS   (MARISA_UINT32_MAX - 1)
 
+// marisa_status provides a list of error codes. Most of functions in
+// libmarisa throw or return an error code.
 typedef enum marisa_status_ {
-  // If a function succeeds.
+  // MARISA_OK means that a requested operation has succeeded.
   MARISA_OK               = 0,
 
-  // If a given handle is wrong.
+  // MARISA_HANDLE_ERRO means that a given handle is invalid.
   MARISA_HANDLE_ERROR     = 1,
 
-  // If an internal state is invalid.
+  // MARISA_STATE_ERROR means that an object is not ready for a requested
+  // operation. For example, an operation to modify a fixed container throws
+  // an exception with this error code.
   MARISA_STATE_ERROR      = 2,
 
-  // If a given argument is obviously wrong.
+  // MARISA_PARAM_ERROR means that a given argument is invalid. For example,
+  // some functions throw an exception with this error code when an
+  // out-of-range value or a NULL pointer is given.
   MARISA_PARAM_ERROR      = 3,
 
-  // If a size is too large.
+  // MARISA_SIZE_ERROR means that a size exceeds its limit. This error code
+  // is used when a building dictionary is too large or std::length_error is
+  // catched.
   MARISA_SIZE_ERROR       = 4,
 
-  // If a memory allocation fails or a given buffer is too small.
+  // MARISA_MEMORY_ERROR means that a memory allocation has failed.
   MARISA_MEMORY_ERROR     = 5,
 
-  // If an I/O function fails.
+  // MARISA_IO_ERROR means that an I/O failure.
   MARISA_IO_ERROR         = 6,
 
-  // In other cases.
+  // MARISA_UNEXPECTED_ERROR means that an unexpected error has occurred.
   MARISA_UNEXPECTED_ERROR = 7
 } marisa_status;
 
+// marisa_strerror() returns a name of an error code.
+const char *marisa_strerror(marisa_status status);
+
+// Flags and masks for dictionary settings are defined as follows. Please note
+// that unspecified value/flags will be replaced with default value/flags.
 typedef enum marisa_flags_ {
+  // A dictionary consinsts of 3 tries in default. If you want to change the
+  // number of tries, please give it with other flags.
   MARISA_MIN_NUM_TRIES     = 0x00001,
   MARISA_MAX_NUM_TRIES     = 0x000FF,
   MARISA_DEFAULT_NUM_TRIES = 0x00003,
 
+  // MARISA_PATRICIA_TRIE is usually a better choice. MARISA_PREFIX_TRIE is
+  // provided for comparing prefix/patricia tries.
   MARISA_PATRICIA_TRIE     = 0x00100,
   MARISA_PREFIX_TRIE       = 0x00200,
   MARISA_DEFAULT_TRIE      = MARISA_PATRICIA_TRIE,
 
+  // There are 3 kinds of TAIL implementations.
+  // - MARISA_WITHOUT_TAIL:
+  //   builds a dictionary without a TAIL. Its last trie has only 1-byte
+  //   labels.
+  // - MARISA_BINARY_TAIL:
+  //   builds a dictionary with a binary-mode TAIL. Its last labels are stored
+  //   as binary data.
+  // - MARISA_WITHOUT_TAIL:
+  //   builds a dictionary with a text-mode TAIL if its last labels do not
+  //   contain NULL characters. The last labels are stored as zero-terminated
+  //   string. Otherwise, a dictionary is built with a binary-mode TAIL.
   MARISA_WITHOUT_TAIL      = 0x01000,
   MARISA_BINARY_TAIL       = 0x02000,
   MARISA_TEXT_TAIL         = 0x04000,
   MARISA_DEFAULT_TAIL      = MARISA_TEXT_TAIL,
 
+  // libmarisa arranges nodes in ascending order of their labels
+  // (MARISA_LABEL_ORDER) or in descending order of their weights
+  // (MARISA_WEIGHT_ORDER). MARISA_WEIGHT_ORDER is generally a better choice
+  // because it enables faster lookups, but MARISA_LABEL_ORDER is still useful
+  // if an application needs to predict keys in label order.
   MARISA_LABEL_ORDER       = 0x10000,
   MARISA_WEIGHT_ORDER      = 0x20000,
   MARISA_DEFAULT_ORDER     = MARISA_WEIGHT_ORDER,
 
+  // The default settings. 0 is equivalent to MARISA_DEFAULT_FLAGS.
   MARISA_DEFAULT_FLAGS     = MARISA_DEFAULT_NUM_TRIES
       | MARISA_DEFAULT_TRIE | MARISA_DEFAULT_TAIL | MARISA_DEFAULT_ORDER,
 
@@ -93,8 +128,6 @@ typedef enum marisa_flags_ {
   MARISA_ORDER_MASK        = 0xF0000,
   MARISA_FLAGS_MASK        = 0xFFFFF
 } marisa_flags;
-
-const char *marisa_strerror(marisa_status status);
 
 #ifdef __cplusplus
 }  // extern "C"
@@ -112,6 +145,7 @@ typedef ::marisa_uint64 UInt64;
 
 typedef ::marisa_status Status;
 
+// An exception object stores a filename, a line number and an error code.
 class Exception {
  public:
   explicit Exception(const char *filename, int line, Status status)
@@ -136,6 +170,7 @@ class Exception {
     return status_;
   }
 
+  // Same as std::exception, what() returns an error message.
   const char *what() const {
     return ::marisa_strerror(status_);
   }
@@ -146,12 +181,22 @@ class Exception {
   Status status_;
 };
 
+// MARISA_THROW adds a filename and a line number to an exception.
 #define MARISA_THROW(status) \
   throw Exception(__FILE__, __LINE__, status)
 
+// MARISA_THROW_IF throws an exception with `status' if `condition' is true.
+// To avoid warnings, `do { ... } while (false)' is not used with Visual C++.
+#ifdef _MSC_VER
+#define MARISA_THROW_IF(condition, status) \
+  { if (condition) MARISA_THROW(status); }
+#else  // _MSC_VER
 #define MARISA_THROW_IF(condition, status) \
   do { if (condition) MARISA_THROW(status); } while (false)
+#endif  // _MSC_VER
 
+// MARISA_DEBUG_IF is used for debugging. For example, MARISA_DEBUG_IF is used
+// to find out-of-range accesses in marisa::Vector, marisa::IntVector, etc.
 #ifdef DEBUG
 #define MARISA_DEBUG_IF(condition, status) \
   MARISA_THROW_IF(condition, status)
@@ -159,9 +204,7 @@ class Exception {
 #define MARISA_DEBUG_IF(condition, status)
 #endif
 
-void *Malloc(std::size_t size);
-void Free(void *ptr);
-
+// To not include <algorithm> only for std::swap().
 template <typename T>
 void Swap(T *lhs, T *rhs) {
   T temp = *lhs;

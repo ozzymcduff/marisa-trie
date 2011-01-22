@@ -16,7 +16,7 @@ enum FindMode {
   FIND_LAST
 };
 
-marisa::UInt32 max_num_results = 10;
+std::size_t max_num_results = 10;
 FindMode find_mode = FIND_ALL;
 bool mmap_flag = true;
 
@@ -39,10 +39,10 @@ void print_help(const char *cmd) {
 void find_all(const marisa::Trie &trie, const std::string &str) {
   static std::vector<marisa::UInt32> key_ids;
   static std::vector<std::size_t> lengths;
-  marisa::UInt32 num_keys = trie.find(str, &key_ids, &lengths);
+  const std::size_t num_keys = trie.find(str, &key_ids, &lengths);
   if (num_keys != 0) {
     std::cout << num_keys << " found" << std::endl;
-    for (marisa::UInt32 i = 0; (i < num_keys) && (i < max_num_results); ++i) {
+    for (std::size_t i = 0; (i < num_keys) && (i < max_num_results); ++i) {
       std::cout << key_ids[i] << '\t';
       std::cout.write(str.c_str(), lengths[i]) << '\t' << str << '\n';
     }
@@ -55,7 +55,7 @@ void find_all(const marisa::Trie &trie, const std::string &str) {
 
 void find_first(const marisa::Trie &trie, const std::string &str) {
   std::size_t length = 0;
-  marisa::UInt32 key_id = trie.find_first(str, &length);
+  const marisa::UInt32 key_id = trie.find_first(str, &length);
   if (key_id != trie.notfound()) {
     std::cout << key_id << '\t';
     std::cout.write(str.c_str(), length) << '\t' << str << '\n';
@@ -66,7 +66,7 @@ void find_first(const marisa::Trie &trie, const std::string &str) {
 
 void find_last(const marisa::Trie &trie, const std::string &str) {
   std::size_t length = 0;
-  marisa::UInt32 key_id = trie.find_last(str, &length);
+  const marisa::UInt32 key_id = trie.find_last(str, &length);
   if (key_id != trie.notfound()) {
     std::cout << key_id << '\t';
     std::cout.write(str.c_str(), length) << '\t' << str << '\n';
@@ -77,47 +77,60 @@ void find_last(const marisa::Trie &trie, const std::string &str) {
 
 int find(const char * const *args, std::size_t num_args) {
   if (num_args == 0) {
-    std::cerr << "error: tries are not specified" << std::endl;
+    std::cerr << "error: a dictionary is not specified" << std::endl;
     return 10;
   } else if (num_args > 1) {
-    std::cerr << "error: more than one tries are specified" << std::endl;
+    std::cerr << "error: more than one dictionaries are specified"
+        << std::endl;
     return 11;
   }
 
   marisa::Trie trie;
   marisa::Mapper mapper;
   if (mmap_flag) {
-    if (!trie.mmap(&mapper, args[0])) {
-      std::cerr << "error: failed to mmap tries: " << args[0] << std::endl;
+    try {
+      trie.mmap(&mapper, args[0]);
+    } catch (const marisa::Exception &ex) {
+      std::cerr << ex.filename() << ':' << ex.line() << ": " << ex.what()
+          << ": failed to mmap a dictionary file: " << args[0] << std::endl;
       return 20;
     }
   } else {
-    if (!trie.load(args[0])) {
-      std::cerr << "error: failed to load tries: " << args[0] << std::endl;
+    try {
+      trie.load(args[0]);
+    } catch (const marisa::Exception &ex) {
+      std::cerr << ex.filename() << ':' << ex.line() << ": " << ex.what()
+          << ": failed to load a dictionary file: " << args[0] << std::endl;
       return 21;
     }
   }
 
   std::string str;
   while (std::getline(std::cin, str)) {
-    switch (find_mode) {
-      case FIND_ALL: {
-        find_all(trie, str);
-        break;
+    try {
+      switch (find_mode) {
+        case FIND_ALL: {
+          find_all(trie, str);
+          break;
+        }
+        case FIND_FIRST: {
+          find_first(trie, str);
+          break;
+        }
+        case FIND_LAST: {
+          find_last(trie, str);
+          break;
+        }
       }
-      case FIND_FIRST: {
-        find_first(trie, str);
-        break;
-      }
-      case FIND_LAST: {
-        find_last(trie, str);
-        break;
-      }
+    } catch (const marisa::Exception &ex) {
+      std::cerr << ex.filename() << ':' << ex.line() << ": " << ex.what()
+          << ": failed to find keys in: " << str << std::endl;
+      return 30;
     }
     if (!std::cout) {
       std::cerr << "error: failed to write results to standard output"
           << std::endl;
-      return 30;
+      return 31;
     }
   }
 
@@ -146,16 +159,15 @@ int main(int argc, char *argv[]) {
     switch (label) {
       case 'n': {
         char *end_of_value;
-        long value = std::strtol(cmdopt.optarg, &end_of_value, 10);
+        const long value = std::strtol(cmdopt.optarg, &end_of_value, 10);
         if ((*end_of_value != '\0') || (value < 0)) {
           std::cerr << "error: option `-n' with an invalid argument: "
               << cmdopt.optarg << std::endl;
         }
-        if ((value == 0) ||
-            (static_cast<unsigned long>(value) > 0xFFFFFFFFUL)) {
-          max_num_results = std::numeric_limits<marisa::UInt32>::max();
+        if ((value == 0) || ((unsigned long)value > MARISA_MAX_NUM_KEYS)) {
+          max_num_results = MARISA_MAX_NUM_KEYS;
         } else {
-          max_num_results = static_cast<marisa::UInt32>(value);
+          max_num_results = (std::size_t)(value);
         }
         break;
       }

@@ -121,7 +121,7 @@ void read_keys(std::istream *input, std::vector<Key> *keys) {
   Key key;
   std::string line;
   while (std::getline(*input, line)) {
-    std::string::size_type delim_pos = line.find_last_of('\t');
+    const std::string::size_type delim_pos = line.find_last_of('\t');
     if (delim_pos != line.npos) {
       char *end_of_value;
       key.second = std::strtod(&line[delim_pos + 1], &end_of_value);
@@ -192,7 +192,7 @@ void benchmark_lookup(const marisa::Trie &trie,
     const std::vector<marisa::UInt32> &key_ids) {
   Clock cl;
   for (std::size_t i = 0; i < keys.size(); ++i) {
-    marisa::UInt32 key_id = trie.lookup(keys[i].first);
+    const marisa::UInt32 key_id = trie.lookup(keys[i].first);
     if (key_id != key_ids[i]) {
       std::cerr << "error: lookup() failed" << std::endl;
       return;
@@ -208,7 +208,7 @@ void benchmark_find(const marisa::Trie &trie,
   std::vector<marisa::UInt32> found_key_ids;
   for (std::size_t i = 0; i < keys.size(); ++i) {
     found_key_ids.clear();
-    marisa::UInt32 num_keys = trie.find(keys[i].first, &found_key_ids);
+    const std::size_t num_keys = trie.find(keys[i].first, &found_key_ids);
     if ((num_keys == 0) || (found_key_ids.back() != key_ids[i])) {
       std::cerr << "error: find() failed" << std::endl;
       return;
@@ -224,7 +224,7 @@ void benchmark_predict_breadth_first(const marisa::Trie &trie,
   std::vector<marisa::UInt32> found_key_ids;
   for (std::size_t i = 0; i < keys.size(); ++i) {
     found_key_ids.clear();
-    marisa::UInt32 num_keys = trie.predict_breadth_first(
+    const std::size_t num_keys = trie.predict_breadth_first(
         keys[i].first, &found_key_ids);
     if ((num_keys == 0) || (found_key_ids.front() != key_ids[i])) {
       std::cerr << "error: predict() failed" << std::endl;
@@ -241,7 +241,7 @@ void benchmark_predict_depth_first(const marisa::Trie &trie,
   std::vector<marisa::UInt32> found_key_ids;
   for (std::size_t i = 0; i < keys.size(); ++i) {
     found_key_ids.clear();
-    marisa::UInt32 num_keys = trie.predict_depth_first(
+    const std::size_t num_keys = trie.predict_depth_first(
         keys[i].first, &found_key_ids, NULL);
     if ((num_keys == 0) || (found_key_ids.front() != key_ids[i])) {
       std::cerr << "error: predict() failed" << std::endl;
@@ -268,7 +268,7 @@ void benchmark(const std::vector<Key> &keys, int num_tries) {
 
 int benchmark(const char * const *args, std::size_t num_args) try {
   std::vector<Key> keys;
-  int ret = read_keys(args, num_args, &keys);
+  const int ret = read_keys(args, num_args, &keys);
   if (ret != 0) {
     return ret;
   }
@@ -327,7 +327,7 @@ int main(int argc, char *argv[]) {
     switch (label) {
       case 'N': {
         char *end_of_value;
-        long value = std::strtol(cmdopt.optarg, &end_of_value, 10);
+        const long value = std::strtol(cmdopt.optarg, &end_of_value, 10);
         if ((*end_of_value != '\0') || (value <= 0) ||
             (value > MARISA_MAX_NUM_TRIES)) {
           std::cerr << "error: option `-n' with an invalid argument: "
@@ -338,7 +338,7 @@ int main(int argc, char *argv[]) {
       }
       case 'n': {
         char *end_of_value;
-        long value = std::strtol(cmdopt.optarg, &end_of_value, 10);
+        const long value = std::strtol(cmdopt.optarg, &end_of_value, 10);
         if ((*end_of_value != '\0') || (value <= 0) ||
             (value > MARISA_MAX_NUM_TRIES)) {
           std::cerr << "error: option `-n' with an invalid argument: "

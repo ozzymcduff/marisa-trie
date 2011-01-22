@@ -22,10 +22,11 @@ void print_help(const char *cmd) {
 
 int lookup(const char * const *args, std::size_t num_args) {
   if (num_args == 0) {
-    std::cerr << "error: tries are not specified" << std::endl;
+    std::cerr << "error: a dictionary is not specified" << std::endl;
     return 10;
   } else if (num_args > 1) {
-    std::cerr << "error: more than one tries are specified" << std::endl;
+    std::cerr << "error: more than one dictionaries are specified"
+        << std::endl;
     return 11;
   }
 
@@ -36,7 +37,7 @@ int lookup(const char * const *args, std::size_t num_args) {
       trie.mmap(&mapper, args[0]);
     } catch (const marisa::Exception &ex) {
       std::cerr << ex.filename() << ':' << ex.line() << ": " << ex.what()
-          << ": failed to mmap tries: " << args[0] << std::endl;
+          << ": failed to mmap a dictionary file: " << args[0] << std::endl;
       return 20;
     }
   } else {
@@ -44,14 +45,14 @@ int lookup(const char * const *args, std::size_t num_args) {
       trie.load(args[0]);
     } catch (const marisa::Exception &ex) {
       std::cerr << ex.filename() << ':' << ex.line() << ": " << ex.what()
-          << ": failed to load tries: " << args[0] << std::endl;
+          << ": failed to load a dictionary file: " << args[0] << std::endl;
       return 21;
     }
   }
 
   std::string str;
   while (std::getline(std::cin, str)) {
-    marisa::UInt32 key_id = trie.lookup(str);
+    const marisa::UInt32 key_id = trie.lookup(str);
     if (key_id != trie.notfound()) {
       std::cout << key_id << '\t' << str << '\n';
     } else {

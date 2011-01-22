@@ -13,7 +13,7 @@ Vector<T>::~Vector() {
     for (std::size_t i = 0; i < size_; ++i) {
       buf_[i].~T();
     }
-    Free(buf_);
+    delete [] reinterpret_cast<char *>(buf_);
   }
 }
 
@@ -196,12 +196,14 @@ void Vector<T>::swap(Vector *rhs) {
 
 template <typename T>
 void Vector<T>::realloc(std::size_t new_capacity) {
-  T * const new_buf = static_cast<T *>(Malloc(sizeof(T) * new_capacity));
+  T * const new_buf = reinterpret_cast<T *>(
+      new (std::nothrow) char[sizeof(T) * new_capacity]);
+  MARISA_THROW_IF(new_buf == NULL, MARISA_MEMORY_ERROR);
   for (std::size_t i = 0; i < size_; ++i) {
     new (&new_buf[i]) T(buf_[i]);
     buf_[i].~T();
   }
-  Free(buf_);
+  delete [] reinterpret_cast<char *>(buf_);
   buf_ = new_buf;
   objs_ = new_buf;
   capacity_ = new_capacity;
