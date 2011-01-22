@@ -1,13 +1,13 @@
-AM_CXXFLAGS = -Wall -Weffc++
+AM_CXXFLAGS = -Wall -Weffc++ -DDEBUG
 
 lib_LIBRARIES = libmarisa.a
 
 libmarisa_a_SOURCES = \
   marisa/base.cc \
   marisa/progress.cc \
+  marisa/mapper.cc \
   marisa/reader.cc \
   marisa/writer.cc \
-  marisa/mapper.cc \
   marisa/intvector.cc \
   marisa/bitvector.cc \
   marisa/tail.cc \
@@ -20,18 +20,18 @@ include_HEADERS = marisa.h
 libmarisa_includedir = ${includedir}/marisa
 libmarisa_include_HEADERS = \
   marisa/base.h \
-  marisa/rank.h \
   marisa/popcount.h \
-  marisa/progress.h \
+  marisa/rank.h \
   marisa/string.h \
   marisa/key.h \
+  marisa/progress.h \
   marisa/range.h \
   marisa/query.h \
   marisa/container.h \
   marisa/cell.h \
+  marisa/mapper.h \
   marisa/reader.h \
   marisa/writer.h \
-  marisa/mapper.h \
   marisa/io.h \
   marisa/vector.h \
   marisa/vector-inline.h \

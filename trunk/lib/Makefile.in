@@ -72,7 +72,7 @@ ARFLAGS = cru
 libmarisa_a_AR = $(AR) $(ARFLAGS)
 libmarisa_a_LIBADD =
 am_libmarisa_a_OBJECTS = base.$(OBJEXT) progress.$(OBJEXT) \
-	reader.$(OBJEXT) writer.$(OBJEXT) mapper.$(OBJEXT) \
+	mapper.$(OBJEXT) reader.$(OBJEXT) writer.$(OBJEXT) \
 	intvector.$(OBJEXT) bitvector.$(OBJEXT) tail.$(OBJEXT) \
 	trie.$(OBJEXT) trie-build.$(OBJEXT) trie-search.$(OBJEXT)
 libmarisa_a_OBJECTS = $(am_libmarisa_a_OBJECTS)
@@ -183,14 +183,14 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CXXFLAGS = -Wall -Weffc++
+AM_CXXFLAGS = -Wall -Weffc++ -DDEBUG
 lib_LIBRARIES = libmarisa.a
 libmarisa_a_SOURCES = \
   marisa/base.cc \
   marisa/progress.cc \
+  marisa/mapper.cc \
   marisa/reader.cc \
   marisa/writer.cc \
-  marisa/mapper.cc \
   marisa/intvector.cc \
   marisa/bitvector.cc \
   marisa/tail.cc \
@@ -202,18 +202,18 @@ include_HEADERS = marisa.h
 libmarisa_includedir = ${includedir}/marisa
 libmarisa_include_HEADERS = \
   marisa/base.h \
-  marisa/rank.h \
   marisa/popcount.h \
-  marisa/progress.h \
+  marisa/rank.h \
   marisa/string.h \
   marisa/key.h \
+  marisa/progress.h \
   marisa/range.h \
   marisa/query.h \
   marisa/container.h \
   marisa/cell.h \
+  marisa/mapper.h \
   marisa/reader.h \
   marisa/writer.h \
-  marisa/mapper.h \
   marisa/io.h \
   marisa/vector.h \
   marisa/vector-inline.h \
@@ -354,6 +354,20 @@ progress.obj: marisa/progress.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o progress.obj `if test -f 'marisa/progress.cc'; then $(CYGPATH_W) 'marisa/progress.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/progress.cc'; fi`
 
+mapper.o: marisa/mapper.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT mapper.o -MD -MP -MF $(DEPDIR)/mapper.Tpo -c -o mapper.o `test -f 'marisa/mapper.cc' || echo '$(srcdir)/'`marisa/mapper.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/mapper.Tpo $(DEPDIR)/mapper.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa/mapper.cc' object='mapper.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o mapper.o `test -f 'marisa/mapper.cc' || echo '$(srcdir)/'`marisa/mapper.cc
+
+mapper.obj: marisa/mapper.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT mapper.obj -MD -MP -MF $(DEPDIR)/mapper.Tpo -c -o mapper.obj `if test -f 'marisa/mapper.cc'; then $(CYGPATH_W) 'marisa/mapper.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/mapper.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/mapper.Tpo $(DEPDIR)/mapper.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa/mapper.cc' object='mapper.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o mapper.obj `if test -f 'marisa/mapper.cc'; then $(CYGPATH_W) 'marisa/mapper.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/mapper.cc'; fi`
+
 reader.o: marisa/reader.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT reader.o -MD -MP -MF $(DEPDIR)/reader.Tpo -c -o reader.o `test -f 'marisa/reader.cc' || echo '$(srcdir)/'`marisa/reader.cc
 @am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/reader.Tpo $(DEPDIR)/reader.Po
@@ -381,20 +395,6 @@ writer.obj: marisa/writer.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa/writer.cc' object='writer.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o writer.obj `if test -f 'marisa/writer.cc'; then $(CYGPATH_W) 'marisa/writer.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/writer.cc'; fi`
-
-mapper.o: marisa/mapper.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT mapper.o -MD -MP -MF $(DEPDIR)/mapper.Tpo -c -o mapper.o `test -f 'marisa/mapper.cc' || echo '$(srcdir)/'`marisa/mapper.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/mapper.Tpo $(DEPDIR)/mapper.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa/mapper.cc' object='mapper.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o mapper.o `test -f 'marisa/mapper.cc' || echo '$(srcdir)/'`marisa/mapper.cc
-
-mapper.obj: marisa/mapper.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT mapper.obj -MD -MP -MF $(DEPDIR)/mapper.Tpo -c -o mapper.obj `if test -f 'marisa/mapper.cc'; then $(CYGPATH_W) 'marisa/mapper.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/mapper.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/mapper.Tpo $(DEPDIR)/mapper.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa/mapper.cc' object='mapper.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o mapper.obj `if test -f 'marisa/mapper.cc'; then $(CYGPATH_W) 'marisa/mapper.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/mapper.cc'; fi`
 
 intvector.o: marisa/intvector.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT intvector.o -MD -MP -MF $(DEPDIR)/intvector.Tpo -c -o intvector.o `test -f 'marisa/intvector.cc' || echo '$(srcdir)/'`marisa/intvector.cc
