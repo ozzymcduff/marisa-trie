@@ -9,6 +9,7 @@ TESTS = \
   key-test \
   range-test \
   query-test \
+  container-test \
   cell-test \
   io-test \
   vector-test \
@@ -42,6 +43,9 @@ range_test_LDADD = ../lib/libmarisa.a
 
 query_test_SOURCES = query-test.cc
 query_test_LDADD = ../lib/libmarisa.a
+
+container_test_SOURCES = container-test.cc
+container_test_LDADD = ../lib/libmarisa.a
 
 cell_test_SOURCES = cell-test.cc
 cell_test_LDADD = ../lib/libmarisa.a

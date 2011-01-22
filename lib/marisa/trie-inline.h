@@ -27,8 +27,9 @@ inline UInt32 Trie::lookup(const std::string &str) const {
 
 inline std::size_t Trie::find(const std::string &str,
     std::vector<UInt32> *key_ids, std::vector<std::size_t> *key_lengths,
-    std::size_t max_count) const {
-  return find(str.c_str(), str.length(), key_ids, key_lengths, max_count);
+    std::size_t max_num_results) const {
+  return find(str.c_str(), str.length(),
+      key_ids, key_lengths, max_num_results);
 }
 
 inline UInt32 Trie::find_first(const std::string &str,
@@ -65,20 +66,21 @@ inline std::size_t Trie::find_callback(const std::string &str,
 
 inline std::size_t Trie::predict(const std::string &str,
     std::vector<UInt32> *key_ids, std::vector<std::string> *keys,
-    std::size_t max_count) const {
-  return predict(str.c_str(), str.length(), key_ids, keys, max_count);
+    std::size_t max_num_results) const {
+  return predict(str.c_str(), str.length(), key_ids, keys, max_num_results);
 }
 
 inline std::size_t Trie::predict_breadth_first(const std::string &str,
-    std::vector<UInt32> *key_ids, std::size_t max_count) const {
-  return predict_breadth_first(str.c_str(), str.length(), key_ids, max_count);
+    std::vector<UInt32> *key_ids, std::size_t max_num_results) const {
+  return predict_breadth_first(str.c_str(), str.length(),
+      key_ids, max_num_results);
 }
 
 inline std::size_t Trie::predict_depth_first(
     const std::string &str, std::vector<UInt32> *key_ids,
-    std::vector<std::string> *keys, std::size_t max_count) const {
+    std::vector<std::string> *keys, std::size_t max_num_results) const {
   return predict_depth_first(str.c_str(), str.length(),
-      key_ids, keys, max_count);
+      key_ids, keys, max_num_results);
 }
 
 template <typename T>
@@ -145,80 +147,8 @@ inline bool Trie::find_child(UInt32 &node, T query,
   return false;
 }
 
-//template <typename T>
-//std::size_t Trie::trie_match(UInt32 node, T query,
-//    std::size_t pos) const {
-//  if (has_link(node)) {
-//    UInt32 next_pos;
-//    if (has_trie()) {
-//      next_pos = trie_->trie_match<T>(get_link(node), query, pos);
-//    } else {
-//      next_pos = tail_match<T>(node, query, pos);
-//    }
-//    if ((next_pos == mismatch()) || (next_pos == pos)) {
-//      return next_pos;
-//    }
-//    pos = next_pos;
-//  } else if (labels_[node] != query[pos]) {
-//    return pos;
-//  } else {
-//    ++pos;
-//  }
-//  node = get_parent(node);
-//  while (node != 0) {
-//    if (query.ends_at(pos)) {
-//      return mismatch();
-//    }
-//    if (has_link(node)) {
-//      UInt32 next_pos;
-//      if (has_trie()) {
-//        next_pos = trie_->trie_match<T>(get_link(node), query, pos);
-//      } else {
-//        next_pos = tail_match<T>(node, query, pos);
-//      }
-//      if ((next_pos == mismatch()) || (next_pos == pos)) {
-//        return mismatch();
-//      }
-//      pos = next_pos;
-//    } else if (labels_[node] != query[pos]) {
-//      return mismatch();
-//    } else {
-//      ++pos;
-//    }
-//    node = get_parent(node);
-//  }
-//  return pos;
-//}
-
-//template <typename T>
-//std::size_t Trie::tail_match(UInt32 node, T query,
-//    std::size_t pos) const {
-//  const UInt32 link_id = link_flags_.rank1(node);
-//  const UInt32 offset = (links_[link_id] * 256) + labels_[node];
-//  const UInt8 *ptr = tail_[offset];
-//  if (*ptr != query[pos]) {
-//    return pos;
-//  } else if (tail_.mode() == MARISA_BINARY_TAIL) {
-//    const UInt32 length = (links_[link_id + 1] * 256)
-//        + labels_[link_flags_.select1(link_id + 1)] - offset;
-//    for (UInt32 i = 1; i < length; ++i) {
-//      if (query.ends_at(pos + i) || (ptr[i] != query[pos + i])) {
-//        return mismatch();
-//      }
-//    }
-//    return pos + length;
-//  } else {
-//    for (++ptr, ++pos; *ptr != '\0'; ++ptr, ++pos) {
-//      if (query.ends_at(pos) || (*ptr != query[pos])) {
-//        return mismatch();
-//      }
-//    }
-//    return pos;
-//  }
-//}
-
 template <typename T, typename U>
-std::size_t Trie::find_callback_(T query, U callback) const {
+std::size_t Trie::find_callback_(T query, U callback) const try {
   std::size_t count = 0;
   UInt32 node = 0;
   std::size_t pos = 0;
@@ -231,6 +161,10 @@ std::size_t Trie::find_callback_(T query, U callback) const {
     }
   } while (!query.ends_at(pos) && find_child<T>(node, query, pos));
   return count;
+} catch (const std::bad_alloc &) {
+  MARISA_THROW(MARISA_MEMORY_ERROR);
+} catch (const std::length_error &) {
+  MARISA_THROW(MARISA_SIZE_ERROR);
 }
 
 template <typename T, typename U>

@@ -33,8 +33,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 TESTS = base-test$(EXEEXT) rank-test$(EXEEXT) popcount-test$(EXEEXT) \
 	progress-test$(EXEEXT) string-test$(EXEEXT) key-test$(EXEEXT) \
-	range-test$(EXEEXT) query-test$(EXEEXT) cell-test$(EXEEXT) \
-	io-test$(EXEEXT) vector-test$(EXEEXT) intvector-test$(EXEEXT) \
+	range-test$(EXEEXT) query-test$(EXEEXT) \
+	container-test$(EXEEXT) cell-test$(EXEEXT) io-test$(EXEEXT) \
+	vector-test$(EXEEXT) intvector-test$(EXEEXT) \
 	bitvector-test$(EXEEXT) tail-test$(EXEEXT) trie-test$(EXEEXT)
 check_PROGRAMS = $(am__EXEEXT_1)
 subdir = tests
@@ -49,8 +50,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am__EXEEXT_1 = base-test$(EXEEXT) rank-test$(EXEEXT) \
 	popcount-test$(EXEEXT) progress-test$(EXEEXT) \
 	string-test$(EXEEXT) key-test$(EXEEXT) range-test$(EXEEXT) \
-	query-test$(EXEEXT) cell-test$(EXEEXT) io-test$(EXEEXT) \
-	vector-test$(EXEEXT) intvector-test$(EXEEXT) \
+	query-test$(EXEEXT) container-test$(EXEEXT) cell-test$(EXEEXT) \
+	io-test$(EXEEXT) vector-test$(EXEEXT) intvector-test$(EXEEXT) \
 	bitvector-test$(EXEEXT) tail-test$(EXEEXT) trie-test$(EXEEXT)
 am_base_test_OBJECTS = base-test.$(OBJEXT)
 base_test_OBJECTS = $(am_base_test_OBJECTS)
@@ -61,6 +62,9 @@ bitvector_test_DEPENDENCIES = ../lib/libmarisa.a
 am_cell_test_OBJECTS = cell-test.$(OBJEXT)
 cell_test_OBJECTS = $(am_cell_test_OBJECTS)
 cell_test_DEPENDENCIES = ../lib/libmarisa.a
+am_container_test_OBJECTS = container-test.$(OBJEXT)
+container_test_OBJECTS = $(am_container_test_OBJECTS)
+container_test_DEPENDENCIES = ../lib/libmarisa.a
 am_intvector_test_OBJECTS = intvector-test.$(OBJEXT)
 intvector_test_OBJECTS = $(am_intvector_test_OBJECTS)
 intvector_test_DEPENDENCIES = ../lib/libmarisa.a
@@ -107,21 +111,21 @@ CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
 SOURCES = $(base_test_SOURCES) $(bitvector_test_SOURCES) \
-	$(cell_test_SOURCES) $(intvector_test_SOURCES) \
-	$(io_test_SOURCES) $(key_test_SOURCES) \
-	$(popcount_test_SOURCES) $(progress_test_SOURCES) \
-	$(query_test_SOURCES) $(range_test_SOURCES) \
-	$(rank_test_SOURCES) $(string_test_SOURCES) \
-	$(tail_test_SOURCES) $(trie_test_SOURCES) \
-	$(vector_test_SOURCES)
+	$(cell_test_SOURCES) $(container_test_SOURCES) \
+	$(intvector_test_SOURCES) $(io_test_SOURCES) \
+	$(key_test_SOURCES) $(popcount_test_SOURCES) \
+	$(progress_test_SOURCES) $(query_test_SOURCES) \
+	$(range_test_SOURCES) $(rank_test_SOURCES) \
+	$(string_test_SOURCES) $(tail_test_SOURCES) \
+	$(trie_test_SOURCES) $(vector_test_SOURCES)
 DIST_SOURCES = $(base_test_SOURCES) $(bitvector_test_SOURCES) \
-	$(cell_test_SOURCES) $(intvector_test_SOURCES) \
-	$(io_test_SOURCES) $(key_test_SOURCES) \
-	$(popcount_test_SOURCES) $(progress_test_SOURCES) \
-	$(query_test_SOURCES) $(range_test_SOURCES) \
-	$(rank_test_SOURCES) $(string_test_SOURCES) \
-	$(tail_test_SOURCES) $(trie_test_SOURCES) \
-	$(vector_test_SOURCES)
+	$(cell_test_SOURCES) $(container_test_SOURCES) \
+	$(intvector_test_SOURCES) $(io_test_SOURCES) \
+	$(key_test_SOURCES) $(popcount_test_SOURCES) \
+	$(progress_test_SOURCES) $(query_test_SOURCES) \
+	$(range_test_SOURCES) $(rank_test_SOURCES) \
+	$(string_test_SOURCES) $(tail_test_SOURCES) \
+	$(trie_test_SOURCES) $(vector_test_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -236,6 +240,8 @@ range_test_SOURCES = range-test.cc
 range_test_LDADD = ../lib/libmarisa.a
 query_test_SOURCES = query-test.cc
 query_test_LDADD = ../lib/libmarisa.a
+container_test_SOURCES = container-test.cc
+container_test_LDADD = ../lib/libmarisa.a
 cell_test_SOURCES = cell-test.cc
 cell_test_LDADD = ../lib/libmarisa.a
 io_test_SOURCES = io-test.cc
@@ -296,6 +302,9 @@ bitvector-test$(EXEEXT): $(bitvector_test_OBJECTS) $(bitvector_test_DEPENDENCIES
 cell-test$(EXEEXT): $(cell_test_OBJECTS) $(cell_test_DEPENDENCIES) 
 	@rm -f cell-test$(EXEEXT)
 	$(CXXLINK) $(cell_test_OBJECTS) $(cell_test_LDADD) $(LIBS)
+container-test$(EXEEXT): $(container_test_OBJECTS) $(container_test_DEPENDENCIES) 
+	@rm -f container-test$(EXEEXT)
+	$(CXXLINK) $(container_test_OBJECTS) $(container_test_LDADD) $(LIBS)
 intvector-test$(EXEEXT): $(intvector_test_OBJECTS) $(intvector_test_DEPENDENCIES) 
 	@rm -f intvector-test$(EXEEXT)
 	$(CXXLINK) $(intvector_test_OBJECTS) $(intvector_test_LDADD) $(LIBS)
@@ -342,6 +351,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitvector-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cell-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/container-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intvector-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/key-test.Po@am__quote@

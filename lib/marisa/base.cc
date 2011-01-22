@@ -1,5 +1,3 @@
-#include <cstdlib>
-
 #include "base.h"
 
 extern "C" {
@@ -21,20 +19,3 @@ const char *marisa_strerror(marisa_status status) {
 }
 
 }  // extern "C"
-
-namespace marisa {
-
-void *Malloc(std::size_t size) {
-  if (size == 0) {
-    return NULL;
-  }
-  void *ptr = std::malloc(size);
-  MARISA_THROW_IF(ptr == NULL, MARISA_MEMORY_ERROR);
-  return ptr;
-}
-
-void Free(void *ptr) {
-  std::free(ptr);
-}
-
-}  // namespace marisa

@@ -41,7 +41,7 @@ void read_keys(std::istream *input, std::vector<Key> *keys) {
   Key key;
   std::string line;
   while (std::getline(*input, line)) {
-    std::string::size_type delim_pos = line.find_last_of('\t');
+    const std::string::size_type delim_pos = line.find_last_of('\t');
     if (delim_pos != line.npos) {
       char *end_of_value;
       key.second = std::strtod(&line[delim_pos + 1], &end_of_value);
@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
     switch (label) {
       case 'n': {
         char *end_of_value;
-        long value = std::strtol(cmdopt.optarg, &end_of_value, 10);
+        const long value = std::strtol(cmdopt.optarg, &end_of_value, 10);
         if ((*end_of_value != '\0') || (value <= 0) ||
             (value > MARISA_MAX_NUM_TRIES)) {
           std::cerr << "error: option `-n' with an invalid argument: "

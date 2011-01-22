@@ -12,7 +12,8 @@ libmarisa_a_SOURCES = \
   marisa/bitvector.cc \
   marisa/tail.cc \
   marisa/trie.cc \
-  marisa/trie-build.cc
+  marisa/trie-build.cc \
+  marisa/trie-search.cc
 
 include_HEADERS = marisa.h
 
@@ -26,6 +27,7 @@ libmarisa_include_HEADERS = \
   marisa/key.h \
   marisa/range.h \
   marisa/query.h \
+  marisa/container.h \
   marisa/cell.h \
   marisa/reader.h \
   marisa/writer.h \
