@@ -26,6 +26,13 @@ inline UInt32 Trie::lookup(const std::string &str) const {
 }
 
 inline std::size_t Trie::find(const std::string &str,
+    UInt32 *key_ids, std::size_t *key_lengths,
+    std::size_t max_num_results) const {
+  return find(str.c_str(), str.length(),
+      key_ids, key_lengths, max_num_results);
+}
+
+inline std::size_t Trie::find(const std::string &str,
     std::vector<UInt32> *key_ids, std::vector<std::size_t> *key_lengths,
     std::size_t max_num_results) const {
   return find(str.c_str(), str.length(),
@@ -65,20 +72,38 @@ inline std::size_t Trie::find_callback(const std::string &str,
 }
 
 inline std::size_t Trie::predict(const std::string &str,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const {
+  return predict(str.c_str(), str.length(), key_ids, keys, max_num_results);
+}
+
+inline std::size_t Trie::predict(const std::string &str,
     std::vector<UInt32> *key_ids, std::vector<std::string> *keys,
     std::size_t max_num_results) const {
   return predict(str.c_str(), str.length(), key_ids, keys, max_num_results);
 }
 
 inline std::size_t Trie::predict_breadth_first(const std::string &str,
-    std::vector<UInt32> *key_ids, std::size_t max_num_results) const {
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const {
   return predict_breadth_first(str.c_str(), str.length(),
-      key_ids, max_num_results);
+      key_ids, keys, max_num_results);
 }
 
-inline std::size_t Trie::predict_depth_first(
-    const std::string &str, std::vector<UInt32> *key_ids,
-    std::vector<std::string> *keys, std::size_t max_num_results) const {
+inline std::size_t Trie::predict_breadth_first(const std::string &str,
+    std::vector<UInt32> *key_ids, std::vector<std::string> *keys,
+    std::size_t max_num_results) const {
+  return predict_breadth_first(str.c_str(), str.length(),
+      key_ids, keys, max_num_results);
+}
+
+inline std::size_t Trie::predict_depth_first(const std::string &str,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const {
+  return predict_depth_first(str.c_str(), str.length(),
+      key_ids, keys, max_num_results);
+}
+
+inline std::size_t Trie::predict_depth_first(const std::string &str,
+    std::vector<UInt32> *key_ids, std::vector<std::string> *keys,
+    std::size_t max_num_results) const {
   return predict_depth_first(str.c_str(), str.length(),
       key_ids, keys, max_num_results);
 }
@@ -106,7 +131,7 @@ inline bool Trie::empty() const {
   return louds_.empty();
 }
 
-inline std::size_t Trie::num_keys() const {
+inline UInt32 Trie::num_keys() const {
   return num_keys_;
 }
 
@@ -167,6 +192,35 @@ std::size_t Trie::find_callback_(T query, U callback) const try {
   MARISA_THROW(MARISA_SIZE_ERROR);
 }
 
+template <typename T>
+inline bool Trie::predict_child(UInt32 &node, T query, std::size_t &pos,
+    std::string *key) const {
+  UInt32 louds_pos = get_child(node);
+  if (!louds_[louds_pos]) {
+    return false;
+  }
+  node = louds_pos_to_node(louds_pos);
+  do {
+    if (has_link(node)) {
+      std::size_t next_pos = has_trie() ?
+          trie_->trie_prefix_match<T>(get_link(node), query, pos, key) :
+          tail_prefix_match<T>(node, query, pos, key);
+      if (next_pos == mismatch()) {
+        return false;
+      } else if (next_pos != pos) {
+        pos = next_pos;
+        return true;
+      }
+    } else if (labels_[node] == query[pos]) {
+      ++pos;
+      return true;
+    }
+    ++node;
+    ++louds_pos;
+  } while (louds_[louds_pos]);
+  return false;
+}
+
 template <typename T, typename U>
 std::size_t Trie::predict_callback_(T query, U callback) const try {
   std::string key;
@@ -181,7 +235,7 @@ std::size_t Trie::predict_callback_(T query, U callback) const try {
   UInt32 count = 0;
   if (terminal_flags_[node]) {
     ++count;
-    if (!callback(node_to_key_id(node), key.c_str(), key.length())) {
+    if (!callback(node_to_key_id(node), key)) {
       return count;
     }
   }
@@ -216,7 +270,7 @@ std::size_t Trie::predict_callback_(T query, U callback) const try {
     }
     if (terminal_flags_[cur.node()]) {
       ++count;
-      if (!callback(cur.key_id(), key.c_str(), key.length())) {
+      if (!callback(cur.key_id(), key)) {
         return count;
       }
       cur.set_key_id(cur.key_id() + 1);
@@ -264,14 +318,6 @@ inline bool Trie::has_link(UInt32 node) const {
 
 inline UInt32 Trie::get_link(UInt32 node) const {
   return (links_[link_flags_.rank1(node)] * 256) + labels_[node];
-}
-
-inline UInt32 Trie::get_link(UInt32 node, UInt32 *length) const {
-  const UInt32 link_id = link_flags_.rank1(node);
-  const UInt32 offset = (links_[link_id] * 256) + labels_[node];
-  *length = (links_[link_id + 1] * 256)
-      + labels_[link_flags_.select1(link_id + 1)] - offset;
-  return offset;
 }
 
 inline bool Trie::has_link() const {

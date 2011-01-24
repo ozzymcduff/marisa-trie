@@ -166,7 +166,7 @@ void benchmark_build(const std::vector<Key> &keys, int num_tries,
   Clock cl;
   trie->build(keys, key_ids, num_tries
       | param_trie | param_tail | param_order);
-  std::printf(" %8lu", (unsigned long)trie->num_nodes());
+  std::printf(" %9lu", (unsigned long)trie->num_nodes());
   std::printf(" %9lu", (unsigned long)trie->total_size());
   print_time_info(keys.size(), cl.elasped());
 }
@@ -272,27 +272,27 @@ int benchmark(const char * const *args, std::size_t num_args) try {
   if (ret != 0) {
     return ret;
   }
-  std::printf("------+--------+---------+-------+"
+  std::printf("------+---------+---------+-------+"
       "-------+-------+-------+-------+-------\n");
-  std::printf("%6s %8s %9s %7s %7s %7s %7s %7s %7s\n",
+  std::printf("%6s %9s %9s %7s %7s %7s %7s %7s %7s\n",
       "#tries", "#nodes", "size",
       "build", "restore", "lookup", "find", "predict", "predict");
-  std::printf("%6s %8s %9s %7s %7s %7s %7s %7s %7s\n",
+  std::printf("%6s %9s %9s %7s %7s %7s %7s %7s %7s\n",
       "", "", "", "", "", "", "", "breadth", "depth");
   if (speed_flag) {
-    std::printf("%6s %8s %9s %7s %7s %7s %7s %7s %7s\n",
+    std::printf("%6s %9s %9s %7s %7s %7s %7s %7s %7s\n",
         "", "", "[bytes]",
         "[K/s]", "[K/s]", "[K/s]", "[K/s]", "[K/s]", "[K/s]");
   } else {
-    std::printf("%6s %8s %9s %7s %7s %7s %7s %7s %7s\n",
+    std::printf("%6s %9s %9s %7s %7s %7s %7s %7s %7s\n",
         "", "", "[bytes]", "[us]", "[us]", "[us]", "[us]", "[us]", "[us]");
   }
-  std::printf("------+--------+---------+-------+"
+  std::printf("------+---------+---------+-------+"
       "-------+-------+-------+-------+-------\n");
   for (int i = param_min_num_tries; i <= param_max_num_tries; ++i) {
     benchmark(keys, i);
   }
-  std::printf("------+--------+---------+-------+"
+  std::printf("------+---------+---------+-------+"
       "-------+-------+-------+-------+-------\n");
   return 0;
 } catch (const marisa::Exception &ex) {

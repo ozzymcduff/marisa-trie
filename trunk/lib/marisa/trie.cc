@@ -120,11 +120,11 @@ int Trie::num_tries() const {
   return has_trie() ? (trie_->num_tries() + 1) : (louds_.empty() ? 0 : 1);
 }
 
-std::size_t Trie::num_nodes() const {
+UInt32 Trie::num_nodes() const {
   if (louds_.empty()) {
     return 0;
   }
-  std::size_t num_nodes = (louds_.size() / 2) - 1;
+  UInt32 num_nodes = (UInt32)(louds_.size() / 2) - 1;
   if (has_trie()) {
     num_nodes += trie_->num_nodes();
   }

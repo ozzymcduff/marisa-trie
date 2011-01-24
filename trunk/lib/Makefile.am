@@ -1,4 +1,4 @@
-AM_CXXFLAGS = -Wall -Weffc++ -DDEBUG
+AM_CXXFLAGS = -Wall -Weffc++
 
 lib_LIBRARIES = libmarisa.a
 
@@ -13,7 +13,8 @@ libmarisa_a_SOURCES = \
   marisa/tail.cc \
   marisa/trie.cc \
   marisa/trie-build.cc \
-  marisa/trie-search.cc
+  marisa/trie-search.cc \
+  marisa/trie-c.cc
 
 include_HEADERS = marisa.h
 

@@ -58,12 +58,22 @@ class Trie {
 
   std::string restore(UInt32 key_id) const;
   void restore(UInt32 key_id, std::string *key) const;
-  void restore(UInt32 key_id, char *key_buf,
-      std::size_t key_buf_size, std::size_t *key_length = NULL) const;
+  std::size_t restore(UInt32 key_id, char *key_buf,
+      std::size_t key_buf_size) const;
 
   UInt32 lookup(const char *str) const;
   UInt32 lookup(const char *ptr, std::size_t length) const;
   UInt32 lookup(const std::string &str) const;
+
+  std::size_t find(const char *str,
+      UInt32 *key_ids, std::size_t *key_lengths,
+      std::size_t max_num_results) const;
+  std::size_t find(const char *ptr, std::size_t length,
+      UInt32 *key_ids, std::size_t *key_lengths,
+      std::size_t max_num_results) const;
+  std::size_t find(const std::string &str,
+      UInt32 *key_ids, std::size_t *key_lengths,
+      std::size_t max_num_results) const;
 
   std::size_t find(const char *str,
       std::vector<UInt32> *key_ids = NULL,
@@ -92,7 +102,7 @@ class Trie {
   UInt32 find_last(const std::string &str,
       std::size_t *key_length = NULL) const;
 
-  // int callback(UInt32 key_id, std::size_t key_length);
+  // bool callback(UInt32 key_id, std::size_t key_length);
   template <typename T>
   std::size_t find_callback(const char *str, T callback) const;
   template <typename T>
@@ -100,6 +110,13 @@ class Trie {
       T callback) const;
   template <typename T>
   std::size_t find_callback(const std::string &str, T callback) const;
+
+  std::size_t predict(const char *str,
+      UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+  std::size_t predict(const char *ptr, std::size_t length,
+      UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+  std::size_t predict(const std::string &str,
+      UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
 
   std::size_t predict(const char *str,
       std::vector<UInt32> *key_ids = NULL,
@@ -115,14 +132,31 @@ class Trie {
       std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
 
   std::size_t predict_breadth_first(const char *str,
+      UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+  std::size_t predict_breadth_first(const char *ptr, std::size_t length,
+      UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+  std::size_t predict_breadth_first(const std::string &str,
+      UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+
+  std::size_t predict_breadth_first(const char *str,
       std::vector<UInt32> *key_ids = NULL,
+      std::vector<std::string> *keys = NULL,
       std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
   std::size_t predict_breadth_first(const char *ptr, std::size_t length,
       std::vector<UInt32> *key_ids = NULL,
+      std::vector<std::string> *keys = NULL,
       std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
   std::size_t predict_breadth_first(const std::string &str,
       std::vector<UInt32> *key_ids = NULL,
+      std::vector<std::string> *keys = NULL,
       std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
+
+  std::size_t predict_depth_first(const char *str,
+      UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+  std::size_t predict_depth_first(const char *ptr, std::size_t length,
+      UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+  std::size_t predict_depth_first(const std::string &str,
+      UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
 
   std::size_t predict_depth_first(const char *str,
       std::vector<UInt32> *key_ids = NULL,
@@ -137,7 +171,7 @@ class Trie {
       std::vector<std::string> *keys = NULL,
       std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
 
-  // int callback(UInt32 key_id, const char *key, std::size_t key_length);
+  // bool callback(UInt32 key_id, const std::string &key);
   template <typename T>
   std::size_t predict_callback(const char *str, T callback) const;
   template <typename T>
@@ -147,9 +181,9 @@ class Trie {
   std::size_t predict_callback(const std::string &str, T callback) const;
 
   bool empty() const;
-  std::size_t num_keys() const;
+  UInt32 num_keys() const;
   int num_tries() const;
-  std::size_t num_nodes() const;
+  UInt32 num_nodes() const;
   std::size_t total_size() const;
 
   void clear();
@@ -197,8 +231,8 @@ class Trie {
   void trie_restore(UInt32 node, std::string *key) const;
   void tail_restore(UInt32 node, std::string *key) const;
 
-  void restore_(UInt32 key_id, char *key_buf,
-      std::size_t key_buf_size, std::size_t *key_length) const;
+  std::size_t restore_(UInt32 key_id, char *key_buf,
+      std::size_t key_buf_size) const;
   void trie_restore(UInt32 node, char *key_buf,
       std::size_t key_buf_size, std::size_t &key_pos) const;
   void tail_restore(UInt32 node, char *key_buf,
@@ -223,8 +257,8 @@ class Trie {
   template <typename T, typename U>
   std::size_t find_callback_(T query, U callback) const;
 
-  template <typename T, typename U>
-  std::size_t predict_breadth_first_(T query, U key_ids,
+  template <typename T, typename U, typename V>
+  std::size_t predict_breadth_first_(T query, U key_ids, V keys,
       std::size_t max_num_results) const;
   template <typename T, typename U, typename V>
   std::size_t predict_depth_first_(T query, U key_ids, V keys,
@@ -234,13 +268,13 @@ class Trie {
 
   template <typename T>
   bool predict_child(UInt32 &node, T query, std::size_t &pos,
-      std::string *key = NULL) const;
+      std::string *key) const;
   template <typename T>
   std::size_t trie_prefix_match(UInt32 node, T query,
-      std::size_t pos, std::string *key = NULL) const;
+      std::size_t pos, std::string *key) const;
   template <typename T>
   std::size_t tail_prefix_match(UInt32 node, T query,
-      std::size_t pos, std::string *key = NULL) const;
+      std::size_t pos, std::string *key) const;
 
   UInt32 key_id_to_node(UInt32 key_id) const;
   UInt32 node_to_key_id(UInt32 node) const;
@@ -251,7 +285,6 @@ class Trie {
 
   bool has_link(UInt32 node) const;
   UInt32 get_link(UInt32 node) const;
-  UInt32 get_link(UInt32 node, UInt32 *length) const;
 
   bool has_link() const;
   bool has_trie() const;
@@ -266,6 +299,10 @@ class Trie {
 
 #include "trie-inline.h"
 
+#else  // __cplusplus
+
+#include <stdio.h>
+
 #endif  // __cplusplus
 
 #ifdef __cplusplus
@@ -277,8 +314,8 @@ typedef struct marisa_trie_ marisa_trie;
 marisa_status marisa_init(marisa_trie **h);
 marisa_status marisa_end(marisa_trie *h);
 
-marisa_status build(const char * const *keys, size_t num_keys,
-    const size_t *key_lengths, const double *key_weights,
+marisa_status marisa_build(marisa_trie *h, const char * const *keys,
+    size_t num_keys, const size_t *key_lengths, const double *key_weights,
     marisa_uint32 *key_ids, int flags);
 
 marisa_status marisa_mmap(marisa_trie *h, const char *filename,
@@ -312,26 +349,32 @@ marisa_status marisa_find_last(const marisa_trie *h,
     const char *ptr, size_t length,
     marisa_uint32 *key_id, size_t *key_length);
 marisa_status marisa_find_callback(const marisa_trie *h,
+    const char *ptr, size_t length,
     int (*callback)(void *, marisa_uint32, size_t),
     void *first_arg_to_callback);
 
 marisa_status marisa_predict(const marisa_trie *h,
-    marisa_uint32 *key_ids, size_t max_num_results, size_t *num_results);
+    const char *ptr, size_t length, marisa_uint32 *key_ids,
+    size_t max_num_results, size_t *num_results);
 marisa_status marisa_predict_breadth_first(const marisa_trie *h,
-    marisa_uint32 *key_ids, size_t max_num_results, size_t *num_results);
+    const char *ptr, size_t length, marisa_uint32 *key_ids,
+    size_t max_num_results, size_t *num_results);
 marisa_status marisa_predict_depth_first(const marisa_trie *h,
-    marisa_uint32 *key_ids, size_t max_num_results, size_t *num_results);
+    const char *ptr, size_t length, marisa_uint32 *key_ids,
+    size_t max_num_results, size_t *num_results);
 marisa_status marisa_predict_callback(const marisa_trie *h,
+    const char *ptr, size_t length,
     int (*callback)(void *, marisa_uint32, const char *, size_t),
     void *first_arg_to_callback);
 
 marisa_status marisa_get_num_keys(const marisa_trie *h,
     marisa_uint32 *num_keys);
 marisa_status marisa_get_num_tries(const marisa_trie *h,
-    marisa_uint32 *num_tries);
+    int *num_tries);
 marisa_status marisa_get_num_nodes(const marisa_trie *h,
     marisa_uint32 *num_nodes);
-marisa_status marisa_get_size(const marisa_trie *h, size_t *size);
+marisa_status marisa_get_total_size(const marisa_trie *h,
+    size_t *total_size);
 
 marisa_status marisa_clear(marisa_trie *h);
 marisa_status marisa_swap(marisa_trie *lhs, marisa_trie *rhs);
