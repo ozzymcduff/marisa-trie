@@ -1,32 +1,19 @@
 #include <cstdlib>
 #include <ctime>
 #include <sstream>
+#include <string>
 #include <vector>
 
 #include <marisa/vector.h>
 #include <marisa/intvector.h>
 #include <marisa/bitvector.h>
 
-#define ASSERT(cond) { \
-  if (!(cond)) { \
-    std::cout << __LINE__ << ": " \
-        << "Assertion `" #cond "' failed." << std::endl; \
-    std::exit(-1); \
-  } \
-}
+#include "assert.h"
 
-#define EXCEPT(code, expected_status) try { \
-  code; \
-  std::cout << __LINE__ << ": " \
-      << "Exception `" #code "' failed." << std::endl; \
-  std::exit(-1); \
-} catch (const marisa::Exception &ex) { \
-  ASSERT(ex.status() == expected_status); \
-}
+namespace {
 
 void TestVector() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   std::vector<int> values;
   for (std::size_t i = 0; i < 1000; ++i) {
@@ -130,12 +117,11 @@ void TestVector() {
   EXCEPT(vec.resize(0), MARISA_STATE_ERROR);
   EXCEPT(vec.reserve(0), MARISA_STATE_ERROR);
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
 
 void TestIntVector() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   marisa::IntVector vec;
 
@@ -225,7 +211,7 @@ void TestIntVector() {
   EXCEPT(vec.build(MARISA_UINT32_MAX, MARISA_UINT32_MAX - 3),
       MARISA_SIZE_ERROR);
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
 
 void TestBitVector(marisa::UInt32 size) {
@@ -292,8 +278,7 @@ void TestBitVector(marisa::UInt32 size) {
 }
 
 void TestBitVector() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   TestBitVector(0);
   TestBitVector(1);
@@ -305,8 +290,10 @@ void TestBitVector() {
     TestBitVector(std::rand() % 4096);
   }
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
+
+}  // namespace
 
 int main() {
   std::srand((unsigned int)time(NULL));

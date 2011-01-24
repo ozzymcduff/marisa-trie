@@ -98,8 +98,10 @@ void Trie::build_trie(Vector<Key<String> > &keys,
       temp.terminal_flags_.push_back(false);
       ++node;
     }
-    temp.terminal_flags_.push_back(true);
-    ++node;
+    if (node == pairs[i].first) {
+      temp.terminal_flags_.push_back(true);
+      ++node;
+    }
   }
   while (node < temp.labels_.size()) {
     temp.terminal_flags_.push_back(false);

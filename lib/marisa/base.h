@@ -197,7 +197,7 @@ class Exception {
 
 // MARISA_DEBUG_IF is used for debugging. For example, MARISA_DEBUG_IF is used
 // to find out-of-range accesses in marisa::Vector, marisa::IntVector, etc.
-#ifdef DEBUG
+#ifdef _DEBUG
 #define MARISA_DEBUG_IF(condition, status) \
   MARISA_THROW_IF(condition, status)
 #else

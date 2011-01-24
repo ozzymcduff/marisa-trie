@@ -74,10 +74,7 @@ int predict(const char * const *args, std::size_t num_args) {
               str, &key_ids, &keys, max_num_results);
         } else {
           num_keys = trie.predict_breadth_first(
-              str, &key_ids, max_num_results);
-          for (std::size_t i = 0; i < num_keys; ++i) {
-            keys.push_back(trie.restore(key_ids[i]));
-          }
+              str, &key_ids, &keys, max_num_results);
         }
       } catch (const marisa::Exception &ex) {
         std::cerr << ex.filename() << ':' << ex.line() << ": " << ex.what()

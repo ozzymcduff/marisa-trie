@@ -1,6 +1,5 @@
 #include <cstdlib>
-#include <iostream>
-#include <string>
+#include <ctime>
 
 #include <marisa/base.h>
 #include <marisa/popcount.h>
@@ -13,28 +12,12 @@
 #include <marisa/container.h>
 #include <marisa/cell.h>
 
-#define ASSERT(cond) { \
-  if (!(cond)) { \
-    std::cout << __LINE__ << ": " \
-        << "Assertion `" #cond "' failed." << std::endl; \
-    std::exit(-1); \
-  } \
-}
-
-#define EXCEPT(code, expected_status) try { \
-  code; \
-  std::cout << __LINE__ << ": " \
-      << "Exception `" #code "' failed." << std::endl; \
-  std::exit(-1); \
-} catch (const marisa::Exception &ex) { \
-  ASSERT(ex.status() == expected_status); \
-}
+#include "assert.h"
 
 namespace {
 
 void TestBase() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   ASSERT(sizeof(marisa_uint8) == 1);
   ASSERT(sizeof(marisa_uint16) == 2);
@@ -59,7 +42,7 @@ void TestBase() {
   EXCEPT(marisa::Swap(static_cast<int *>(NULL), &y), MARISA_PARAM_ERROR);
   EXCEPT(marisa::Swap(&x, static_cast<int *>(NULL)), MARISA_PARAM_ERROR);
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
 
 marisa::UInt32 NaivePopCount(marisa::UInt32 x) {
@@ -72,8 +55,7 @@ marisa::UInt32 NaivePopCount(marisa::UInt32 x) {
 }
 
 void TestPopCount() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   ASSERT(marisa::PopCount(0).lo8() == 0);
   ASSERT(marisa::PopCount(0).lo16() == 0);
@@ -94,12 +76,11 @@ void TestPopCount() {
     ASSERT(popcount.lo32() == NaivePopCount(value));
   }
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
 
 void TestRank() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   marisa::Rank rank;
 
@@ -130,12 +111,11 @@ void TestRank() {
   ASSERT(rank.rel6() == 384);
   ASSERT(rank.rel7() == 448);
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
 
 void TestString() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   marisa::String str;
 
@@ -195,12 +175,11 @@ void TestString() {
 
   ASSERT(marisa::String("abcde").substr(1, 2) == marisa::String("bc"));
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
 
 void TestKey() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   marisa::Key<marisa::String> key;
 
@@ -237,11 +216,10 @@ void TestKey() {
   ASSERT(rkey.id() == 5);
   ASSERT(rkey.terminal() == 6);
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
 void TestProgress() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   {
     marisa::Progress progress(0);
@@ -297,12 +275,11 @@ void TestProgress() {
     ASSERT(!progress.is_valid());
   }
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
 
 void TestRange() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   marisa::Range range;
 
@@ -350,12 +327,11 @@ void TestRange() {
   ASSERT(wrange.pos() == 7);
   ASSERT(wrange.weight() == 8.0);
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
 
 void TestQuery() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   marisa::Query query("abc", 3);
 
@@ -391,12 +367,11 @@ void TestQuery() {
   cquery.insert(&str);
   ASSERT(str == "xyzabcstr");
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
 
 void TestContainer() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   int array[1024];
   marisa::Container<int *> array_container(array);
@@ -438,12 +413,11 @@ void TestContainer() {
   marisa::Container<std::vector<int> *> vec_container3(NULL);
   ASSERT(!vec_container3.is_valid());
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
 
 void TestCell() {
-  std::cout << __FILE__ << ':' << __LINE__ << ": "
-      << __FUNCTION__ << "(): " << std::flush;
+  TEST_START();
 
   marisa::Cell cell;
 
@@ -462,7 +436,7 @@ void TestCell() {
   ASSERT(cell.key_id() == 3);
   ASSERT(cell.length() == 4);
 
-  std::cout << "ok" << std::endl;
+  TEST_END();
 }
 
 }  // namespace

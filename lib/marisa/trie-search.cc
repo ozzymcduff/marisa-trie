@@ -17,13 +17,12 @@ class PredictCallback {
         max_num_results_(callback.max_num_results_),
         num_results_(callback.num_results_) {}
 
-  bool operator()(marisa::UInt32 key_id,
-      const char *key, std::size_t key_length) {
+  bool operator()(marisa::UInt32 key_id, const std::string &key) {
     if (key_ids_.is_valid()) {
       key_ids_.insert(num_results_, key_id);
     }
     if (keys_.is_valid()) {
-      keys_.insert(num_results_, std::string(key, key_length));
+      keys_.insert(num_results_, key);
     }
     return ++num_results_ < max_num_results_;
   }
@@ -50,16 +49,18 @@ std::string Trie::restore(UInt32 key_id) const {
 
 void Trie::restore(UInt32 key_id, std::string *key) const {
   MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
-  MARISA_THROW_IF((key_id >= num_keys_) || (key == NULL), MARISA_PARAM_ERROR);
+  MARISA_THROW_IF(key_id >= num_keys_, MARISA_PARAM_ERROR);
+  MARISA_THROW_IF(key == NULL, MARISA_PARAM_ERROR);
   restore_(key_id, key);
 }
 
-void Trie::restore(UInt32 key_id, char *key_buf,
-    std::size_t key_buf_size, std::size_t *key_length) const {
+std::size_t Trie::restore(UInt32 key_id, char *key_buf,
+    std::size_t key_buf_size) const {
   MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
-  MARISA_THROW_IF((key_id >= num_keys_) ||
-      ((key_buf == NULL) && (key_buf_size != 0)), MARISA_PARAM_ERROR);
-  restore_(key_id, key_buf, key_buf_size, key_length);
+  MARISA_THROW_IF(key_id >= num_keys_, MARISA_PARAM_ERROR);
+  MARISA_THROW_IF((key_buf == NULL) && (key_buf_size != 0),
+      MARISA_PARAM_ERROR);
+  return restore_(key_id, key_buf, key_buf_size);
 }
 
 UInt32 Trie::lookup(const char *str) const {
@@ -72,6 +73,24 @@ UInt32 Trie::lookup(const char *ptr, std::size_t length) const {
   MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
   MARISA_THROW_IF((ptr == NULL) && (length != 0), MARISA_PARAM_ERROR);
   return lookup_<const Query &>(Query(ptr, length));
+}
+
+std::size_t Trie::find(const char *str,
+    UInt32 *key_ids, std::size_t *key_lengths,
+    std::size_t max_num_results) const {
+  MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
+  MARISA_THROW_IF(str == NULL, MARISA_PARAM_ERROR);
+  return find_<CQuery>(CQuery(str),
+      MakeContainer(key_ids), MakeContainer(key_lengths), max_num_results);
+}
+
+std::size_t Trie::find(const char *ptr, std::size_t length,
+    UInt32 *key_ids, std::size_t *key_lengths,
+    std::size_t max_num_results) const {
+  MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
+  MARISA_THROW_IF((ptr == NULL) && (length != 0), MARISA_PARAM_ERROR);
+  return find_<const Query &>(Query(ptr, length),
+      MakeContainer(key_ids), MakeContainer(key_lengths), max_num_results);
 }
 
 std::size_t Trie::find(const char *str,
@@ -121,12 +140,30 @@ UInt32 Trie::find_last(const char *ptr, std::size_t length,
 }
 
 std::size_t Trie::predict(const char *str,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const {
+  MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
+  MARISA_THROW_IF(str == NULL, MARISA_PARAM_ERROR);
+  return (keys == NULL) ?
+      predict_breadth_first(str, key_ids, keys, max_num_results) :
+      predict_depth_first(str, key_ids, keys, max_num_results);
+}
+
+std::size_t Trie::predict(const char *ptr, std::size_t length,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const {
+  MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
+  MARISA_THROW_IF((ptr == NULL) && (length != 0), MARISA_PARAM_ERROR);
+  return (keys == NULL) ?
+      predict_breadth_first(ptr, length, key_ids, keys, max_num_results) :
+      predict_depth_first(ptr, length, key_ids, keys, max_num_results);
+}
+
+std::size_t Trie::predict(const char *str,
     std::vector<UInt32> *key_ids, std::vector<std::string> *keys,
     std::size_t max_num_results) const {
   MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
   MARISA_THROW_IF(str == NULL, MARISA_PARAM_ERROR);
   return (keys == NULL) ?
-      predict_breadth_first(str, key_ids, max_num_results) :
+      predict_breadth_first(str, key_ids, keys, max_num_results) :
       predict_depth_first(str, key_ids, keys, max_num_results);
 }
 
@@ -136,24 +173,58 @@ std::size_t Trie::predict(const char *ptr, std::size_t length,
   MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
   MARISA_THROW_IF((ptr == NULL) && (length != 0), MARISA_PARAM_ERROR);
   return (keys == NULL) ?
-      predict_breadth_first(ptr, length, key_ids, max_num_results) :
+      predict_breadth_first(ptr, length, key_ids, keys, max_num_results) :
       predict_depth_first(ptr, length, key_ids, keys, max_num_results);
 }
 
 std::size_t Trie::predict_breadth_first(const char *str,
-    std::vector<UInt32> *key_ids, std::size_t max_num_results) const {
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const {
   MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
   MARISA_THROW_IF(str == NULL, MARISA_PARAM_ERROR);
   return predict_breadth_first_<CQuery>(CQuery(str),
-      MakeContainer(key_ids), max_num_results);
+      MakeContainer(key_ids), MakeContainer(keys), max_num_results);
 }
 
 std::size_t Trie::predict_breadth_first(const char *ptr, std::size_t length,
-    std::vector<UInt32> *key_ids, std::size_t max_num_results) const {
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const {
   MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
   MARISA_THROW_IF((ptr == NULL) && (length != 0), MARISA_PARAM_ERROR);
   return predict_breadth_first_<const Query &>(Query(ptr, length),
-      MakeContainer(key_ids), max_num_results);
+      MakeContainer(key_ids), MakeContainer(keys), max_num_results);
+}
+
+std::size_t Trie::predict_breadth_first(const char *str,
+    std::vector<UInt32> *key_ids, std::vector<std::string> *keys,
+    std::size_t max_num_results) const {
+  MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
+  MARISA_THROW_IF(str == NULL, MARISA_PARAM_ERROR);
+  return predict_breadth_first_<CQuery>(CQuery(str),
+      MakeContainer(key_ids), MakeContainer(keys), max_num_results);
+}
+
+std::size_t Trie::predict_breadth_first(const char *ptr, std::size_t length,
+    std::vector<UInt32> *key_ids, std::vector<std::string> *keys,
+    std::size_t max_num_results) const {
+  MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
+  MARISA_THROW_IF((ptr == NULL) && (length != 0), MARISA_PARAM_ERROR);
+  return predict_breadth_first_<const Query &>(Query(ptr, length),
+      MakeContainer(key_ids), MakeContainer(keys), max_num_results);
+}
+
+std::size_t Trie::predict_depth_first(const char *str,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const {
+  MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
+  MARISA_THROW_IF(str == NULL, MARISA_PARAM_ERROR);
+  return predict_depth_first_<CQuery>(CQuery(str),
+      MakeContainer(key_ids), MakeContainer(keys), max_num_results);
+}
+
+std::size_t Trie::predict_depth_first(const char *ptr, std::size_t length,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const {
+  MARISA_THROW_IF(empty(), MARISA_STATE_ERROR);
+  MARISA_THROW_IF((ptr == NULL) && (length != 0), MARISA_PARAM_ERROR);
+  return predict_depth_first_<const Query &>(Query(ptr, length),
+      MakeContainer(key_ids), MakeContainer(keys), max_num_results);
 }
 
 std::size_t Trie::predict_depth_first(
@@ -218,17 +289,19 @@ void Trie::trie_restore(UInt32 node, std::string *key) const {
 }
 
 void Trie::tail_restore(UInt32 node, std::string *key) const {
+  const UInt32 link_id = link_flags_.rank1(node);
+  const UInt32 offset = (links_[link_id] * 256) + labels_[node];
   if (tail_.mode() == MARISA_BINARY_TAIL) {
-    UInt32 length;
-    const UInt32 offset = get_link(node, &length);
+    const UInt32 length = (links_[link_id + 1] * 256)
+        + labels_[link_flags_.select1(link_id + 1)] - offset;
     key->append(reinterpret_cast<const char *>(tail_[offset]), length);
   } else {
-    key->append(reinterpret_cast<const char *>(tail_[get_link(node)]));
+    key->append(reinterpret_cast<const char *>(tail_[offset]));
   }
 }
 
-void Trie::restore_(UInt32 key_id, char *key_buf,
-    std::size_t key_buf_size, std::size_t *key_length) const {
+std::size_t Trie::restore_(UInt32 key_id, char *key_buf,
+    std::size_t key_buf_size) const {
   std::size_t pos = 0;
   UInt32 node = key_id_to_node(key_id);
   while (node != 0) {
@@ -250,13 +323,11 @@ void Trie::restore_(UInt32 key_id, char *key_buf,
     }
     node = get_parent(node);
   }
-  if (key_length != NULL) {
-    *key_length = pos;
-  }
   if (pos < key_buf_size) {
     key_buf[pos] = '\0';
     std::reverse(key_buf, key_buf + pos);
   }
+  return pos;
 }
 
 void Trie::trie_restore(UInt32 node, char *key_buf,
@@ -280,9 +351,12 @@ void Trie::trie_restore(UInt32 node, char *key_buf,
 
 void Trie::tail_restore(UInt32 node, char *key_buf,
     std::size_t key_buf_size, std::size_t &pos) const {
+  const UInt32 link_id = link_flags_.rank1(node);
+  const UInt32 offset = (links_[link_id] * 256) + labels_[node];
   if (tail_.mode() == MARISA_BINARY_TAIL) {
-    UInt32 length;
-    const UInt8 *ptr = tail_[get_link(node, &length)];
+    const UInt8 *ptr = tail_[offset];
+    const UInt32 length = (links_[link_id + 1] * 256)
+        + labels_[link_flags_.select1(link_id + 1)] - offset;
     for (UInt32 i = 0; i < length; ++i) {
       if (pos < key_buf_size) {
         key_buf[pos] = ptr[i];
@@ -290,7 +364,7 @@ void Trie::tail_restore(UInt32 node, char *key_buf,
       ++pos;
     }
   } else {
-    for (const UInt8 *str = tail_[get_link(node)]; *str != '\0'; ++str) {
+    for (const UInt8 *str = tail_[offset]; *str != '\0'; ++str) {
       if (pos < key_buf_size) {
         key_buf[pos] = *str;
       }
@@ -356,6 +430,11 @@ std::size_t Trie::trie_match(UInt32 node, T query,
   return pos;
 }
 
+template std::size_t Trie::trie_match<CQuery>(UInt32 node,
+    CQuery query, std::size_t pos) const;
+template std::size_t Trie::trie_match<const Query &>(UInt32 node,
+    const Query &query, std::size_t pos) const;
+
 template <typename T>
 std::size_t Trie::tail_match(UInt32 node, T query,
     std::size_t pos) const {
@@ -382,6 +461,11 @@ std::size_t Trie::tail_match(UInt32 node, T query,
     return pos;
   }
 }
+
+template std::size_t Trie::tail_match<CQuery>(UInt32 node,
+    CQuery query, std::size_t pos) const;
+template std::size_t Trie::tail_match<const Query &>(UInt32 node,
+    const Query &query, std::size_t pos) const;
 
 template <typename T, typename U, typename V>
 std::size_t Trie::find_(T query, U key_ids, V key_lengths,
@@ -445,46 +529,63 @@ UInt32 Trie::find_last_(T query, std::size_t *key_length) const {
   return notfound();
 }
 
-template <typename T, typename U>
-std::size_t Trie::predict_breadth_first_(T query, U key_ids,
+template <typename T, typename U, typename V>
+std::size_t Trie::predict_breadth_first_(T query, U key_ids, V keys,
     std::size_t max_num_results) const try {
   UInt32 node = 0;
   std::size_t pos = 0;
   while (!query.ends_at(pos)) {
-    if (!predict_child<T>(node, query, pos)) {
+    if (!predict_child<T>(node, query, pos, NULL)) {
       return 0;
     }
   }
+  std::string key;
   UInt32 count = 0;
   if (terminal_flags_[node]) {
+    const UInt32 key_id = node_to_key_id(node);
     if (key_ids.is_valid()) {
-      key_ids.insert(count, node_to_key_id(node));
+      key_ids.insert(count, key_id);
+    }
+    if (keys.is_valid()) {
+      restore(key_id, &key);
+      keys.insert(count, key);
     }
     if (++count >= max_num_results) {
       return count;
     }
   }
-  UInt32 louds_pos = get_child(node);
+  const UInt32 louds_pos = get_child(node);
   if (!louds_[louds_pos]) {
     return count;
   }
   UInt32 node_begin = louds_pos_to_node(louds_pos);
   UInt32 node_end = louds_pos_to_node(get_child(node + 1));
   while (node_begin < node_end) {
-    UInt32 key_id_begin = node_to_key_id(node_begin);
-    UInt32 key_id_end = node_to_key_id(node_end);
+    const UInt32 key_id_begin = node_to_key_id(node_begin);
+    const UInt32 key_id_end = node_to_key_id(node_end);
     if (key_ids.is_valid()) {
+      UInt32 temp_count = count;
       for (UInt32 key_id = key_id_begin; key_id < key_id_end; ++key_id) {
-        key_ids.insert(count, key_id);
-        if (++count >= max_num_results) {
-          return count;
+        key_ids.insert(temp_count, key_id);
+        if (++temp_count >= max_num_results) {
+          break;
         }
       }
-    } else {
-      count += key_id_end - key_id_begin;
-      if (count >= max_num_results) {
-        return max_num_results;
+    }
+    if (keys.is_valid()) {
+      UInt32 temp_count = count;
+      for (UInt32 key_id = key_id_begin; key_id < key_id_end; ++key_id) {
+        key.clear();
+        restore(key_id, &key);
+        keys.insert(temp_count, key);
+        if (++temp_count >= max_num_results) {
+          break;
+        }
       }
+    }
+    count += key_id_end - key_id_begin;
+    if (count >= max_num_results) {
+      return max_num_results;
     }
     node_begin = louds_pos_to_node(get_child(node_begin));
     node_end = louds_pos_to_node(get_child(node_end));
@@ -501,35 +602,6 @@ std::size_t Trie::predict_depth_first_(T query, U key_ids, V keys,
     std::size_t max_num_results) const {
   PredictCallback<U, V> callback(key_ids, keys, max_num_results);
   return predict_callback_(query, callback);
-}
-
-template <typename T>
-bool Trie::predict_child(UInt32 &node, T query, std::size_t &pos,
-    std::string *key) const {
-  UInt32 louds_pos = get_child(node);
-  if (!louds_[louds_pos]) {
-    return false;
-  }
-  node = louds_pos_to_node(louds_pos);
-  do {
-    if (has_link(node)) {
-      std::size_t next_pos = has_trie() ?
-          trie_->trie_prefix_match<T>(get_link(node), query, pos, key) :
-          tail_prefix_match<T>(node, query, pos, key);
-      if (next_pos == mismatch()) {
-        return false;
-      } else if (next_pos != pos) {
-        pos = next_pos;
-        return true;
-      }
-    } else if (labels_[node] == query[pos]) {
-      ++pos;
-      return true;
-    }
-    ++node;
-    ++louds_pos;
-  } while (louds_[louds_pos]);
-  return false;
 }
 
 template <typename T>
@@ -581,6 +653,11 @@ std::size_t Trie::trie_prefix_match(UInt32 node, T query,
   return pos;
 }
 
+template std::size_t Trie::trie_prefix_match<CQuery>(UInt32 node,
+    CQuery query, std::size_t pos, std::string *key) const;
+template std::size_t Trie::trie_prefix_match<const Query &>(UInt32 node,
+    const Query &query, std::size_t pos, std::string *key) const;
+
 template <typename T>
 std::size_t Trie::tail_prefix_match(UInt32 node, T query,
     std::size_t pos, std::string *key) const {
@@ -617,5 +694,10 @@ std::size_t Trie::tail_prefix_match(UInt32 node, T query,
     return pos;
   }
 }
+
+template std::size_t Trie::tail_prefix_match<CQuery>(UInt32 node,
+    CQuery query, std::size_t pos, std::string *key) const;
+template std::size_t Trie::tail_prefix_match<const Query &>(UInt32 node,
+    const Query &query, std::size_t pos, std::string *key) const;
 
 }  // namespace marisa

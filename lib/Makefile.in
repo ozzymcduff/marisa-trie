@@ -74,7 +74,8 @@ libmarisa_a_LIBADD =
 am_libmarisa_a_OBJECTS = base.$(OBJEXT) progress.$(OBJEXT) \
 	mapper.$(OBJEXT) reader.$(OBJEXT) writer.$(OBJEXT) \
 	intvector.$(OBJEXT) bitvector.$(OBJEXT) tail.$(OBJEXT) \
-	trie.$(OBJEXT) trie-build.$(OBJEXT) trie-search.$(OBJEXT)
+	trie.$(OBJEXT) trie-build.$(OBJEXT) trie-search.$(OBJEXT) \
+	trie-c.$(OBJEXT)
 libmarisa_a_OBJECTS = $(am_libmarisa_a_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -183,7 +184,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CXXFLAGS = -Wall -Weffc++ -DDEBUG
+AM_CXXFLAGS = -Wall -Weffc++
 lib_LIBRARIES = libmarisa.a
 libmarisa_a_SOURCES = \
   marisa/base.cc \
@@ -196,7 +197,8 @@ libmarisa_a_SOURCES = \
   marisa/tail.cc \
   marisa/trie.cc \
   marisa/trie-build.cc \
-  marisa/trie-search.cc
+  marisa/trie-search.cc \
+  marisa/trie-c.cc
 
 include_HEADERS = marisa.h
 libmarisa_includedir = ${includedir}/marisa
@@ -308,6 +310,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tail.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie-build.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie-c.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie-search.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/writer.Po@am__quote@
@@ -479,6 +482,20 @@ trie-search.obj: marisa/trie-search.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa/trie-search.cc' object='trie-search.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie-search.obj `if test -f 'marisa/trie-search.cc'; then $(CYGPATH_W) 'marisa/trie-search.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/trie-search.cc'; fi`
+
+trie-c.o: marisa/trie-c.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie-c.o -MD -MP -MF $(DEPDIR)/trie-c.Tpo -c -o trie-c.o `test -f 'marisa/trie-c.cc' || echo '$(srcdir)/'`marisa/trie-c.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie-c.Tpo $(DEPDIR)/trie-c.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa/trie-c.cc' object='trie-c.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie-c.o `test -f 'marisa/trie-c.cc' || echo '$(srcdir)/'`marisa/trie-c.cc
+
+trie-c.obj: marisa/trie-c.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie-c.obj -MD -MP -MF $(DEPDIR)/trie-c.Tpo -c -o trie-c.obj `if test -f 'marisa/trie-c.cc'; then $(CYGPATH_W) 'marisa/trie-c.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/trie-c.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie-c.Tpo $(DEPDIR)/trie-c.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa/trie-c.cc' object='trie-c.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie-c.obj `if test -f 'marisa/trie-c.cc'; then $(CYGPATH_W) 'marisa/trie-c.cc'; else $(CYGPATH_W) '$(srcdir)/marisa/trie-c.cc'; fi`
 install-includeHEADERS: $(include_HEADERS)
 	@$(NORMAL_INSTALL)
 	test -z "$(includedir)" || $(MKDIR_P) "$(DESTDIR)$(includedir)"
