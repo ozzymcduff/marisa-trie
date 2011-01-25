@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="key-test"
-	ProjectGUID="{8C6E19A6-C502-4052-919E-D82634E49F2D}"
-	RootNamespace="keytest"
+	Name="unit-test"
+	ProjectGUID="{6A83AFE2-2AF8-4BD2-A3BD-D26AFBE96C87}"
+	RootNamespace="unittest"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -173,7 +173,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\tests\key-test.cc"
+				RelativePath="..\..\tests\unit-test.cc"
 				>
 			</File>
 		</Filter>
@@ -182,6 +182,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath="..\..\tests\assert.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="リソース ファイル"

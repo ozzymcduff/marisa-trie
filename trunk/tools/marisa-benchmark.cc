@@ -60,7 +60,7 @@ void print_help(const char *cmd) {
 }
 
 void print_config() {
-  std::cout << "max. #tries: " << param_min_num_tries
+  std::cout << "#tries: " << param_min_num_tries
       << " - " << param_max_num_tries << std::endl;
 
   switch (param_trie) {

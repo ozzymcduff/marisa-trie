@@ -149,6 +149,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\..\lib\marisa\base.cc"
+				>
+			</File>
+			<File
 				RelativePath="..\..\lib\marisa\bitvector.cc"
 				>
 			</File>
@@ -161,6 +165,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\lib\marisa\progress.cc"
+				>
+			</File>
+			<File
 				RelativePath="..\..\lib\marisa\reader.cc"
 				>
 			</File>
@@ -170,6 +178,14 @@
 			</File>
 			<File
 				RelativePath="..\..\lib\marisa\trie-build.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\lib\marisa\trie-c.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\lib\marisa\trie-search.cc"
 				>
 			</File>
 			<File
@@ -199,7 +215,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\config.h"
+				RelativePath="..\..\lib\marisa\container.h"
 				>
 			</File>
 			<File
@@ -224,6 +240,10 @@
 			</File>
 			<File
 				RelativePath="..\..\lib\marisa\popcount.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\lib\marisa\progress.h"
 				>
 			</File>
 			<File
@@ -256,6 +276,10 @@
 			</File>
 			<File
 				RelativePath="..\..\lib\marisa\trie.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\lib\marisa\vector-inline.h"
 				>
 			</File>
 			<File

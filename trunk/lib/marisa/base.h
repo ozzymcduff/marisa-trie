@@ -183,25 +183,19 @@ class Exception {
 
 // MARISA_THROW adds a filename and a line number to an exception.
 #define MARISA_THROW(status) \
-  throw Exception(__FILE__, __LINE__, status)
+  (throw Exception(__FILE__, __LINE__, status))
 
-// MARISA_THROW_IF throws an exception with `status' if `condition' is true.
-// To avoid warnings, `do { ... } while (false)' is not used with Visual C++.
-#ifdef _MSC_VER
-#define MARISA_THROW_IF(condition, status) \
-  { if (condition) MARISA_THROW(status); }
-#else  // _MSC_VER
-#define MARISA_THROW_IF(condition, status) \
-  do { if (condition) MARISA_THROW(status); } while (false)
-#endif  // _MSC_VER
+// MARISA_THROW_IF throws an exception with `status' if `cond' is true.
+#define MARISA_THROW_IF(cond, status) \
+  (void)((!(cond)) || (MARISA_THROW(status), 0))
 
 // MARISA_DEBUG_IF is used for debugging. For example, MARISA_DEBUG_IF is used
 // to find out-of-range accesses in marisa::Vector, marisa::IntVector, etc.
 #ifdef _DEBUG
-#define MARISA_DEBUG_IF(condition, status) \
-  MARISA_THROW_IF(condition, status)
+#define MARISA_DEBUG_IF(cond, status) \
+  MARISA_THROW_IF(cond, status)
 #else
-#define MARISA_DEBUG_IF(condition, status)
+#define MARISA_DEBUG_IF(cond, status)
 #endif
 
 // To not include <algorithm> only for std::swap().

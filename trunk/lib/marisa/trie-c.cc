@@ -401,13 +401,4 @@ marisa_status marisa_clear(marisa_trie *h) {
   return MARISA_OK;
 }
 
-marisa_status marisa_swap(marisa_trie *lhs, marisa_trie *rhs) {
-  if ((lhs == NULL) || (rhs == NULL)) {
-    return MARISA_PARAM_ERROR;
-  }
-  lhs->trie.swap(&rhs->trie);
-  lhs->mapper.swap(&rhs->mapper);
-  return MARISA_OK;
-}
-
 }  // extern "C"
