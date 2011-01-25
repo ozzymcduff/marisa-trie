@@ -377,7 +377,6 @@ marisa_status marisa_get_total_size(const marisa_trie *h,
     size_t *total_size);
 
 marisa_status marisa_clear(marisa_trie *h);
-marisa_status marisa_swap(marisa_trie *lhs, marisa_trie *rhs);
 
 #ifdef __cplusplus
 }  // extern "C"

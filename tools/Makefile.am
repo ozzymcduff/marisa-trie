@@ -1,4 +1,4 @@
-AM_CFLAGS = -Wall
+AM_CFLAGS = -Wall -I../lib
 AM_CXXFLAGS = -Wall -Weffc++ -I../lib
 
 bin_PROGRAMS = \
