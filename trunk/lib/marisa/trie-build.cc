@@ -172,9 +172,9 @@ void Trie::build_cur(Vector<Key<T> > &keys,
   Vector<Key<T> > rest_keys;
   std::queue<Range> queue;
   Vector<WRange> wranges;
-  queue.push(Range(0, keys.size(), 0));
+  queue.push(Range(0, (UInt32)keys.size(), 0));
   while (!queue.empty()) {
-    const UInt32 node = link_flags_.size() - (UInt32)queue.size();
+    const UInt32 node = (UInt32)(link_flags_.size() - queue.size());
     Range range = queue.front();
     queue.pop();
 

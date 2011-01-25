@@ -48,7 +48,7 @@ class PredictCallback {
 
 }  // namespace
 
-class marisa_trie_ {
+struct marisa_trie_ {
  public:
   marisa_trie_() : trie(), mapper() {}
 
@@ -348,48 +348,20 @@ marisa_status marisa_predict_callback(const marisa_trie *h,
   return ex.status();
 }
 
-marisa_status marisa_get_num_keys(const marisa_trie *h,
-    marisa_uint32 *num_keys) {
-  if (h == NULL) {
-    return MARISA_HANDLE_ERROR;
-  } else if (num_keys == NULL) {
-    return MARISA_PARAM_ERROR;
-  }
-  *num_keys = h->trie.num_keys();
-  return MARISA_OK;
+size_t marisa_get_num_tries(const marisa_trie *h) {
+  return (h != NULL) ? h->trie.num_tries() : 0;
 }
 
-marisa_status marisa_get_num_tries(const marisa_trie *h,
-    int *num_tries) {
-  if (h == NULL) {
-    return MARISA_HANDLE_ERROR;
-  } else if (num_tries == NULL) {
-    return MARISA_PARAM_ERROR;
-  }
-  *num_tries = h->trie.num_tries();
-  return MARISA_OK;
+size_t marisa_get_num_keys(const marisa_trie *h) {
+  return (h != NULL) ? h->trie.num_keys() : 0;
 }
 
-marisa_status marisa_get_num_nodes(const marisa_trie *h,
-    marisa_uint32 *num_nodes) {
-  if (h == NULL) {
-    return MARISA_HANDLE_ERROR;
-  } else if (num_nodes == NULL) {
-    return MARISA_PARAM_ERROR;
-  }
-  *num_nodes = h->trie.num_nodes();
-  return MARISA_OK;
+size_t marisa_get_num_nodes(const marisa_trie *h) {
+  return (h != NULL) ? h->trie.num_nodes() : 0;
 }
 
-marisa_status marisa_get_total_size(const marisa_trie *h,
-    size_t *total_size) {
-  if (h == NULL) {
-    return MARISA_HANDLE_ERROR;
-  } else if (total_size == NULL) {
-    return MARISA_PARAM_ERROR;
-  }
-  *total_size = h->trie.total_size();
-  return MARISA_OK;
+size_t marisa_get_total_size(const marisa_trie *h) {
+  return (h != NULL) ? h->trie.total_size() : 0;
 }
 
 marisa_status marisa_clear(marisa_trie *h) {

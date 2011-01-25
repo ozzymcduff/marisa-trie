@@ -18,8 +18,7 @@ class Mapper {
   template <typename T>
   void map(T *obj) {
     MARISA_THROW_IF(obj == NULL, MARISA_PARAM_ERROR);
-    const void *ptr = map_data(sizeof(T));
-    *obj = *static_cast<const T *>(ptr);
+    *obj = *static_cast<const T *>(map_data(sizeof(T)));
   }
 
   template <typename T>
@@ -27,8 +26,7 @@ class Mapper {
     MARISA_THROW_IF((objs == NULL) && (num_objs != 0), MARISA_PARAM_ERROR);
     MARISA_THROW_IF(num_objs > (MARISA_UINT32_MAX / sizeof(T)),
         MARISA_SIZE_ERROR);
-    const void *ptr = map_data(sizeof(T) * num_objs);
-    *objs = static_cast<const T *>(ptr);
+    *objs = static_cast<const T *>(map_data(sizeof(T) * num_objs));
   }
 
   bool is_open() const {

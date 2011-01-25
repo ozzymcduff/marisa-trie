@@ -269,10 +269,10 @@ void TestBitVector(marisa::UInt32 size) {
     ASSERT(bv.rank1(i) == num_ones);
     ++(bv[i] ? num_ones : num_zeros);
   }
-  for (std::size_t i = 0; i < zeros.size(); ++i) {
+  for (marisa::UInt32 i = 0; i < zeros.size(); ++i) {
     ASSERT(bv.select0(i) == zeros[i]);
   }
-  for (std::size_t i = 0; i < ones.size(); ++i) {
+  for (marisa::UInt32 i = 0; i < ones.size(); ++i) {
     ASSERT(bv.select1(i) == ones[i]);
   }
 }

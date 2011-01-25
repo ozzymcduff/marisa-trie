@@ -19,7 +19,7 @@ class Progress {
     return *this;
   }
 
-  void test_total_size(UInt32 total_size) {
+  void test_total_size(std::size_t total_size) {
     MARISA_THROW_IF(total_size_ > (MARISA_UINT32_MAX - total_size),
         MARISA_SIZE_ERROR);
     total_size_ += total_size;
@@ -31,7 +31,7 @@ class Progress {
   int trie_id() const {
     return trie_id_;
   }
-  UInt32 total_size() const {
+  std::size_t total_size() const {
     return total_size_;
   }
 
@@ -51,7 +51,7 @@ class Progress {
  private:
   int flags_;
   int trie_id_;
-  UInt32 total_size_;
+  std::size_t total_size_;
 
   // Disallows copy and assignment.
   Progress(const Progress &);

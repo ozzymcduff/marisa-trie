@@ -131,7 +131,7 @@ inline bool Trie::empty() const {
   return louds_.empty();
 }
 
-inline UInt32 Trie::num_keys() const {
+inline std::size_t Trie::num_keys() const {
   return num_keys_;
 }
 
@@ -153,7 +153,7 @@ inline bool Trie::find_child(UInt32 &node, T query,
   node = louds_pos_to_node(louds_pos);
   do {
     if (has_link(node)) {
-      UInt32 next_pos = has_trie() ?
+      std::size_t next_pos = has_trie() ?
           trie_->trie_match<T>(get_link(node), query, pos) :
           tail_match<T>(node, query, pos);
       if (next_pos == mismatch()) {
