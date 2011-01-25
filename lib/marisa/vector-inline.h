@@ -206,7 +206,7 @@ void Vector<T>::realloc(std::size_t new_capacity) {
   delete [] reinterpret_cast<char *>(buf_);
   buf_ = new_buf;
   objs_ = new_buf;
-  capacity_ = new_capacity;
+  capacity_ = (UInt32)new_capacity;
 }
 
 }  // namespace marisa

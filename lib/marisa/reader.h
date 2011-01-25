@@ -29,7 +29,9 @@ class Reader {
     MARISA_THROW_IF((objs == NULL) && (num_objs != 0), MARISA_PARAM_ERROR);
     MARISA_THROW_IF(num_objs > (MARISA_UINT32_MAX / sizeof(T)),
         MARISA_SIZE_ERROR);
-    read_data(objs, sizeof(T) * num_objs);
+    if (num_objs != 0) {
+      read_data(objs, sizeof(T) * num_objs);
+    }
   }
 
   bool is_open() const {

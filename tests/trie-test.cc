@@ -55,16 +55,16 @@ void TestTrie() {
 
   marisa::Trie trie;
 
-  ASSERT(trie.num_keys() == 0);
   ASSERT(trie.num_tries() == 0);
+  ASSERT(trie.num_keys() == 0);
   ASSERT(trie.num_nodes() == 0);
   ASSERT(trie.total_size() == (sizeof(marisa::UInt32) * 22));
 
   std::vector<std::string> keys;
   trie.build(keys);
 
-  ASSERT(trie.num_keys() == 0);
   ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 0);
   ASSERT(trie.num_nodes() == 1);
 
   keys.push_back("apple");
@@ -76,8 +76,8 @@ void TestTrie() {
   std::vector<marisa::UInt32> key_ids;
   trie.build(keys, &key_ids, 1 | MARISA_WITHOUT_TAIL | MARISA_LABEL_ORDER);
 
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 11);
 
   ASSERT(key_ids.size() == 5);
@@ -100,15 +100,15 @@ void TestTrie() {
 
   trie.clear();
 
-  ASSERT(trie.num_keys() == 0);
   ASSERT(trie.num_tries() == 0);
+  ASSERT(trie.num_keys() == 0);
   ASSERT(trie.num_nodes() == 0);
   ASSERT(trie.total_size() == (sizeof(marisa::UInt32) * 22));
 
   trie.build(keys, &key_ids, 1 | MARISA_WITHOUT_TAIL | MARISA_WEIGHT_ORDER);
 
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 11);
 
   ASSERT(key_ids.size() == 5);
@@ -193,8 +193,8 @@ void TestPrefixTrie() {
   trie.build(keys, &key_ids, 1 | MARISA_PREFIX_TRIE
       | MARISA_TEXT_TAIL | MARISA_LABEL_ORDER);
 
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 7);
 
   char key_buf[256];
@@ -224,8 +224,8 @@ void TestPrefixTrie() {
   trie.build(keys, &key_ids, 2 | MARISA_PREFIX_TRIE
       | MARISA_WITHOUT_TAIL | MARISA_WEIGHT_ORDER);
 
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 16);
 
   for (std::size_t i = 0; i < keys.size(); ++i) {
@@ -253,8 +253,8 @@ void TestPrefixTrie() {
   trie.build(keys, &key_ids, 2 | MARISA_PREFIX_TRIE
       | MARISA_TEXT_TAIL | MARISA_LABEL_ORDER);
 
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 14);
 
   for (std::size_t i = 0; i < keys.size(); ++i) {
@@ -272,8 +272,8 @@ void TestPrefixTrie() {
   trie.mmap(&mapper, "trie-test.dat");
 
   ASSERT(mapper.is_open());
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 14);
 
   for (std::size_t i = 0; i < keys.size(); ++i) {
@@ -290,8 +290,8 @@ void TestPrefixTrie() {
   trie.clear();
   trie.read(stream);
 
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 14);
 
   for (std::size_t i = 0; i < keys.size(); ++i) {
@@ -306,8 +306,8 @@ void TestPrefixTrie() {
   trie.build(keys, &key_ids, 3 | MARISA_PREFIX_TRIE
       | MARISA_WITHOUT_TAIL | MARISA_WEIGHT_ORDER);
 
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 3);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 19);
 
   for (std::size_t i = 0; i < keys.size(); ++i) {
@@ -418,8 +418,8 @@ void TestPatriciaTrie() {
   std::vector<marisa::UInt32> key_ids;
   trie.build(keys, &key_ids, 1);
 
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 7);
 
   ASSERT(key_ids.size() == 5);
@@ -442,8 +442,8 @@ void TestPatriciaTrie() {
 
   trie.build(keys, &key_ids, 2 | MARISA_WITHOUT_TAIL);
 
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 17);
 
   for (std::size_t i = 0; i < keys.size(); ++i) {
@@ -457,8 +457,8 @@ void TestPatriciaTrie() {
 
   trie.build(keys, &key_ids, 2);
 
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 14);
 
   for (std::size_t i = 0; i < keys.size(); ++i) {
@@ -472,8 +472,8 @@ void TestPatriciaTrie() {
 
   trie.build(keys, &key_ids, 3 | MARISA_WITHOUT_TAIL);
 
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 3);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 20);
 
   for (std::size_t i = 0; i < keys.size(); ++i) {
@@ -490,8 +490,8 @@ void TestPatriciaTrie() {
   trie.clear();
   trie.read(stream);
 
-  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_tries() == 3);
+  ASSERT(trie.num_keys() == 4);
   ASSERT(trie.num_nodes() == 20);
 
   for (std::size_t i = 0; i < keys.size(); ++i) {
@@ -516,15 +516,15 @@ void TestEmptyString() {
   std::vector<marisa::UInt32> key_ids;
   trie.build(keys, &key_ids);
 
-  ASSERT(trie.num_keys() == 1);
   ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 1);
   ASSERT(trie.num_nodes() == 1);
 
   ASSERT(key_ids.size() == 1);
   ASSERT(key_ids[0] == 0);
 
   ASSERT(trie[""] == 0);
-  ASSERT(trie[0U] == "");
+  ASSERT(trie[(marisa::UInt32)0] == "");
 
   ASSERT(trie["x"] == trie.notfound());
   ASSERT(trie.find_first("") == 0);
@@ -580,8 +580,8 @@ void TestBinaryKey() {
   std::vector<marisa::UInt32> key_ids;
   trie.build(keys, &key_ids, 1 | MARISA_WITHOUT_TAIL);
 
-  ASSERT(trie.num_keys() == 1);
   ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 1);
   ASSERT(trie.num_nodes() == 8);
   ASSERT(key_ids.size() == 1);
 
@@ -595,8 +595,8 @@ void TestBinaryKey() {
 
   trie.build(keys, &key_ids, 1 | MARISA_PREFIX_TRIE | MARISA_BINARY_TAIL);
 
-  ASSERT(trie.num_keys() == 1);
   ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 1);
   ASSERT(trie.num_nodes() == 2);
   ASSERT(key_ids.size() == 1);
 
@@ -608,8 +608,8 @@ void TestBinaryKey() {
 
   trie.build(keys, &key_ids, 1 | MARISA_PREFIX_TRIE | MARISA_TEXT_TAIL);
 
-  ASSERT(trie.num_keys() == 1);
   ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 1);
   ASSERT(trie.num_nodes() == 2);
   ASSERT(key_ids.size() == 1);
 

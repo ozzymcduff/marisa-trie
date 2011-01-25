@@ -122,12 +122,12 @@ void Tail::build_binary_tail(const Vector<String> &keys,
   temp_offsets.resize(keys.size() + 1);
 
   for (std::size_t i = 0; i < keys.size(); ++i) {
-    temp_offsets[i] = buf.size();
+    temp_offsets[i] = (UInt32)buf.size();
     for (std::size_t j = 0; j < keys[i].length(); ++j) {
       buf.push_back(keys[i][j]);
     }
   }
-  temp_offsets.back() = buf.size();
+  temp_offsets.back() = (UInt32)buf.size();
   buf.shrink();
 
   if (offsets != NULL) {
@@ -153,7 +153,7 @@ void Tail::build_text_tail(const Vector<String> &keys,
       }
     }
     pairs[i].first = RString(keys[i]);
-    pairs[i].second = i;
+    pairs[i].second = (UInt32)i;
   }
   std::sort(pairs.begin(), pairs.end(), std::greater<KeyIdPair>());
 
@@ -173,10 +173,10 @@ void Tail::build_text_tail(const Vector<String> &keys,
       ++match;
     }
     if ((match == cur.first.length()) && (last->first.length() != 0)) {
-      temp_offsets[cur.second] = temp_offsets[last->second]
-          + (last->first.length() - match);
+      temp_offsets[cur.second] = (UInt32)(temp_offsets[last->second]
+          + (last->first.length() - match));
     } else {
-      temp_offsets[cur.second] = buf.size();
+      temp_offsets[cur.second] = (UInt32)buf.size();
       for (std::size_t j = 1; j <= cur.first.length(); ++j) {
         buf.push_back(cur.first[cur.first.length() - j]);
       }

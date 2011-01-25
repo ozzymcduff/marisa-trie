@@ -389,7 +389,7 @@ template <typename T>
 std::size_t Trie::trie_match(UInt32 node, T query,
     std::size_t pos) const {
   if (has_link(node)) {
-    UInt32 next_pos;
+    std::size_t next_pos;
     if (has_trie()) {
       next_pos = trie_->trie_match<T>(get_link(node), query, pos);
     } else {
@@ -410,7 +410,7 @@ std::size_t Trie::trie_match(UInt32 node, T query,
       return mismatch();
     }
     if (has_link(node)) {
-      UInt32 next_pos;
+      std::size_t next_pos;
       if (has_trie()) {
         next_pos = trie_->trie_match<T>(get_link(node), query, pos);
       } else {

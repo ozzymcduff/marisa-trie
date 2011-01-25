@@ -181,9 +181,9 @@ class Trie {
   std::size_t predict_callback(const std::string &str, T callback) const;
 
   bool empty() const;
-  UInt32 num_keys() const;
-  int num_tries() const;
-  UInt32 num_nodes() const;
+  std::size_t num_tries() const;
+  std::size_t num_keys() const;
+  std::size_t num_nodes() const;
   std::size_t total_size() const;
 
   void clear();
@@ -367,14 +367,10 @@ marisa_status marisa_predict_callback(const marisa_trie *h,
     int (*callback)(void *, marisa_uint32, const char *, size_t),
     void *first_arg_to_callback);
 
-marisa_status marisa_get_num_keys(const marisa_trie *h,
-    marisa_uint32 *num_keys);
-marisa_status marisa_get_num_tries(const marisa_trie *h,
-    int *num_tries);
-marisa_status marisa_get_num_nodes(const marisa_trie *h,
-    marisa_uint32 *num_nodes);
-marisa_status marisa_get_total_size(const marisa_trie *h,
-    size_t *total_size);
+size_t marisa_get_num_tries(const marisa_trie *h);
+size_t marisa_get_num_keys(const marisa_trie *h);
+size_t marisa_get_num_nodes(const marisa_trie *h);
+size_t marisa_get_total_size(const marisa_trie *h);
 
 marisa_status marisa_clear(marisa_trie *h);
 
