@@ -1,11 +1,102 @@
 #summary インタフェース
 #labels Featured
 
-= インタフェース =
+= はじめに =
 
-libmarisa を利用するときは，`marisa.h` をインクルードし，`marisa::Trie` というクラスを用いることになります．また，キーの ID として使用する型（`unsigned __int32` もしくは `uint32_t`）には，`marisa::UInt32` という別名が与えられています．以下，`marisa::Trie` の解説になっています．対応するヘッダは `marisa/trie.h` です．
+libmarisa には，C++ 用のインタフェースと C 言語用のインタフェースがあります．すべての機能は C++ により実装されていて，それらに対するラッパとして C 言語用のインタフェースが提供されているという構成になっています．
+
+ * *Version: 0.1.0 向けに修正中です．現在，エラー処理の部分だけが 0.1.0 の内容で，残りは 0.0.1 の内容になっています．ご注意ください．*
 
 <wiki:toc max_depth="3" />
+
+----
+
+= エラー処理 =
+
+C++ 用のインタフェースでは，エラーを検出したとき，例外 `marisa::Exception` を投げるようになっています．ただし，I/O において `std::iostream` が `std::ios_base::failure` 以外を投げた場合，およびにコールバック関数が `std::bad_alloc` もしくは `std::length_error` 以外の例外を投げた場合，それらの例外はライブラリ内部でキャッチされないので，呼び出し側で対処する必要があります．
+
+一方，C 言語用のインタフェースでは，例外をライブラリの内部でキャッチし，エラー番号 `marisa_status` を返すようになっています．呼び出し側に例外が届くようなことはありません．あるとすれば，それはライブラリのバグです．
+
+----
+
+== 例外 ==
+
+例外クラスである `marisa::Exception` には，`std::exception` と同じように関数 `what()` を持たせているほか，ファイル名，行番号，エラー番号を持たせるようにしています．
+
+{{{
+class Exception {
+ public:
+  Exception(const char *filename, int line, Status status);
+  Exception(const Exception &ex);
+
+  Exception &operator=(const Exception &rhs);
+
+  // 例外を投げたファイルの名前（__FILE__）を返します．
+  const char *filename() const;
+
+  // 例外を投げた行の番号（__LINE__）を返します．
+  int line() const;
+
+  // エラー番号を返します．
+  Status status() const;
+
+  // エラー番号に対応する文字列を返します．
+  // marisa_strerror() を呼び出すだけです．
+  const char *what() const;
+};
+}}}
+
+----
+
+== エラー番号 ==
+
+エラー番号の一覧は，列挙体 `marisa_status`（`marisa::Status` と同じ）のメンバとして定義されています．
+
+{{{
+typedef enum marisa_status_ {
+  // C 言語用のインタフェース専用であり，問題がないときに返されます．
+  MARISA_OK               = 0,
+
+  // C 言語用のインタフェース専用であり，不正なハンドルを指定したときに
+  // 返されます．
+  MARISA_HANDLE_ERROR     = 1,
+
+  // オブジェクトの状態と指定した動作の組み合わせが適切でないことを示す
+  // エラーです．例えば，構築前の marisa::Trie オブジェクトで検索しようと
+  // した場合に発生します．
+  MARISA_STATE_ERROR      = 2,
+
+  // 引数が正しくないときに起きるエラーです．NULL ポインタや範囲外の値を
+  // 引数として渡したときに発生することがあります．
+  MARISA_PARAM_ERROR      = 3,
+
+  // 基本的には，入力されたキー集合が大きすぎるとき，あるいは検索結果が
+  // 大きくなりすぎたときに起きるエラーです．`std::length_error' の代わり
+  // として使っています．
+  MARISA_SIZE_ERROR       = 4,
+
+  // メモリの確保に失敗したことを示すエラーです．
+  MARISA_MEMORY_ERROR     = 5,
+
+  // 入出力に失敗したことを示すエラーです．
+  MARISA_IO_ERROR         = 6,
+
+  // 想定していないエラーです．ライブラリのバグである可能性があります．
+  MARISA_UNEXPECTED_ERROR = 7
+} marisa_status;
+}}}
+
+エラーの番号から名前を取得できるように，`marisa_strerror()` という関数を用意しています．引数が `MARISA_OK` であれば "MARISA_OK" を返すという程度の味気ない関数ですが，多少は役に立つと思います．
+
+{{{
+const char *marisa_strerror(marisa_status status);
+}}}
+
+----
+
+= C++ 用のインタフェース =
+
+libmarisa を利用するときは，`marisa.h` をインクルードし，`marisa::Trie` というクラスを用いることになります．また，キーの ID として使用する型（`unsigned __int32` もしくは `uint32_t`）には，`marisa::UInt32` という別名が与えられています．以下，`marisa::Trie` の解説になっています．対応するヘッダは `marisa/trie.h` です．
 
 ----
 
@@ -290,3 +381,9 @@ static const std::size_t MISMATCH = static_cast<std::size_t>(-2);
 `notfound()` と `mismatch()` は，それぞれ `NOTFOUND` と `MISMATCH` を返します．`NOTFOUND` と `notfound()` のどちらを使うのかは気分次第です．
 
 `NOTFOUND` はキーが見つからなかったことを示す定数です．`MISMATCH` は，内部で使用されている定数であり，今のところ，外部からは用なしの存在です．
+
+----
+
+= C 言語用のインタフェース ==
+
+まだですよー．
