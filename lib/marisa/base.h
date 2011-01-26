@@ -47,7 +47,7 @@ typedef enum marisa_status_ {
   // MARISA_OK means that a requested operation has succeeded.
   MARISA_OK               = 0,
 
-  // MARISA_HANDLE_ERRO means that a given handle is invalid.
+  // MARISA_HANDLE_ERROR means that a given handle is invalid.
   MARISA_HANDLE_ERROR     = 1,
 
   // MARISA_STATE_ERROR means that an object is not ready for a requested
@@ -148,7 +148,7 @@ typedef ::marisa_status Status;
 // An exception object stores a filename, a line number and an error code.
 class Exception {
  public:
-  explicit Exception(const char *filename, int line, Status status)
+  Exception(const char *filename, int line, Status status)
       : filename_(filename), line_(line), status_(status) {}
   Exception(const Exception &ex)
       : filename_(ex.filename_), line_(ex.line_), status_(ex.status_) {}
