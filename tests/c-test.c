@@ -196,6 +196,8 @@ void TestTrie() {
   ASSERT(marisa_predict_callback(trie, "app", MARISA_ZERO_TERMINATED,
       callback_for_predict, &num_found_keys) == MARISA_OK);
 
+  ASSERT(marisa_end(trie) == MARISA_OK);
+
   TEST_END();
 }
 

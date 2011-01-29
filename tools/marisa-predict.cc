@@ -104,15 +104,15 @@ int main(int argc, char *argv[]) {
 
   ::cmdopt_option long_options[] = {
     { "max-num-results", 1, NULL, 'n' },
-    { "mmap-dictionary", 0, NULL, 'm' },
-    { "read-dictionary", 0, NULL, 'r' },
     { "depth-first", 0, NULL, 'd' },
     { "breadth-first", 0, NULL, 'b' },
+    { "mmap-dictionary", 0, NULL, 'm' },
+    { "read-dictionary", 0, NULL, 'r' },
     { "help", 0, NULL, 'h' },
     { NULL, 0, NULL, 0 }
   };
   ::cmdopt_t cmdopt;
-  ::cmdopt_init(&cmdopt, argc, argv, "n:mrdbh", long_options);
+  ::cmdopt_init(&cmdopt, argc, argv, "n:dbmrh", long_options);
   int label;
   while ((label = ::cmdopt_get(&cmdopt)) != -1) {
     switch (label) {
@@ -130,20 +130,20 @@ int main(int argc, char *argv[]) {
         }
         break;
       }
-      case 'm': {
-        mmap_flag = true;
-        break;
-      }
-      case 'r': {
-        mmap_flag = false;
-        break;
-      }
       case 'd': {
         depth_first_flag = true;
         break;
       }
       case 'b': {
         depth_first_flag = false;
+        break;
+      }
+      case 'm': {
+        mmap_flag = true;
+        break;
+      }
+      case 'r': {
+        mmap_flag = false;
         break;
       }
       case 'h': {
