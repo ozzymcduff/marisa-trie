@@ -232,7 +232,7 @@ std::size_t Trie::predict_callback_(T query, U callback) const try {
     }
   }
   query.insert(&key);
-  UInt32 count = 0;
+  std::size_t count = 0;
   if (terminal_flags_[node]) {
     ++count;
     if (!callback(node_to_key_id(node), key)) {
@@ -247,7 +247,7 @@ std::size_t Trie::predict_callback_(T query, U callback) const try {
   cell.set_node(louds_pos_to_node(cell.louds_pos()));
   cell.set_key_id(node_to_key_id(cell.node()));
   cell.set_length(key.length());
-  std::vector<Cell> stack;
+  Vector<Cell> stack;
   stack.push_back(cell);
   std::size_t stack_pos = 1;
   while (stack_pos != 0) {

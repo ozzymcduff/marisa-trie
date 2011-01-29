@@ -20,6 +20,7 @@ int param_max_num_tries = 10;
 int param_trie = MARISA_DEFAULT_TRIE;
 int param_tail = MARISA_DEFAULT_TAIL;
 int param_order = MARISA_DEFAULT_ORDER;
+bool predict_strs_flag = false;
 bool speed_flag = true;
 
 class Clock {
@@ -51,8 +52,10 @@ void print_help(const char *cmd) {
       "  -T, --text-tail      build a dictionary with text TAIL (default)\n"
       "  -b, --binary-tail    build a dictionary with binary TAIL\n"
       "  -t, --without-tail   build a dictionary without TAIL\n"
-      "  -w, --weight-order   arranges siblings in weight order (default)\n"
-      "  -l, --label-order    arranges siblings in label order\n"
+      "  -w, --weight-order   arrange siblings in weight order (default)\n"
+      "  -l, --label-order    arrange siblings in label order\n"
+      "  -I, --predict-ids    get key IDs in predictive searches (default)\n"
+      "  -i, --predict-strs   restore key strings in predictive searches\n"
       "  -S, --print-speed    print speed [1000 keys/s] (default)\n"
       "  -s, --print-time     print time [us/key]\n"
       "  -h, --help           print this help\n"
@@ -98,6 +101,12 @@ void print_config() {
       std::cout << "order: weight" << std::endl;
       break;
     }
+  }
+
+  if (predict_strs_flag) {
+    std::cout << "predict: both IDs and strings" << std::endl;
+  } else {
+    std::cout << "predict: only IDs" << std::endl;
   }
 }
 
@@ -222,10 +231,14 @@ void benchmark_predict_breadth_first(const marisa::Trie &trie,
     const std::vector<marisa::UInt32> &key_ids) {
   Clock cl;
   std::vector<marisa::UInt32> found_key_ids;
+  std::vector<std::string> found_keys;
+  std::vector<std::string> *found_keys_ref =
+      predict_strs_flag ? &found_keys : NULL;
   for (std::size_t i = 0; i < keys.size(); ++i) {
     found_key_ids.clear();
+    found_keys.clear();
     const std::size_t num_keys = trie.predict_breadth_first(
-        keys[i].first, &found_key_ids);
+        keys[i].first, &found_key_ids, found_keys_ref);
     if ((num_keys == 0) || (found_key_ids.front() != key_ids[i])) {
       std::cerr << "error: predict() failed" << std::endl;
       return;
@@ -239,10 +252,14 @@ void benchmark_predict_depth_first(const marisa::Trie &trie,
     const std::vector<marisa::UInt32> &key_ids) {
   Clock cl;
   std::vector<marisa::UInt32> found_key_ids;
+  std::vector<std::string> found_keys;
+  std::vector<std::string> *found_keys_ref =
+      predict_strs_flag ? &found_keys : NULL;
   for (std::size_t i = 0; i < keys.size(); ++i) {
     found_key_ids.clear();
+    found_keys.clear();
     const std::size_t num_keys = trie.predict_depth_first(
-        keys[i].first, &found_key_ids, NULL);
+        keys[i].first, &found_key_ids, found_keys_ref);
     if ((num_keys == 0) || (found_key_ids.front() != key_ids[i])) {
       std::cerr << "error: predict() failed" << std::endl;
       return;
@@ -307,21 +324,24 @@ int main(int argc, char *argv[]) {
   std::ios::sync_with_stdio(false);
 
   ::cmdopt_option long_options[] = {
+    { "min-num-tries", 1, NULL, 'N' },
     { "max-num-tries", 1, NULL, 'n' },
     { "patricia-trie", 0, NULL, 'P' },
     { "prefix-trie", 0, NULL, 'p' },
-    { "with-tail", 0, NULL, 'T' },
+    { "text-tail", 0, NULL, 'T' },
+    { "binary-tail", 0, NULL, 'b' },
     { "without-tail", 0, NULL, 't' },
     { "weight-order", 0, NULL, 'w' },
     { "label-order", 0, NULL, 'l' },
+    { "predict-ids", 0, NULL, 'I' },
+    { "predict-strs", 0, NULL, 'i' },
     { "print-speed", 0, NULL, 'S' },
     { "print-time", 0, NULL, 's' },
-    { "output", 1, NULL, 'o' },
     { "help", 0, NULL, 'h' },
     { NULL, 0, NULL, 0 }
   };
   ::cmdopt_t cmdopt;
-  ::cmdopt_init(&cmdopt, argc, argv, "N:n:PpTbtwlSso:h", long_options);
+  ::cmdopt_init(&cmdopt, argc, argv, "N:n:PpTbtwlIiSsh", long_options);
   int label;
   while ((label = ::cmdopt_get(&cmdopt)) != -1) {
     switch (label) {
@@ -373,6 +393,14 @@ int main(int argc, char *argv[]) {
       }
       case 'l': {
         param_order = MARISA_LABEL_ORDER;
+        break;
+      }
+      case 'I': {
+        predict_strs_flag = false;
+        break;
+      }
+      case 'i': {
+        predict_strs_flag = true;
         break;
       }
       case 'S': {

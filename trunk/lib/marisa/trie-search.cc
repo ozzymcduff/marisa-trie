@@ -470,6 +470,9 @@ template std::size_t Trie::tail_match<const Query &>(UInt32 node,
 template <typename T, typename U, typename V>
 std::size_t Trie::find_(T query, U key_ids, V key_lengths,
     std::size_t max_num_results) const try {
+  if (max_num_results == 0) {
+    return 0;
+  }
   std::size_t count = 0;
   UInt32 node = 0;
   std::size_t pos = 0;
@@ -532,6 +535,9 @@ UInt32 Trie::find_last_(T query, std::size_t *key_length) const {
 template <typename T, typename U, typename V>
 std::size_t Trie::predict_breadth_first_(T query, U key_ids, V keys,
     std::size_t max_num_results) const try {
+  if (max_num_results == 0) {
+    return 0;
+  }
   UInt32 node = 0;
   std::size_t pos = 0;
   while (!query.ends_at(pos)) {
@@ -540,7 +546,7 @@ std::size_t Trie::predict_breadth_first_(T query, U key_ids, V keys,
     }
   }
   std::string key;
-  UInt32 count = 0;
+  std::size_t count = 0;
   if (terminal_flags_[node]) {
     const UInt32 key_id = node_to_key_id(node);
     if (key_ids.is_valid()) {
@@ -599,9 +605,71 @@ std::size_t Trie::predict_breadth_first_(T query, U key_ids, V keys,
 
 template <typename T, typename U, typename V>
 std::size_t Trie::predict_depth_first_(T query, U key_ids, V keys,
-    std::size_t max_num_results) const {
-  PredictCallback<U, V> callback(key_ids, keys, max_num_results);
-  return predict_callback_(query, callback);
+    std::size_t max_num_results) const try {
+  if (max_num_results == 0) {
+    return 0;
+  } else if (keys.is_valid()) {
+    PredictCallback<U, V> callback(key_ids, keys, max_num_results);
+    return predict_callback_(query, callback);
+  }
+
+  UInt32 node = 0;
+  std::size_t pos = 0;
+  while (!query.ends_at(pos)) {
+    if (!predict_child<T>(node, query, pos, NULL)) {
+      return 0;
+    }
+  }
+  std::size_t count = 0;
+  if (terminal_flags_[node]) {
+    if (key_ids.is_valid()) {
+      key_ids.insert(count, node_to_key_id(node));
+    }
+    if (++count >= max_num_results) {
+      return count;
+    }
+  }
+  Cell cell;
+  cell.set_louds_pos(get_child(node));
+  if (!louds_[cell.louds_pos()]) {
+    return count;
+  }
+  cell.set_node(louds_pos_to_node(cell.louds_pos()));
+  cell.set_key_id(node_to_key_id(cell.node()));
+  Vector<Cell> stack;
+  stack.push_back(cell);
+  std::size_t stack_pos = 1;
+  while (stack_pos != 0) {
+    Cell &cur = stack[stack_pos - 1];
+    if (!louds_[cur.louds_pos()]) {
+      cur.set_louds_pos(cur.louds_pos() + 1);
+      --stack_pos;
+      continue;
+    }
+    cur.set_louds_pos(cur.louds_pos() + 1);
+    if (terminal_flags_[cur.node()]) {
+      if (key_ids.is_valid()) {
+        key_ids.insert(count, cur.key_id());
+      }
+      if (++count >= max_num_results) {
+        return count;
+      }
+      cur.set_key_id(cur.key_id() + 1);
+    }
+    if (stack_pos == stack.size()) {
+      cell.set_louds_pos(get_child(cur.node()));
+      cell.set_node(louds_pos_to_node(cell.louds_pos()));
+      cell.set_key_id(node_to_key_id(cell.node()));
+      stack.push_back(cell);
+    }
+    stack[stack_pos - 1].set_node(stack[stack_pos - 1].node() + 1);
+    ++stack_pos;
+  }
+  return count;
+} catch (const std::bad_alloc &) {
+  MARISA_THROW(MARISA_MEMORY_ERROR);
+} catch (const std::length_error &) {
+  MARISA_THROW(MARISA_SIZE_ERROR);
 }
 
 template <typename T>

@@ -119,8 +119,10 @@ Options:
   -T, --text-tail      build a dictionary with text TAIL (default)
   -b, --binary-tail    build a dictionary with binary TAIL
   -t, --without-tail   build a dictionary without TAIL
-  -w, --weight-order   arranges siblings in weight order (default)
-  -l, --label-order    arranges siblings in label order
+  -w, --weight-order   arrange siblings in weight order (default)
+  -l, --label-order    arrange siblings in label order
+  -I, --predict-ids    get key IDs in predictive searches (default)
+  -i, --predict-strs   restore key strings in predictive searches
   -S, --print-speed    print speed [1000 keys/s] (default)
   -s, --print-time     print time [us/key]
   -h, --help           print this help

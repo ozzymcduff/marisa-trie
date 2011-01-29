@@ -5,7 +5,7 @@
 
 libmarisa には，C++ 用のインタフェースと C 言語用のインタフェースがあります．すべての機能は C++ により実装されていて，それらに対するラッパとして C 言語用のインタフェースが提供されているという構成になっています．
 
- * *Version: 0.1.0 向けに修正中です．現在，検索と C 言語用のインタフェースに関する部分が未完成の状態になっています．ご注意ください．*
+ * Version: 0.1.0
 
 <wiki:toc max_depth="3" />
 
@@ -154,12 +154,11 @@ TAIL の種類は 3 種類ありますが，多くの場合，テキストモー
 {{{
 void build(const std::vector<std::string> &keys,
     std::vector<UInt32> *key_ids = NULL, int flags = 0);
-
 void build(const std::vector<std::pair<std::string, double> > &keys,
     std::vector<UInt32> *key_ids = NULL, int flags = 0);
 }}}
 
-キーと重みの指定およびキー ID の受け取りに STL コンテナを使用するという違いがあるだけです．キーの重みや辞書の設定については，上記の解説を参考にしてください．
+キーと重みの指定およびキー ID の受け取りに STL コンテナを使用するという違いがあるだけです．キーの重みや辞書の設定については，上記の解説を参照してください．
 
 ----
 
@@ -254,23 +253,42 @@ UInt32 lookup(const char *ptr, std::size_t length) const;
 UInt32 lookup(const std::string &str) const;
 }}}
 
-キーから ID を求めます．キーとして登録されていない文字列を渡した場合，`MARISA_NOT_FOUND`（`notfound()` の返り値と同じ）を返します．
+指定された文字列がキーとして辞書に登録されているかどうかを確認して，登録されていれば当該キーの ID を返し，登録されていなければ `MARISA_NOT_FOUND`（`notfound()` の返り値と同じ）を返します．
 
-=== `find()`, `find_first()`, `find_last()` ===
+=== `find()` ===
 
 {{{
-UInt32 find(const char *str,
-    std::vector<UInt32> *key_ids = NULL,
-    std::vector<std::size_t> *key_lengths = NULL) const;
-UInt32 find(const char *ptr, std::size_t length,
-    std::vector<UInt32> *key_ids = NULL,
-    std::vector<std::size_t> *key_lengths = NULL) const;
-UInt32 find(const std::string &str,
-    std::vector<UInt32> *key_ids = NULL,
-    std::vector<std::size_t> *key_lengths = NULL) const;
+std::size_t find(const char *str,
+    UInt32 *key_ids, std::size_t *key_lengths,
+    std::size_t max_num_results) const;
+std::size_t find(const char *ptr, std::size_t length,
+    UInt32 *key_ids, std::size_t *key_lengths,
+    std::size_t max_num_results) const;
+std::size_t find(const std::string &str,
+    UInt32 *key_ids, std::size_t *key_lengths,
+    std::size_t max_num_results) const;
 }}}
 
-指定された文字列の前方部分列と一致するキーを検索します．返り値は一致したキーの数です．一致するキーが見つかったときは，`key_ids` と `key_lengths` の末尾に，それぞれキーの ID と長さが追加されます．ID や長さがいらないときは `NULL` を渡してください．
+指定された文字列の前方部分列と一致するキーを検索します．一致するキーを見つけたときは，`key_ids` と `key_lengths` が `NULL` でなければ，それぞれにキーの ID と長さを格納します．検索において見つけたキーの数が `max_num_results` に到達したときは，その時点で検索を中止し，`max_num_results` が返り値になります．`max_num_results` に到達しなかったときは，見つけたキーの数が返り値になります．
+
+{{{
+std::size_t find(const char *str,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::size_t> *key_lengths = NULL,
+    std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
+std::size_t find(const char *ptr, std::size_t length,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::size_t> *key_lengths = NULL,
+    std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
+std::size_t find(const std::string &str,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::size_t> *key_lengths = NULL,
+    std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
+}}}
+
+キーの ID と長さを `key_ids` と `key_lengths` の末尾に追加するという違いがあるだけです．`max_num_results` や返り値については，上記の解説を参照してください．
+
+=== `find_first()`, `find_last()` ===
 
 {{{
 UInt32 find_first(const char *str,
@@ -281,7 +299,7 @@ UInt32 find_first(const std::string &str,
     std::size_t *key_length = NULL) const;
 }}}
 
-指定された文字列の前方部分列と一致するキーを検索して，最初に見つかった（一番短い）キーの ID を返します．`key_length` が `NULL` でなければ，見つかったキーの長さが格納されるようになっています．見つからなければ，返り値は `NOTFOUND` になり，`key_length` は変更されません．
+指定された文字列の前方部分列と一致するキーを検索して，最初に見つかった（一番短い）キーの ID を返します．`key_length` が `NULL` でなければ，見つかったキーの長さが格納されるようになっています．見つからなければ，返り値は `MARISA_NOT_FOUND` になり，`key_length` は変更されません．
 
 {{{
 UInt32 find_last(const char *str,
@@ -292,50 +310,116 @@ UInt32 find_last(const std::string &str,
     std::size_t *key_length = NULL) const;
 }}}
 
-指定された文字列の前方部分列と一致するキーを検索して，最後に見つかった（一番長い）キーの ID を返します．`key_length` が `NULL` でなければ，見つかったキーの長さが格納されるようになっています．見つからなければ，返り値は `NOTFOUND` になり，`key_length` は変更されません．
+指定された文字列の前方部分列と一致するキーを検索して，最後に見つかった（一番長い）キーの ID を返します．`key_length` が `NULL` でなければ，見つかったキーの長さが格納されるようになっています．見つからなければ，返り値は `MARISA_NOT_FOUND` になり，`key_length` は変更されません．
 
 === `find_callback()` ===
 
 {{{
 // bool callback(UInt32 key_id, std::size_t key_length);
 template <typename T>
-UInt32 find_callback(const char *str, T callback) const;
+std::size_t find_callback(const char *str, T callback) const;
 template <typename T>
-UInt32 find_callback(const char *ptr, std::size_t length,
+std::size_t find_callback(const char *ptr, std::size_t length,
     T callback) const;
 template <typename T>
-UInt32 find_callback(const std::string &str, T callback) const;
+std::size_t find_callback(const std::string &str, T callback) const;
 }}}
 
-指定された文字列の前方部分列と一致するキーを検索し，キーが見つかるたびにコールバック関数を呼び出します．コールバック関数の第 1 引数にはキーの ID，第 2 引数にはキーの長さが渡されます．また，コールバック関数の返り値が `0` あるいは `false` であれば，検索を中断します．返り値はコールバック関数を呼び出した回数になります．
+指定された文字列の前方部分列と一致するキーを検索して，キーが見つかるたびにコールバック関数（`callback`）を呼び出します．コールバック関数の第 1 引数にはキーの ID，第 2 引数にはキーの長さが渡されます．また，コールバック関数の返り値が `0` あるいは `false` であれば，検索を中断します．`find_callback()` の返り値はコールバック関数を呼び出した回数です．
 
 === `predict()` ===
 
 {{{
-UInt32 predict(const char *str,
-    std::vector<UInt32> *key_ids = NULL) const;
-UInt32 predict(const char *ptr, std::size_t length,
-    std::vector<UInt32> *key_ids = NULL) const;
-UInt32 predict(const std::string &str,
-    std::vector<UInt32> *key_ids = NULL) const;
+std::size_t predict(const char *str,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+std::size_t predict(const char *ptr, std::size_t length,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+std::size_t predict(const std::string &str,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
 }}}
 
-指定された文字列で始まるキーの数を返します．該当するキーの ID が `key_ids` に追加されるようになっています．ID がいらないときは `key_ids` を `NULL` にしてください．
+指定された文字列で始まるキーを検索します．一致するキーを見つけたときは，`key_ids` と `keys` が `NULL` でなければ，それぞれにキー ID と復元したキーを格納します．検索において見つけたキーの数が `max_num_results` に到達したときは，その時点で検索を中止し，`max_num_results` が返り値になります．`max_num_results` に到達しなかったときは，見つけたキーの数が返り値になります．
 
-キーを復元する必要がないという特徴を利用して，手抜きな探索をおこないます．結果として，`key_ids` に追加される ID は幅優先（昇順）になります．後述の `predict()` と比べると，機能は制限されるものの，探索時間は短くなります．
+実際には，`keys` が `NULL` であれば `predict_breadth_first()` を呼び出し，そうでなければ `predict_depth_first()` を呼び出すようになっています．`keys` 次第で検索結果の順序が変化するので注意してください．
+
+`keys` によって動作を切り替える理由は，キー ID のみを必要とする状況では `predict_breadth_first()` の方が高速になり，キー本体を必要とする状況では `predict_depth_first()` の方が高速になるためです．
+
+{{{
+std::size_t predict(const char *str,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::string> *keys = NULL,
+    std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
+std::size_t predict(const char *ptr, std::size_t length,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::string> *keys = NULL,
+    std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
+std::size_t predict(const std::string &str,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::string> *keys = NULL,
+    std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
+}}}
+
+キー ID と復元しキーを `key_ids` と `keys` の末尾に追加するという違いがあるだけです．`max_num_results` や返り値については，上記の解説を参照してください．
+
+=== `predict_breadth_first()` ===
 
 深さ優先な ID が欲しいときやキーを復元したいときは，後述の `predict()` を利用してください．
 
 {{{
-UInt32 predict(const char *str,
-    std::vector<UInt32> *key_ids, std::vector<std::string> *keys) const;
-UInt32 predict(const char *ptr, std::size_t length,
-    std::vector<UInt32> *key_ids, std::vector<std::string> *keys) const;
-UInt32 predict(const std::string &str,
-    std::vector<UInt32> *key_ids, std::vector<std::string> *keys) const;
+std::size_t predict_breadth_first(const char *str,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+std::size_t predict_breadth_first(const char *ptr, std::size_t length,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+std::size_t predict_breadth_first(const std::string &str,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+
+std::size_t predict_breadth_first(const char *str,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::string> *keys = NULL,
+    std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
+std::size_t predict_breadth_first(const char *ptr, std::size_t length,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::string> *keys = NULL,
+    std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
+std::size_t predict_breadth_first(const std::string &str,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::string> *keys = NULL,
+    std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
 }}}
 
-指定された文字列で始まるキーの数を返します．該当するキーの ID が `key_ids` に追加されるだけでなく，復元されたキーが `keys` に追加されるようになっています．ID がいらないときは `key_ids` を `NULL` に，キーがいらないときは `keys` を `NULL` にしてください．
+指定された文字列で始まるキーを検索します．引数および返り値の役割については，`predict()` の解説を参照してください．
+
+指定された文字列にしたがって探索した後，トライを幅優先に探索することで，該当するキーの ID を列挙します．幅優先に探索するため，キー ID が昇順に列挙されるという特徴があります．
+
+`keys` が `NULL` であれば `predict_depth_first()` より高速に動作しますが，そうでない場合，キー ID からキーを復元するため，効率が著しく低下します．キーを復元しなければならない状況では，`predict_depth_first()` の利用を検討してください．
+
+=== `predict_depth_first()` ===
+
+{{{
+std::size_t predict_depth_first(const char *str,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+std::size_t predict_depth_first(const char *ptr, std::size_t length,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+std::size_t predict_depth_first(const std::string &str,
+    UInt32 *key_ids, std::string *keys, std::size_t max_num_results) const;
+
+std::size_t predict_depth_first(const char *str,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::string> *keys = NULL,
+    std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
+std::size_t predict_depth_first(const char *ptr, std::size_t length,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::string> *keys = NULL,
+    std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
+std::size_t predict_depth_first(const std::string &str,
+    std::vector<UInt32> *key_ids = NULL,
+    std::vector<std::string> *keys = NULL,
+    std::size_t max_num_results = MARISA_MAX_NUM_KEYS) const;
+}}}
+
+指定された文字列で始まるキーを検索します．引数および返り値の役割については，`predict()` の解説を参照してください．
+
+指定された文字列にしたがって探索した後，トライを深さ優先に探索することで，該当するキーの ID を列挙します．トライの探索と同時にキーを復元できるため，`keys` が `NULL` でないときは `predict_breadth_first()` より高速に動作します．
 
 === `predict_callback()` ===
 
@@ -350,7 +434,7 @@ template <typename T>
 UInt32 predict_callback(const std::string &str, T callback) const;
 }}}
 
-指定された文字列で始まるキーを求めて辞書を探索し，該当するキーが見つかるたびにコールバック関数を呼び出します．コールバック関数の第 1 引数にはキーの ID，第 2 引数には復元されたキーが渡されます．また，コールバック関数の返り値が `0` あるいは `false` であれば，探索を中断します．返り値はコールバック関数を呼び出した回数になります．
+指定された文字列で始まるキーを検索して，該当するキーが見つかるたびにコールバック関数（`callback`）を呼び出します．コールバック関数の第 1 引数にはキーの ID，第 2 引数には復元されたキーが渡されます．また，コールバック関数の返り値が `0` あるいは `false` であれば，検索を中断します．`predict_callback()` の返り値はコールバック関数を呼び出した回数です．
 
 ----
 
