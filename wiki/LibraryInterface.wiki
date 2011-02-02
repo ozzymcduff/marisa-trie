@@ -490,6 +490,152 @@ static std::size_t mismatch();
 
 ----
 
-= C 言語用のインタフェース ==
+= C 言語用のインタフェース =
 
-まだですよー．
+C 言語用のインタフェースを利用するときは，`marisa.h` をインクルードします．gcc では C++ 用のライブラリをリンクするオプション（`-lstdc++`）が必要になるので注意してください．
+
+辞書に対応する構造体は `marisa_trie` ですが，不完全な型になっているので，`marisa_trie` 型の変数を定義することはできません．`marisa_trie *` をハンドルとして，辞書の構築・検索や入出力などをおこなうようになっています．また，ほとんどの関数は，エラー番号（`marisa_status`）を返します．`MARISA_OK` 以外は関数の失敗を意味するので注意してください．
+
+----
+
+== 初期化・終了処理 ==
+
+{{{
+marisa_status marisa_init(marisa_trie **h);
+}}}
+
+辞書のオブジェクトを作成し，新しいオブジェクトへのポインタを `*h` に格納します．呼び出しの時点で `*h == NULL` でなければエラーになるので注意してください．また，作成したオブジェクトについては，`marisa_end()` によって破棄する必要があります．
+
+`marisa_trie` は不完全な型なので，`marisa_trie` 型の変数を定義することはできません．辞書の構築・検索や入出力など，すべての操作は `marisa_init()` により作成したオブジェクトを用いるようになっています．
+
+{{{
+marisa_status marisa_end(marisa_trie *h);
+}}}
+
+`marisa_init()` によって作成されたオブジェクトを破棄します．
+
+----
+
+== 構築 ==
+
+{{{
+marisa_status marisa_build(marisa_trie *h, const char * const *keys,
+    size_t num_keys, const size_t *key_lengths, const double *key_weights,
+    marisa_uint32 *key_ids, int flags);
+}}}
+
+`marisa::Trie::build()` と対応しています．例外の代わりに `marisa_status` を返すという違いがあるだけで，引数の扱いや動作は同じです．
+
+----
+
+== 入出力 ==
+
+{{{
+marisa_status marisa_mmap(marisa_trie *h, const char *filename,
+    long offset, int whence);
+marisa_status marisa_map(marisa_trie *h, const void *ptr, size_t size);
+
+marisa_status marisa_load(marisa_trie *h, const char *filename,
+    long offset, int whence);
+marisa_status marisa_fread(marisa_trie *h, FILE *file);
+marisa_status marisa_read(marisa_trie *h, int fd);
+
+marisa_status marisa_save(const marisa_trie *h, const char *filename,
+    int trunc_flag, long offset, int whence);
+marisa_status marisa_fwrite(const marisa_trie *h, FILE *file);
+marisa_status marisa_write(const marisa_trie *h, int fd);
+}}}
+
+`marisa::Trie` のメンバ関数とそれぞれ対応しています．ただし，`std::istream &`, `std::ostream &` を受け取る関数はありません．
+
+----
+
+== 検索 ==
+
+{{{
+marisa_status marisa_restore(const marisa_trie *h, marisa_uint32 key_id,
+    char *key_buf, size_t key_buf_size, size_t *key_length);
+}}}
+
+`marisa::Trie::restore()` と対応しています．ただし，復元されたキーの長さを `*key_length` に格納するという違いがあります．
+
+{{{
+marisa_status marisa_lookup(const marisa_trie *h,
+    const char *ptr, size_t length, marisa_uint32 *key_id);
+}}}
+
+`marisa::Trie::lookup()` と対応しています．ただし，見つけたキーの ID を `*key_id` に格納するという違いがあります．
+
+{{{
+marisa_status marisa_find(const marisa_trie *h,
+    const char *ptr, size_t length,
+    marisa_uint32 *key_ids, size_t *key_lengths,
+    size_t max_num_results, size_t *num_results);
+}}}
+
+`marisa::Trie::find()` と対応しています．ただし，見つけたキーの数を `*num_results` に格納するという違いがあります．
+
+{{{
+marisa_status marisa_find_first(const marisa_trie *h,
+    const char *ptr, size_t length,
+    marisa_uint32 *key_id, size_t *key_length);
+
+marisa_status marisa_find_last(const marisa_trie *h,
+    const char *ptr, size_t length,
+    marisa_uint32 *key_id, size_t *key_length);
+}}}
+
+`marisa::Trie::find_first()`, `marisa::Trie::find_last()` と対応しています．ただし，見つけたキーの ID を `*key_id` に格納するという違いがあります．
+
+{{{
+marisa_status marisa_find_callback(const marisa_trie *h,
+    const char *ptr, size_t length,
+    int (*callback)(void *, marisa_uint32, size_t),
+    void *first_arg_to_callback);
+}}}
+
+`marisa::Trie::find_callback()` と対応しています．ただし，コールバック関数に任意のポインタ（`first_arg_to_callback`）を渡せるようになっています．また，コールバック関数の呼び出し回数を返さないという違いがあります．
+
+{{{
+marisa_status marisa_predict(const marisa_trie *h,
+    const char *ptr, size_t length, marisa_uint32 *key_ids,
+    size_t max_num_results, size_t *num_results);
+
+marisa_status marisa_predict_breadth_first(const marisa_trie *h,
+    const char *ptr, size_t length, marisa_uint32 *key_ids,
+    size_t max_num_results, size_t *num_results);
+
+marisa_status marisa_predict_depth_first(const marisa_trie *h,
+    const char *ptr, size_t length, marisa_uint32 *key_ids,
+    size_t max_num_results, size_t *num_results);
+}}}
+
+`marisa::Trie::predict()` と対応しています．ただし，見つけたキーの数を `*num_results` に格納するという違いがあります．
+
+{{{
+marisa_status marisa_predict_callback(const marisa_trie *h,
+    const char *ptr, size_t length,
+    int (*callback)(void *, marisa_uint32, const char *, size_t),
+    void *first_arg_to_callback);
+}}}
+
+`marisa::Trie::predict_callback()` と対応しています．ただし，コールバック関数に任意のポインタ（`first_arg_to_callback`）を渡せるようになり，文字列の表現方法が `const char *` と `size_t` の組に変化しています．また，コールバック関数の呼び出し回数を返さないという違いがあります．
+
+----
+
+== その他 ==
+
+{{{
+size_t marisa_get_num_tries(const marisa_trie *h);
+size_t marisa_get_num_keys(const marisa_trie *h);
+size_t marisa_get_num_nodes(const marisa_trie *h);
+size_t marisa_get_total_size(const marisa_trie *h);
+}}}
+
+上から順に，辞書を構成するトライの数，辞書に登録されているキーの数，辞書を構成するノードの数，出力時のサイズ（バイト単位）を返します．ただし，`h == NULL` のときは `0` を返すようになっています．
+
+{{{
+marisa_status marisa_clear(marisa_trie *h);
+}}}
+
+辞書の内容を破棄し，初期状態に戻します．オブジェクトは有効なので，`marisa_end()` による終了処理が必要です．
