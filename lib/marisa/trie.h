@@ -278,7 +278,7 @@ class Trie {
 
   UInt32 key_id_to_node(UInt32 key_id) const;
   UInt32 node_to_key_id(UInt32 node) const;
-  UInt32 louds_pos_to_node(UInt32 louds_pos) const;
+  UInt32 louds_pos_to_node(UInt32 louds_pos, UInt32 parent_node) const;
 
   UInt32 get_child(UInt32 node) const;
   UInt32 get_parent(UInt32 node) const;

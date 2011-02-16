@@ -150,7 +150,7 @@ inline bool Trie::find_child(UInt32 &node, T query,
   if (!louds_[louds_pos]) {
     return false;
   }
-  node = louds_pos_to_node(louds_pos);
+  node = louds_pos_to_node(louds_pos, node);
   do {
     if (has_link(node)) {
       std::size_t next_pos = has_trie() ?
@@ -199,7 +199,7 @@ inline bool Trie::predict_child(UInt32 &node, T query, std::size_t &pos,
   if (!louds_[louds_pos]) {
     return false;
   }
-  node = louds_pos_to_node(louds_pos);
+  node = louds_pos_to_node(louds_pos, node);
   do {
     if (has_link(node)) {
       std::size_t next_pos = has_trie() ?
@@ -244,7 +244,7 @@ std::size_t Trie::predict_callback_(T query, U callback) const try {
   if (!louds_[cell.louds_pos()]) {
     return count;
   }
-  cell.set_node(louds_pos_to_node(cell.louds_pos()));
+  cell.set_node(louds_pos_to_node(cell.louds_pos(), node));
   cell.set_key_id(node_to_key_id(cell.node()));
   cell.set_length(key.length());
   Vector<Cell> stack;
@@ -277,7 +277,7 @@ std::size_t Trie::predict_callback_(T query, U callback) const try {
     }
     if (stack_pos == stack.size()) {
       cell.set_louds_pos(get_child(cur.node()));
-      cell.set_node(louds_pos_to_node(cell.louds_pos()));
+      cell.set_node(louds_pos_to_node(cell.louds_pos(), cur.node()));
       cell.set_key_id(node_to_key_id(cell.node()));
       stack.push_back(cell);
     }
@@ -300,8 +300,9 @@ inline UInt32 Trie::node_to_key_id(UInt32 node) const {
   return terminal_flags_.rank1(node);
 }
 
-inline UInt32 Trie::louds_pos_to_node(UInt32 louds_pos) const {
-  return louds_.rank1(louds_pos);
+inline UInt32 Trie::louds_pos_to_node(UInt32 louds_pos,
+    UInt32 parent_node) const {
+  return louds_pos - parent_node - 1;
 }
 
 inline UInt32 Trie::get_child(UInt32 node) const {

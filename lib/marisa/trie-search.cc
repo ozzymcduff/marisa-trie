@@ -564,8 +564,8 @@ std::size_t Trie::predict_breadth_first_(T query, U key_ids, V keys,
   if (!louds_[louds_pos]) {
     return count;
   }
-  UInt32 node_begin = louds_pos_to_node(louds_pos);
-  UInt32 node_end = louds_pos_to_node(get_child(node + 1));
+  UInt32 node_begin = louds_pos_to_node(louds_pos, node);
+  UInt32 node_end = louds_pos_to_node(get_child(node + 1), node + 1);
   while (node_begin < node_end) {
     const UInt32 key_id_begin = node_to_key_id(node_begin);
     const UInt32 key_id_end = node_to_key_id(node_end);
@@ -593,8 +593,8 @@ std::size_t Trie::predict_breadth_first_(T query, U key_ids, V keys,
     if (count >= max_num_results) {
       return max_num_results;
     }
-    node_begin = louds_pos_to_node(get_child(node_begin));
-    node_end = louds_pos_to_node(get_child(node_end));
+    node_begin = louds_pos_to_node(get_child(node_begin), node_begin);
+    node_end = louds_pos_to_node(get_child(node_end), node_end);
   }
   return count;
 } catch (const std::bad_alloc &) {
@@ -634,7 +634,7 @@ std::size_t Trie::predict_depth_first_(T query, U key_ids, V keys,
   if (!louds_[cell.louds_pos()]) {
     return count;
   }
-  cell.set_node(louds_pos_to_node(cell.louds_pos()));
+  cell.set_node(louds_pos_to_node(cell.louds_pos(), node));
   cell.set_key_id(node_to_key_id(cell.node()));
   Vector<Cell> stack;
   stack.push_back(cell);
@@ -658,7 +658,7 @@ std::size_t Trie::predict_depth_first_(T query, U key_ids, V keys,
     }
     if (stack_pos == stack.size()) {
       cell.set_louds_pos(get_child(cur.node()));
-      cell.set_node(louds_pos_to_node(cell.louds_pos()));
+      cell.set_node(louds_pos_to_node(cell.louds_pos(), cur.node()));
       cell.set_key_id(node_to_key_id(cell.node()));
       stack.push_back(cell);
     }
