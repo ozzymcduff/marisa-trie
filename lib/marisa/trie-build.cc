@@ -109,6 +109,7 @@ void Trie::build_trie(Vector<Key<String> > &keys,
   }
   terminal_flags_.push_back(false);
   temp.terminal_flags_.build();
+  temp.terminal_flags_.clear_select0s();
   progress.test_total_size(temp.terminal_flags_.total_size());
 
   if (key_ids != NULL) {
@@ -129,7 +130,6 @@ void Trie::build_trie(Vector<Key<T> > &keys,
   progress.test_total_size(sizeof(num_keys_));
   if (link_flags_.empty()) {
     labels_.shrink();
-    link_flags_.build();
     progress.test_total_size(labels_.total_size());
     progress.test_total_size(link_flags_.total_size());
     progress.test_total_size(links_.total_size());
@@ -152,6 +152,11 @@ void Trie::build_trie(Vector<Key<T> > &keys,
     labels_[link_flags_.select1(i)] = (UInt8)(next_terminals[i] % 256);
     next_terminals[i] /= 256;
   }
+  link_flags_.clear_select0s();
+  if (has_trie() || (tail_.mode() == MARISA_TEXT_TAIL)) {
+    link_flags_.clear_select1s();
+  }
+
   links_.build(next_terminals);
   labels_.shrink();
   progress.test_total_size(labels_.total_size());
@@ -243,6 +248,9 @@ void Trie::build_cur(Vector<Key<T> > &keys,
   }
   louds_.push_back(false);
   louds_.build();
+  if (progress.trie_id() != 0) {
+    louds_.clear_select0s();
+  }
   if (rest_keys.empty()) {
     link_flags_.clear();
   }

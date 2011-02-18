@@ -159,7 +159,7 @@ BitVector::BitVector()
 void BitVector::build() {
   Vector<Rank> ranks;
   const UInt32 num_blocks = (size_ / 512) + (((size_ % 512) != 0) ? 1 : 0);
-  ranks.resize(num_blocks);
+  ranks.resize(num_blocks + 1);
   Vector<UInt32> select0s;
   Vector<UInt32> select1s;
   UInt32 num_0s = 0;
@@ -241,6 +241,7 @@ void BitVector::build() {
       }
     }
   }
+  ranks.back().set_abs(num_1s);
   select0s.push_back(size_);
   select1s.push_back(size_);
   select0s.shrink();
@@ -392,15 +393,21 @@ UInt32 BitVector::select0(UInt32 i) const {
   }
   UInt32 begin = select0s_[select_id] / 512;
   UInt32 end = (select0s_[select_id + 1] + 511) / 512;
-  while (begin + 1 < end) {
-    UInt32 middle = (begin + end) / 2;
-    if (i < (middle * 512) - ranks_[middle].abs()) {
-      end = middle;
-    } else {
-      begin = middle;
+  if (begin + 10 >= end) {
+    while (i >= ((begin + 1) * 512) - ranks_[begin + 1].abs()) {
+      ++begin;
+    }
+  } else {
+    while (begin + 1 < end) {
+      UInt32 middle = (begin + end) / 2;
+      if (i < (middle * 512) - ranks_[middle].abs()) {
+        end = middle;
+      } else {
+        begin = middle;
+      }
     }
   }
-  UInt32 rank_id = begin;
+  const UInt32 rank_id = begin;
   i -= (rank_id * 512) - ranks_[rank_id].abs();
 
   const Rank &rank = ranks_[rank_id];
@@ -470,15 +477,21 @@ UInt32 BitVector::select1(UInt32 i) const {
   }
   UInt32 begin = select1s_[select_id] / 512;
   UInt32 end = (select1s_[select_id + 1] + 511) / 512;
-  while (begin + 1 < end) {
-    UInt32 middle = (begin + end) / 2;
-    if (i < ranks_[middle].abs()) {
-      end = middle;
-    } else {
-      begin = middle;
+  if (begin + 10 >= end) {
+    while (i >= ranks_[begin + 1].abs()) {
+      ++begin;
+    }
+  } else {
+    while (begin + 1 < end) {
+      UInt32 middle = (begin + end) / 2;
+      if (i < ranks_[middle].abs()) {
+        end = middle;
+      } else {
+        begin = middle;
+      }
     }
   }
-  UInt32 rank_id = begin;
+  const UInt32 rank_id = begin;
   i -= ranks_[rank_id].abs();
 
   const Rank &rank = ranks_[rank_id];

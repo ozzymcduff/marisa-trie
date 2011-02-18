@@ -12,6 +12,13 @@ class BitVector {
 
   void build();
 
+  void clear_select0s() {
+    select0s_.clear();
+  }
+  void clear_select1s() {
+    select1s_.clear();
+  }
+
   void mmap(Mapper *mapper, const char *filename,
       long offset = 0, int whence = SEEK_SET);
   void map(const void *ptr, std::size_t size);
