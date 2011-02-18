@@ -1,4 +1,5 @@
 AM_CXXFLAGS = -Wall -Weffc++
+#AM_CXXFLAGS = -Wall -Weffc++ -D_DEBUG
 
 lib_LIBRARIES = libmarisa.a
 

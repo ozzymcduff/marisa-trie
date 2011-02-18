@@ -185,6 +185,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CXXFLAGS = -Wall -Weffc++
+#AM_CXXFLAGS = -Wall -Weffc++ -D_DEBUG
 lib_LIBRARIES = libmarisa.a
 libmarisa_a_SOURCES = \
   marisa/base.cc \
