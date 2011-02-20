@@ -106,7 +106,7 @@ void TestTrie() {
   ASSERT(marisa_get_num_tries(trie) == 0);
   ASSERT(marisa_get_num_keys(trie) == 0);
   ASSERT(marisa_get_num_nodes(trie) == 0);
-  ASSERT(marisa_get_total_size(trie) == (sizeof(marisa_uint32) * 22));
+  ASSERT(marisa_get_total_size(trie) == (sizeof(marisa_uint32) * 23));
 
   ASSERT(marisa_build(trie, NULL, 0, NULL, NULL, NULL, 0) == MARISA_OK);
 
@@ -153,7 +153,7 @@ void TestTrie() {
   ASSERT(marisa_get_num_tries(trie) == 0);
   ASSERT(marisa_get_num_keys(trie) == 0);
   ASSERT(marisa_get_num_nodes(trie) == 0);
-  ASSERT(marisa_get_total_size(trie) == (sizeof(marisa_uint32) * 22));
+  ASSERT(marisa_get_total_size(trie) == (sizeof(marisa_uint32) * 23));
 
   ASSERT(marisa_build(trie, keys, 5, NULL, NULL, key_ids,
       1 | MARISA_WITHOUT_TAIL | MARISA_WEIGHT_ORDER) == MARISA_OK);

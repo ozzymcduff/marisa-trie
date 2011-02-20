@@ -310,7 +310,7 @@ inline UInt32 Trie::get_child(UInt32 node) const {
 }
 
 inline UInt32 Trie::get_parent(UInt32 node) const {
-  return louds_.select1(node) - node - 1;
+  return (node > num_first_branches_) ? (louds_.select1(node) - node - 1) : 0;
 }
 
 inline bool Trie::has_link(UInt32 node) const {

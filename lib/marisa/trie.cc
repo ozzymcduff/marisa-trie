@@ -7,7 +7,7 @@ namespace marisa {
 
 Trie::Trie()
     : louds_(), labels_(), terminal_flags_(), link_flags_(), links_(),
-      trie_(), tail_(), num_keys_(0) {}
+      trie_(), tail_(), num_first_branches_(0), num_keys_(0) {}
 
 void Trie::mmap(Mapper *mapper, const char *filename,
     long offset, int whence) {
@@ -31,6 +31,7 @@ void Trie::map(Mapper &mapper) {
   temp.link_flags_.map(mapper);
   temp.links_.map(mapper);
   temp.tail_.map(mapper);
+  mapper.map(&temp.num_first_branches_);
   mapper.map(&temp.num_keys_);
 
   if (temp.has_link() && !temp.has_tail()) {
@@ -71,6 +72,7 @@ void Trie::read(Reader &reader) {
   temp.link_flags_.read(reader);
   temp.links_.read(reader);
   temp.tail_.read(reader);
+  reader.read(&temp.num_first_branches_);
   reader.read(&temp.num_keys_);
 
   if (temp.has_link() && !temp.has_tail()) {
@@ -110,6 +112,7 @@ void Trie::write(Writer &writer) const {
   link_flags_.write(writer);
   links_.write(writer);
   tail_.write(writer);
+  writer.write(num_first_branches_);
   writer.write(num_keys_);
   if (has_trie()) {
     trie_->write(writer);
@@ -135,7 +138,7 @@ std::size_t Trie::total_size() const {
   return louds_.total_size() + labels_.total_size()
       + terminal_flags_.total_size() + link_flags_.total_size()
       + links_.total_size() + (has_trie() ? trie_->total_size() : 0)
-      + tail_.total_size() + sizeof(num_keys_);
+      + tail_.total_size() + sizeof(num_first_branches_) + sizeof(num_keys_);
 }
 
 void Trie::clear() {
@@ -151,6 +154,7 @@ void Trie::swap(Trie *rhs) {
   links_.swap(&rhs->links_);
   Swap(&trie_, &rhs->trie_);
   tail_.swap(&rhs->tail_);
+  Swap(&num_first_branches_, &rhs->num_first_branches_);
   Swap(&num_keys_, &rhs->num_keys_);
 }
 

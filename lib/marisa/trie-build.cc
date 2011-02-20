@@ -127,6 +127,7 @@ void Trie::build_trie(Vector<Key<T> > &keys,
     Vector<UInt32> *terminals, Progress &progress) {
   build_cur(keys, terminals, progress);
   progress.test_total_size(louds_.total_size());
+  progress.test_total_size(sizeof(num_first_branches_));
   progress.test_total_size(sizeof(num_keys_));
   if (link_flags_.empty()) {
     labels_.shrink();
@@ -206,6 +207,9 @@ void Trie::build_cur(Vector<Key<T> > &keys,
     wranges.push_back(WRange(range, weight));
     if (progress.order() == MARISA_WEIGHT_ORDER) {
       std::stable_sort(wranges.begin(), wranges.end(), std::greater<WRange>());
+    }
+    if (node == 0) {
+      num_first_branches_ = wranges.size();
     }
     for (UInt32 i = 0; i < wranges.size(); ++i) {
       const WRange &wrange = wranges[i];

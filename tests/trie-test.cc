@@ -58,11 +58,10 @@ void TestTrie() {
   ASSERT(trie.num_tries() == 0);
   ASSERT(trie.num_keys() == 0);
   ASSERT(trie.num_nodes() == 0);
-  ASSERT(trie.total_size() == (sizeof(marisa::UInt32) * 22));
+  ASSERT(trie.total_size() == (sizeof(marisa::UInt32) * 23));
 
   std::vector<std::string> keys;
   trie.build(keys);
-
   ASSERT(trie.num_tries() == 1);
   ASSERT(trie.num_keys() == 0);
   ASSERT(trie.num_nodes() == 1);
@@ -103,7 +102,7 @@ void TestTrie() {
   ASSERT(trie.num_tries() == 0);
   ASSERT(trie.num_keys() == 0);
   ASSERT(trie.num_nodes() == 0);
-  ASSERT(trie.total_size() == (sizeof(marisa::UInt32) * 22));
+  ASSERT(trie.total_size() == (sizeof(marisa::UInt32) * 23));
 
   trie.build(keys, &key_ids, 1 | MARISA_WITHOUT_TAIL | MARISA_WEIGHT_ORDER);
 

@@ -200,6 +200,7 @@ class Trie {
   IntVector links_;
   std::auto_ptr<Trie> trie_;
   Tail tail_;
+  UInt32 num_first_branches_;
   UInt32 num_keys_;
 
   void build_trie(Vector<Key<String> > &keys,
