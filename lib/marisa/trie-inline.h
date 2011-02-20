@@ -151,11 +151,17 @@ inline bool Trie::find_child(UInt32 &node, T query,
     return false;
   }
   node = louds_pos_to_node(louds_pos, node);
+  UInt32 link_id = MARISA_UINT32_MAX;
   do {
     if (has_link(node)) {
+      if (link_id == MARISA_UINT32_MAX) {
+        link_id = get_link_id(node);
+      } else {
+        ++link_id;
+      }
       std::size_t next_pos = has_trie() ?
-          trie_->trie_match<T>(get_link(node), query, pos) :
-          tail_match<T>(node, query, pos);
+          trie_->trie_match<T>(get_link(node, link_id), query, pos) :
+          tail_match<T>(node, link_id, query, pos);
       if (next_pos == mismatch()) {
         return false;
       } else if (next_pos != pos) {
@@ -200,11 +206,18 @@ inline bool Trie::predict_child(UInt32 &node, T query, std::size_t &pos,
     return false;
   }
   node = louds_pos_to_node(louds_pos, node);
+  UInt32 link_id = MARISA_UINT32_MAX;
   do {
     if (has_link(node)) {
+      if (link_id == MARISA_UINT32_MAX) {
+        link_id = get_link_id(node);
+      } else {
+        ++link_id;
+      }
       std::size_t next_pos = has_trie() ?
-          trie_->trie_prefix_match<T>(get_link(node), query, pos, key) :
-          tail_prefix_match<T>(node, query, pos, key);
+          trie_->trie_prefix_match<T>(
+              get_link(node, link_id), query, pos, key) :
+          tail_prefix_match<T>(node, link_id, query, pos, key);
       if (next_pos == mismatch()) {
         return false;
       } else if (next_pos != pos) {
@@ -317,8 +330,16 @@ inline bool Trie::has_link(UInt32 node) const {
   return (link_flags_.empty()) ? false : link_flags_[node];
 }
 
+inline UInt32 Trie::get_link_id(UInt32 node) const {
+  return link_flags_.rank1(node);
+}
+
 inline UInt32 Trie::get_link(UInt32 node) const {
-  return (links_[link_flags_.rank1(node)] * 256) + labels_[node];
+  return get_link(node, get_link_id(node));
+}
+
+inline UInt32 Trie::get_link(UInt32 node, UInt32 link_id) const {
+  return (links_[link_id] * 256) + labels_[node];
 }
 
 inline bool Trie::has_link() const {
