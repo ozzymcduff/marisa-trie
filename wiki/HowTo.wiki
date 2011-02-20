@@ -5,9 +5,15 @@
 
 marisa-trie の基本的な使い方に関するドキュメントです．
 
- * version: 0.1.1
+ * version: 0.1.2
 
 <wiki:toc max_depth="3" />
+
+== 互換性 ==
+
+marisa-trie 0.1.0 には下位互換性があるため，0.0.1 で構築した辞書は 0.1.0 でも使用できます．0.1.0 で構築した辞書については，TAIL がバイナリモードでなければ，0.0.1 でも使用できます．また，marisa-trie 0.1.1 の辞書は 0.1.0 と同じなので，そのまま利用することができます．
+
+marisa-trie 0.1.2 では辞書の書式が少し変更されています．互換性はないので，0.0.1 および 0.1.0, 0.1.1 で構築した辞書を使うことはできません．辞書の再構築が必要になります．
 
 ----
 
@@ -18,10 +24,10 @@ marisa-trie の基本的な使い方に関するドキュメントです．
 `g++` および `make` がインストールされている環境であれば，`configure` と `make` の組み合わせでビルド・インストールできます．
 
 {{{
-$ wget http://marisa-trie.googlecode.com/files/marisa-0.1.0.tar.gz
+$ wget http://marisa-trie.googlecode.com/files/marisa-0.1.2.tar.gz
 ...
-$ tar zxf marisa-0.1.0.tar.gz
-$ cd marisa-0.1.0/
+$ tar zxf marisa-0.1.2.tar.gz
+$ cd marisa-0.1.2/
 $ ./configure
 ...
 $ make
@@ -46,50 +52,50 @@ marisa-trie に含まれるツールは，`marisa-build`, `marisa-lookup`, `mari
 
 {{{
 # 辞書を構築するツールです．
-$ gzip -cd jawiki-20101102-all-titles-in-ns0.gz | marisa-build > jawiki.dic
-#keys: 1146584
+$ gzip -cd jawiki-20110129-all-titles-in-ns0.gz | marisa-build > jawiki.dic
+#keys: 1174430
 #tries: 3
-#nodes: 2264302
-size: 6522559
+#nodes: 2316597
+size: 6806033
 
 # 完全一致検索をおこなうツールです．
 $ marisa-lookup jawiki.dic
 あ
-2578	あ
+2608	あ
 
 # 入力されたクエリの前半に含まれるキーを検索するツールです．
 $ marisa-find jawiki.dic 
 トライ
 3 found
-2462	ト	トライ
-132331	トラ	トライ
-500091	トライ	トライ
+2490	ト	トライ
+134510	トラ	トライ
+510443	トライ	トライ
 
 # 入力されたクエリで始まるキーを検索するツールです．
 $ marisa-predict -n 3 jawiki.dic
 あ
-2342 found
-2578	あ	あ
-134977	あい	あ
-855840	あいち健康の森	あ
+2405 found
+2608	あ	あ
+137194	あい	あ
+875067	あいち健康の森	あ
 
 # 辞書のサイズや構築・検索にかかる時間を計測するツールです．
-$ gzip -cd jawiki-20101102-all-titles-in-ns0.gz | marisa-benchmark -n 3
+$ gzip -cd jawiki-20110129-all-titles-in-ns0.gz | marisa-benchmark -n 3
 #tries: 1 - 3
 trie: patricia
 tail: text
 order: weight
 predict: only IDs
-#keys: 1146584
-total length: 23809474
+#keys: 1174430
+total length: 24438317
 ------+---------+---------+-------+-------+-------+-------+-------+-------
 #tries    #nodes      size   build restore  lookup    find predict predict
                                                            breadth   depth
                    [bytes]   [K/s]   [K/s]   [K/s]   [K/s]   [K/s]   [K/s]
 ------+---------+---------+-------+-------+-------+-------+-------+-------
-     1   1564294   9850414  299.37  779.99  712.16  666.62  609.89  587.99
-     2   2087639   7056713  274.96  413.93  386.06  371.06  357.19  344.32
-     3   2264302   6522559  264.19  359.43  336.24  323.89  313.27  303.33
+     1   1602151  10074222  309.88 1118.50  947.12  863.55  827.06  757.70
+     2   2136398   7355508  281.64  611.68  575.70  543.72  526.65  499.76
+     3   2316597   6806033  271.86  553.98  510.62  483.30  473.56  444.86
 ------+---------+---------+-------+-------+-------+-------+-------+-------
 }}}
 
@@ -169,7 +175,7 @@ int main() {
 }
 }}}
 
-ビルドするときは，libmarisa をリンクする必要があります．C 言語用のインタフェースを使う場合は -lstdc++ も必要になるのでご注意ください．
+ビルドするときは，libmarisa をリンクする必要があります．C 言語用のインタフェースを使う場合は `-lstdc++` も必要になるのでご注意ください．
 
 {{{
 $ g++ sample.cc -lmarisa
