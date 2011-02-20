@@ -246,7 +246,8 @@ class Trie {
   template <typename T>
   std::size_t trie_match(UInt32 node, T query, std::size_t pos) const;
   template <typename T>
-  std::size_t tail_match(UInt32 node, T query, std::size_t pos) const;
+  std::size_t tail_match(UInt32 node, UInt32 link_id,
+      T query, std::size_t pos) const;
 
   template <typename T, typename U, typename V>
   std::size_t find_(T query, U key_ids, V key_lengths,
@@ -274,8 +275,8 @@ class Trie {
   std::size_t trie_prefix_match(UInt32 node, T query,
       std::size_t pos, std::string *key) const;
   template <typename T>
-  std::size_t tail_prefix_match(UInt32 node, T query,
-      std::size_t pos, std::string *key) const;
+  std::size_t tail_prefix_match(UInt32 node, UInt32 link_id,
+      T query, std::size_t pos, std::string *key) const;
 
   UInt32 key_id_to_node(UInt32 key_id) const;
   UInt32 node_to_key_id(UInt32 node) const;
@@ -285,7 +286,9 @@ class Trie {
   UInt32 get_parent(UInt32 node) const;
 
   bool has_link(UInt32 node) const;
+  UInt32 get_link_id(UInt32 node) const;
   UInt32 get_link(UInt32 node) const;
+  UInt32 get_link(UInt32 node, UInt32 link_id) const;
 
   bool has_link() const;
   bool has_trie() const;

@@ -393,7 +393,7 @@ std::size_t Trie::trie_match(UInt32 node, T query,
     if (has_trie()) {
       next_pos = trie_->trie_match<T>(get_link(node), query, pos);
     } else {
-      next_pos = tail_match<T>(node, query, pos);
+      next_pos = tail_match<T>(node, get_link_id(node), query, pos);
     }
     if ((next_pos == mismatch()) || (next_pos == pos)) {
       return next_pos;
@@ -414,7 +414,7 @@ std::size_t Trie::trie_match(UInt32 node, T query,
       if (has_trie()) {
         next_pos = trie_->trie_match<T>(get_link(node), query, pos);
       } else {
-        next_pos = tail_match<T>(node, query, pos);
+        next_pos = tail_match<T>(node, get_link_id(node), query, pos);
       }
       if ((next_pos == mismatch()) || (next_pos == pos)) {
         return mismatch();
@@ -436,9 +436,8 @@ template std::size_t Trie::trie_match<const Query &>(UInt32 node,
     const Query &query, std::size_t pos) const;
 
 template <typename T>
-std::size_t Trie::tail_match(UInt32 node, T query,
-    std::size_t pos) const {
-  const UInt32 link_id = link_flags_.rank1(node);
+std::size_t Trie::tail_match(UInt32 node, UInt32 link_id,
+    T query, std::size_t pos) const {
   const UInt32 offset = (links_[link_id] * 256) + labels_[node];
   const UInt8 *ptr = tail_[offset];
   if (*ptr != query[pos]) {
@@ -463,9 +462,9 @@ std::size_t Trie::tail_match(UInt32 node, T query,
 }
 
 template std::size_t Trie::tail_match<CQuery>(UInt32 node,
-    CQuery query, std::size_t pos) const;
+    UInt32 link_id, CQuery query, std::size_t pos) const;
 template std::size_t Trie::tail_match<const Query &>(UInt32 node,
-    const Query &query, std::size_t pos) const;
+    UInt32 link_id, const Query &query, std::size_t pos) const;
 
 template <typename T, typename U, typename V>
 std::size_t Trie::find_(T query, U key_ids, V key_lengths,
@@ -680,7 +679,8 @@ std::size_t Trie::trie_prefix_match(UInt32 node, T query,
     if (has_trie()) {
       next_pos = trie_->trie_prefix_match<T>(get_link(node), query, pos, key);
     } else {
-      next_pos = tail_prefix_match<T>(node, query, pos, key);
+      next_pos = tail_prefix_match<T>(
+          node, get_link_id(node), query, pos, key);
     }
     if ((next_pos == mismatch()) || (next_pos == pos)) {
       return next_pos;
@@ -705,7 +705,8 @@ std::size_t Trie::trie_prefix_match(UInt32 node, T query,
         next_pos = trie_->trie_prefix_match<T>(
             get_link(node), query, pos, key);
       } else {
-        next_pos = tail_prefix_match<T>(node, query, pos, key);
+        next_pos = tail_prefix_match<T>(
+            node, get_link_id(node), query, pos, key);
       }
       if ((next_pos == mismatch()) || (next_pos == pos)) {
         return next_pos;
@@ -727,9 +728,8 @@ template std::size_t Trie::trie_prefix_match<const Query &>(UInt32 node,
     const Query &query, std::size_t pos, std::string *key) const;
 
 template <typename T>
-std::size_t Trie::tail_prefix_match(UInt32 node, T query,
-    std::size_t pos, std::string *key) const {
-  const UInt32 link_id = link_flags_.rank1(node);
+std::size_t Trie::tail_prefix_match(UInt32 node, UInt32 link_id,
+    T query, std::size_t pos, std::string *key) const {
   const UInt32 offset = (links_[link_id] * 256) + labels_[node];
   const UInt8 *ptr = tail_[offset];
   if (*ptr != query[pos]) {
@@ -763,9 +763,11 @@ std::size_t Trie::tail_prefix_match(UInt32 node, T query,
   }
 }
 
-template std::size_t Trie::tail_prefix_match<CQuery>(UInt32 node,
+template std::size_t Trie::tail_prefix_match<CQuery>(
+    UInt32 node, UInt32 link_id,
     CQuery query, std::size_t pos, std::string *key) const;
-template std::size_t Trie::tail_prefix_match<const Query &>(UInt32 node,
+template std::size_t Trie::tail_prefix_match<const Query &>(
+    UInt32 node, UInt32 link_id,
     const Query &query, std::size_t pos, std::string *key) const;
 
 }  // namespace marisa
