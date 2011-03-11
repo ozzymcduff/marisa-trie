@@ -22,8 +22,7 @@ void TestVector() {
 
   marisa::Vector<int> vec;
 
-  ASSERT(vec.max_size() ==
-      (MARISA_UINT32_MAX - sizeof(marisa::UInt32)) / sizeof(int));
+  ASSERT(vec.max_size() == MARISA_UINT32_MAX);
   ASSERT(vec.size() == 0);
   ASSERT(vec.capacity() == 0);
   ASSERT(!vec.fixed());
@@ -93,9 +92,6 @@ void TestVector() {
     ASSERT(vec[i] == values[i]);
     ASSERT(static_cast<const marisa::Vector<int> &>(vec)[i] == values[i]);
   }
-
-  EXCEPT(vec.resize(1U << 30), MARISA_SIZE_ERROR);
-  EXCEPT(vec.reserve(1U << 30), MARISA_SIZE_ERROR);
 
   vec.clear();
 
@@ -207,9 +203,6 @@ void TestIntVector() {
   for (std::size_t i = 0; i < vec.size(); ++i) {
     ASSERT(vec[i] == values[i]);
   }
-
-  EXCEPT(vec.build(MARISA_UINT32_MAX, MARISA_UINT32_MAX - 3),
-      MARISA_SIZE_ERROR);
 
   TEST_END();
 }

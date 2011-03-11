@@ -160,7 +160,7 @@ void Vector<T>::reserve(std::size_t capacity) {
     return;
   }
   std::size_t new_capacity = capacity;
-  if (capacity_ > capacity / 2) {
+  if (capacity_ > (capacity / 2)) {
     if (capacity_ > (max_size() / 2)) {
       new_capacity = max_size();
     } else {
@@ -196,6 +196,8 @@ void Vector<T>::swap(Vector *rhs) {
 
 template <typename T>
 void Vector<T>::realloc(std::size_t new_capacity) {
+  MARISA_THROW_IF(new_capacity > (MARISA_SIZE_MAX / sizeof(T)),
+      MARISA_SIZE_ERROR);
   T * const new_buf = reinterpret_cast<T *>(
       new (std::nothrow) char[sizeof(T) * new_capacity]);
   MARISA_THROW_IF(new_buf == NULL, MARISA_MEMORY_ERROR);
