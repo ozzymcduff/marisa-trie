@@ -33,6 +33,7 @@ typedef uint64_t marisa_uint64;
 #define MARISA_UINT16_MAX ((marisa_uint16)-1)
 #define MARISA_UINT32_MAX ((marisa_uint32)-1)
 #define MARISA_UINT64_MAX ((marisa_uint64)-1)
+#define MARISA_SIZE_MAX   ((size_t)-1)
 
 #define MARISA_ZERO_TERMINATED MARISA_UINT32_MAX
 #define MARISA_NOT_FOUND       MARISA_UINT32_MAX

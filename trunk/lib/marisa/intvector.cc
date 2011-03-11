@@ -29,7 +29,6 @@ void IntVector::build(UInt32 max_int, std::size_t size) {
       (((UInt64)num_bits_per_int * size) + 31) / 32);
 
   Vector<UInt32> temp_units;
-  MARISA_THROW_IF(new_size > (temp_units.max_size() - 3), MARISA_SIZE_ERROR);
   temp_units.resize(new_size, 0);
   units_.swap(&temp_units);
 

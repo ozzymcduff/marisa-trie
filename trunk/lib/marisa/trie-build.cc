@@ -281,7 +281,7 @@ void Trie::build_next(Vector<Key<String> > &keys,
         return;
       } catch (const Exception &ex) {
         if (ex.status() != MARISA_PARAM_ERROR) {
-          throw ex;
+          throw;
         }
       }
     }
@@ -314,7 +314,7 @@ void Trie::build_next(Vector<Key<RString> > &rkeys,
         return;
       } catch (const Exception &ex) {
         if (ex.status() != MARISA_PARAM_ERROR) {
-          throw ex;
+          throw;
         }
       }
     }

@@ -103,7 +103,7 @@ class Vector {
   void swap(Vector *rhs);
 
   static std::size_t max_size() {
-    return (MARISA_UINT32_MAX - sizeof(UInt32)) / sizeof(T);
+    return MARISA_UINT32_MAX;
   }
 
  private:

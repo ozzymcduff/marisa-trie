@@ -29,7 +29,7 @@ The biggest advantage of *marisa-trie* is that it can build a considerably compa
 || *Implementation* || *Size (bytes)* || *Remarks*                   ||
 ||  darts-clone     ||   316,065,792  || Compacted double-array trie ||
 ||  tx-trie         ||   107,119,864  || LOUDS-based trie            ||
-|| *marisa-trie*    ||   *42,852,635* || Nesting patricia trie       ||
+|| *marisa-trie*    ||   *42,688,271* || Nesting patricia trie       ||
 
  * Documentation (in Japanese)
   * HowTo
