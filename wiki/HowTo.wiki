@@ -5,7 +5,7 @@
 
 marisa-trie の基本的な使い方に関するドキュメントです．
 
- * version: 0.1.3
+ * version: 0.1.4
 
 <wiki:toc max_depth="3" />
 
@@ -13,7 +13,7 @@ marisa-trie の基本的な使い方に関するドキュメントです．
 
 marisa-trie 0.1.0 には下位互換性があるため，0.0.1 で構築した辞書は 0.1.0 でも使用できます．0.1.0 で構築した辞書については，TAIL がバイナリモードでなければ，0.0.1 でも使用できます．また，marisa-trie 0.1.1 の辞書は 0.1.0 と同じなので，そのまま利用することができます．
 
-marisa-trie 0.1.2 では辞書の書式が少し変更されています．互換性はないので，0.0.1 および 0.1.0, 0.1.1 で構築した辞書を使うことはできません．辞書の再構築が必要になります．また，marisa-trie 0.1.3 の辞書は 0.1.2 と同じなので，そのまま利用することができます．
+marisa-trie 0.1.2 では辞書の書式が少し変更されています．互換性はないので，0.0.1 および 0.1.0, 0.1.1 で構築した辞書を使うことはできません．辞書の再構築が必要になります．また，marisa-trie 0.1.3, 0.1.4 の辞書は 0.1.2 と同じなので，そのまま利用することができます．
 
 ----
 
@@ -24,10 +24,10 @@ marisa-trie 0.1.2 では辞書の書式が少し変更されています．互�
 `g++` および `make` がインストールされている環境であれば，`configure` と `make` の組み合わせでビルド・インストールできます．
 
 {{{
-$ wget http://marisa-trie.googlecode.com/files/marisa-0.1.3.tar.gz
+$ wget http://marisa-trie.googlecode.com/files/marisa-0.1.4.tar.gz
 ...
-$ tar zxf marisa-0.1.3.tar.gz
-$ cd marisa-0.1.3/
+$ tar zxf marisa-0.1.4.tar.gz
+$ cd marisa-0.1.4/
 $ ./configure
 ...
 $ make
