@@ -275,17 +275,7 @@ void Trie::build_next(Vector<Key<String> > &keys,
     for (UInt32 i = 0; i < strs.size(); ++i) {
       strs[i] = keys[i].str();
     }
-    if (progress.tail() == MARISA_TEXT_TAIL) {
-      try {
-        tail_.build(strs, terminals, MARISA_TEXT_TAIL);
-        return;
-      } catch (const Exception &ex) {
-        if (ex.status() != MARISA_PARAM_ERROR) {
-          throw;
-        }
-      }
-    }
-    tail_.build(strs, terminals, MARISA_BINARY_TAIL);
+    tail_.build(strs, terminals, progress.tail());
     return;
   }
   Vector<Key<RString> > rkeys;
@@ -308,17 +298,7 @@ void Trie::build_next(Vector<Key<RString> > &rkeys,
     for (UInt32 i = 0; i < strs.size(); ++i) {
       strs[i] = String(rkeys[i].str().ptr(), rkeys[i].str().length());
     }
-    if (progress.tail() == MARISA_TEXT_TAIL) {
-      try {
-        tail_.build(strs, terminals, MARISA_TEXT_TAIL);
-        return;
-      } catch (const Exception &ex) {
-        if (ex.status() != MARISA_PARAM_ERROR) {
-          throw;
-        }
-      }
-    }
-    tail_.build(strs, terminals, MARISA_BINARY_TAIL);
+    tail_.build(strs, terminals, progress.tail());
     return;
   }
   trie_.reset(new (std::nothrow) Trie);

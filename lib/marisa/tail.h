@@ -58,7 +58,7 @@ class Tail {
 
   void build_binary_tail(const Vector<String> &keys,
       Vector<UInt32> *offsets);
-  void build_text_tail(const Vector<String> &keys,
+  bool build_text_tail(const Vector<String> &keys,
       Vector<UInt32> *offsets);
   void build_empty_tail(Vector<UInt32> *offsets);
 

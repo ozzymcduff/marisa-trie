@@ -16,7 +16,9 @@ void Tail::build(const Vector<String> &keys,
       return;
     }
     case MARISA_TEXT_TAIL: {
-      build_text_tail(keys, offsets);
+      if (!build_text_tail(keys, offsets)) {
+        build_binary_tail(keys, offsets);
+      }
       return;
     }
     default: {
@@ -136,11 +138,11 @@ void Tail::build_binary_tail(const Vector<String> &keys,
   buf_.swap(&buf);
 }
 
-void Tail::build_text_tail(const Vector<String> &keys,
+bool Tail::build_text_tail(const Vector<String> &keys,
     Vector<UInt32> *offsets) {
   if (keys.empty()) {
     build_empty_tail(offsets);
-    return;
+    return true;
   }
 
   typedef std::pair<RString, UInt32> KeyIdPair;
@@ -149,7 +151,7 @@ void Tail::build_text_tail(const Vector<String> &keys,
   for (std::size_t i = 0; i < keys.size(); ++i) {
     for (std::size_t j = 0; j < keys[i].length(); ++j) {
       if (keys[i][j] == '\0') {
-        MARISA_THROW(MARISA_PARAM_ERROR);
+        return false;
       }
     }
     pairs[i].first = RString(keys[i]);
@@ -190,6 +192,7 @@ void Tail::build_text_tail(const Vector<String> &keys,
     temp_offsets.swap(offsets);
   }
   buf_.swap(&buf);
+  return true;
 }
 
 void Tail::build_empty_tail(Vector<UInt32> *offsets) {

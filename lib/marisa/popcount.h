@@ -8,8 +8,8 @@ namespace marisa {
 class PopCount {
  public:
   PopCount(UInt32 x) : value_() {
-    x = (x & 0x55555555U) + ((x >> 1) & 0x55555555U);
-    x = (x & 0x33333333U) + ((x >> 2) & 0x33333333U);
+    x = (x & 0x55555555U) + ((x & 0xAAAAAAAAU) >> 1);
+    x = (x & 0x33333333U) + ((x & 0xCCCCCCCCU) >> 2);
     x = (x + (x >> 4)) & 0x0F0F0F0FU;
     x += x << 8;
     x += x << 16;

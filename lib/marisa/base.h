@@ -101,7 +101,7 @@ typedef enum marisa_flags_ {
   // - MARISA_BINARY_TAIL:
   //   builds a dictionary with a binary-mode TAIL. Its last labels are stored
   //   as binary data.
-  // - MARISA_WITHOUT_TAIL:
+  // - MARISA_TEXT_TAIL:
   //   builds a dictionary with a text-mode TAIL if its last labels do not
   //   contain NULL characters. The last labels are stored as zero-terminated
   //   string. Otherwise, a dictionary is built with a binary-mode TAIL.

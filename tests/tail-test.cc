@@ -37,7 +37,15 @@ void TestBinaryTail() {
 
   const char binary_key[] = { 'N', 'P', '\0', 'T', 'r', 'i', 'e' };
   keys[0] = marisa::String(binary_key, sizeof(binary_key));
-  EXCEPT(tail.build(keys, &offsets, MARISA_TEXT_TAIL), MARISA_PARAM_ERROR);
+  tail.build(keys, &offsets, MARISA_TEXT_TAIL);
+
+  ASSERT(tail.size() == sizeof(binary_key) + 1);
+  ASSERT(tail.mode() == MARISA_BINARY_TAIL);
+  ASSERT(!tail.empty());
+  ASSERT(tail.total_size() == (sizeof(marisa::UInt32) + tail.size()));
+  ASSERT(offsets.size() == keys.size() + 1);
+  ASSERT(offsets[0] == 1);
+  ASSERT(offsets[1] == tail.size());
 
   tail.build(keys, &offsets, MARISA_BINARY_TAIL);
 
