@@ -12,7 +12,7 @@
 
 #include <marisa/grimoire/io.h>
 
-#include "assert.h"
+#include "marisa-assert.h"
 
 namespace {
 

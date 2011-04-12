@@ -1,5 +1,5 @@
-#ifndef MARISA2_ASSERT_H_
-#define MARISA2_ASSERT_H_
+#ifndef MARISA_ASSERT_H_
+#define MARISA_ASSERT_H_
 
 #include <iostream>
 #include <cstdlib>
@@ -23,4 +23,4 @@
 #define TEST_END() \
   (std::cout << "ok" << std::endl)
 
-#endif  // MARISA2_ASSERT_H_
+#endif  // MARISA_ASSERT_H_

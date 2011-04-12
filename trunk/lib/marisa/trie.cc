@@ -168,6 +168,12 @@ void Trie::swap(Trie &rhs) {
   trie_.swap(rhs.trie_);
 }
 
+}  // namespace marisa
+
+#include <iostream>
+
+namespace marisa {
+
 class TrieIO {
  public:
   static void fread(std::FILE *file, Trie *trie) {

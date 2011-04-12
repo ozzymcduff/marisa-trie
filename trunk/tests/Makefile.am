@@ -9,7 +9,7 @@ TESTS = \
 
 check_PROGRAMS = $(TESTS)
 
-noinst_HEADERS = assert.h
+noinst_HEADERS = marisa-assert.h
 
 base_test_SOURCES = base-test.cc
 base_test_LDADD = ../lib/libmarisa.la
