@@ -5,7 +5,7 @@
 
 #include <marisa.h>
 
-#include "assert.h"
+#include "marisa-assert.h"
 
 namespace {
 

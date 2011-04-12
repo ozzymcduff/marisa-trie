@@ -8,7 +8,7 @@
 #include <marisa/grimoire/vector/rank-index.h>
 #include <marisa/grimoire/vector.h>
 
-#include "assert.h"
+#include "marisa-assert.h"
 
 namespace {
 

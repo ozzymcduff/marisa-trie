@@ -9,7 +9,7 @@
 #include <marisa/grimoire/trie/tail.h>
 #include <marisa/grimoire/trie/state.h>
 
-#include "assert.h"
+#include "marisa-assert.h"
 
 namespace {
 
