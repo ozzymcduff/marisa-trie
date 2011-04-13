@@ -211,8 +211,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CXXFLAGS = -Wall -Weffc++ -Wextra
-#AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG
+
+#AM_CXXFLAGS = -Wall -Weffc++ -Wextra
+AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG
 ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libmarisa.la
 libmarisa_la_SOURCES = \

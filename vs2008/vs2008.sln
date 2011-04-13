@@ -56,7 +56,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-predictive-search", 
 		{3BE97421-D962-4330-815B-AC9B7B799F15} = {3BE97421-D962-4330-815B-AC9B7B799F15}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa", "marisa\marisa.vcproj", "{3BE97421-D962-4330-815B-AC9B7B799F15}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmarisa", "libmarisa\libmarisa.vcproj", "{3BE97421-D962-4330-815B-AC9B7B799F15}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
