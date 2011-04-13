@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <queue>
 
+#include "../algorithm.h"
 #include "header.h"
 #include "range.h"
 #include "state.h"
@@ -315,12 +316,16 @@ void LoudsTrie::build_trie(Vector<T> &keys,
     config_.parse(1 | tail_.mode() | config.node_order());
   }
 
-  link_flags_.build(false, true);
+  link_flags_.build(false, false);
+  std::size_t node_id = 0;
   for (std::size_t i = 0; i < next_terminals.size(); ++i) {
-    labels_[link_flags_.select1(i)] = (UInt8)(next_terminals[i] % 256);
+    while (!link_flags_[node_id]) {
+      ++node_id;
+    }
+    labels_[node_id] = (UInt8)(next_terminals[i] % 256);
     next_terminals[i] /= 256;
+    ++node_id;
   }
-  link_flags_.disable_select1();
   links_.build(next_terminals);
 }
 
@@ -331,7 +336,7 @@ void LoudsTrie::build_current_trie(Vector<T> &keys,
   for (std::size_t i = 0; i < keys.size(); ++i) {
     keys[i].set_id(i);
   }
-  std::sort(keys.begin(), keys.end());
+  Algorithm().sort(keys.begin(), keys.end());
 
   louds_.push_back(true);
   louds_.push_back(false);

@@ -44,7 +44,7 @@ std::size_t select_finish(std::size_t i, std::size_t bit_id, UInt64 unit) {
     unit >>= 56;
     i -= count.lo56();
   }
-  return bit_id + PrecomputedTable::select(i, (UInt8)(unit & 0xFF));
+  return bit_id + PrecomputedTable().select(i, (UInt8)(unit & 0xFF));
 }
 
 }  // namespace
@@ -178,7 +178,7 @@ std::size_t BitVector<32>::select0(std::size_t i) const {
     unit >>= 24;
     i -= count.lo24();
   }
-  return bit_id + PrecomputedTable::select(i, (UInt8)(unit & 0xFF));
+  return bit_id + PrecomputedTable().select(i, (UInt8)(unit & 0xFF));
 }
 
 template <>
@@ -266,7 +266,7 @@ std::size_t BitVector<32>::select1(std::size_t i) const {
     unit >>= 24;
     i -= count.lo24();
   }
-  return bit_id + PrecomputedTable::select(i, (UInt8)(unit & 0xFF));
+  return bit_id + PrecomputedTable().select(i, (UInt8)(unit & 0xFF));
 }
 
 template <>

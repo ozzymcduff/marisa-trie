@@ -254,6 +254,8 @@ noinst_HEADERS = \
   marisa/grimoire/vector/vector.h \
   marisa/grimoire/vector/flat-vector.h \
   marisa/grimoire/vector/bit-vector.h \
+  marisa/grimoire/algorithm.h \
+  marisa/grimoire/algorithm/sort.h \
   marisa/grimoire/trie.h \
   marisa/grimoire/trie/config.h \
   marisa/grimoire/trie/header.h \
