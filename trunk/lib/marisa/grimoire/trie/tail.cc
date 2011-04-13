@@ -1,5 +1,4 @@
-#include <algorithm>
-
+#include "../algorithm.h"
 #include "state.h"
 #include "tail.h"
 
@@ -159,15 +158,15 @@ void Tail::build_(Vector<Entry> &entries, Vector<UInt32> *offsets,
   for (std::size_t i = 0; i < entries.size(); ++i) {
     entries[i].set_id(i);
   }
-  std::sort(entries.begin(), entries.end(), Entry::StringComparer());
+  Algorithm().sort(entries.begin(), entries.end());
 
   Vector<UInt32> temp_offsets;
   temp_offsets.resize(entries.size(), 0);
 
   const Entry dummy;
   const Entry *last = &dummy;
-  for (std::size_t i = 0; i < entries.size(); ++i) {
-    const Entry &cur = entries[i];
+  for (std::size_t i = entries.size(); i > 0; --i) {
+    const Entry &cur = entries[i - 1];
     MARISA_THROW_IF(cur.length() == 0, MARISA_RANGE_ERROR);
     std::size_t match = 0;
     while ((match < cur.length()) && (match < last->length()) &&
