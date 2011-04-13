@@ -11,7 +11,7 @@ class Algorithm {
   Algorithm() {}
 
   template <typename Iterator>
-  void sort(Iterator begin, Iterator end) {
+  void sort(Iterator begin, Iterator end) const {
     algorithm::sort(begin, end);
   }
 

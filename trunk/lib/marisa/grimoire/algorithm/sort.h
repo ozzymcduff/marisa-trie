@@ -14,6 +14,8 @@ enum Threshold {
 
 template <typename Unit>
 int get_label(const Unit &unit, std::size_t depth) {
+  MARISA_DEBUG_IF(depth > unit.length(), MARISA_BOUND_ERROR);
+
   return (depth < unit.length()) ? (int)(UInt8)unit[depth] : -1;
 }
 
@@ -52,6 +54,8 @@ bool less_than(const Unit &lhs, const Unit &rhs, std::size_t depth) {
 
 template <typename Iterator>
 void insertion_sort(Iterator l, Iterator r, std::size_t depth) {
+  MARISA_DEBUG_IF(l > r, MARISA_BOUND_ERROR);
+
   for (Iterator i = l + 1; i < r; ++i) {
     for (Iterator j = i; j > l; --j) {
       if (!less_than(*j, *(j - 1), depth)) {
@@ -64,13 +68,15 @@ void insertion_sort(Iterator l, Iterator r, std::size_t depth) {
 
 template <typename Iterator>
 void sort(Iterator l, Iterator r, std::size_t depth) {
-  while (r - l > MARISA_INSERTION_SORT_THRESHOLD) {
+  MARISA_DEBUG_IF(l > r, MARISA_BOUND_ERROR);
+
+  while ((r - l) > MARISA_INSERTION_SORT_THRESHOLD) {
     Iterator pl = l;
     Iterator pr = r;
     Iterator pivot_l = l;
     Iterator pivot_r = r;
 
-    int pivot = median(*l, *(l + (r - l) / 2), *(r - 1), depth);
+    const int pivot = median(*l, *(l + (r - l) / 2), *(r - 1), depth);
     for ( ; ; ) {
       while (pl < pr) {
         const int label = get_label(*pl, depth);
@@ -140,6 +146,7 @@ void sort(Iterator l, Iterator r, std::size_t depth) {
       }
     }
   }
+
   if (r - l > 1) {
     insertion_sort(l, r, depth);
   }
@@ -149,6 +156,7 @@ void sort(Iterator l, Iterator r, std::size_t depth) {
 
 template <typename Iterator>
 void sort(Iterator begin, Iterator end) {
+  MARISA_DEBUG_IF(begin > end, MARISA_BOUND_ERROR);
   details::sort(begin, end, 0);
 };
 
