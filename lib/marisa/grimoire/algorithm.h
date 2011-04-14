@@ -11,8 +11,8 @@ class Algorithm {
   Algorithm() {}
 
   template <typename Iterator>
-  void sort(Iterator begin, Iterator end) const {
-    algorithm::sort(begin, end);
+  std::size_t sort(Iterator begin, Iterator end) const {
+    return algorithm::sort(begin, end);
   }
 
  private:

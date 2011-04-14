@@ -16,6 +16,7 @@ int param_min_num_tries = 1;
 int param_max_num_tries = 5;
 marisa::TailMode param_tail_mode = MARISA_DEFAULT_TAIL;
 marisa::NodeOrder param_node_order = MARISA_DEFAULT_ORDER;
+marisa::CacheLevel param_cache_level = MARISA_DEFAULT_CACHE;
 bool speed_flag = true;
 
 class Clock {
@@ -38,14 +39,18 @@ class Clock {
 void print_help(const char *cmd) {
   std::cerr << "Usage: " << cmd << " [OPTION]... [FILE]...\n\n"
       "Options:\n"
-      "  -N, --min-num-tries=[N]  limits the number of tries to N"
-      " (default: 1)\n"
-      "  -n, --max-num-tries=[N]  limits the number of tries to N"
-      " (default: 10)\n"
+      "  -N, --min-num-tries=[N]  limits the number of tries"
+      " [" << MARISA_MIN_NUM_TRIES << ", " << MARISA_MAX_NUM_TRIES
+      << "] (default: 1)\n"
+      "  -n, --max-num-tries=[N]  limits the number of tries"
+      " [" << MARISA_MIN_NUM_TRIES << ", " << MARISA_MAX_NUM_TRIES
+      << "] (default: 10)\n"
       "  -t, --text-tail      build a dictionary with text TAIL (default)\n"
       "  -b, --binary-tail    build a dictionary with binary TAIL\n"
       "  -w, --weight-order   arranges siblings in weight order (default)\n"
       "  -l, --label-order    arranges siblings in label order\n"
+      "  -c, --cache-level=[N]    specifies the cache size"
+      " [1, 5] (default: 3)\n"
       "  -S, --print-speed    print speed [1000 keys/s] (default)\n"
       "  -s, --print-time     print time [ns/key]\n"
       "  -h, --help           print this help\n"
@@ -76,6 +81,30 @@ void print_config() {
     }
     case MARISA_WEIGHT_ORDER: {
       std::cout << "Descending weight order" << std::endl;
+      break;
+    }
+  }
+
+  std::cout << "Cache level: ";
+  switch (param_cache_level) {
+    case MARISA_HUGE_CACHE: {
+      std::cout << "Huge cache" << std::endl;
+      break;
+    }
+    case MARISA_LARGE_CACHE: {
+      std::cout << "Large cache" << std::endl;
+      break;
+    }
+    case MARISA_NORMAL_CACHE: {
+      std::cout << "Normal cache" << std::endl;
+      break;
+    }
+    case MARISA_SMALL_CACHE: {
+      std::cout << "Small cache" << std::endl;
+      break;
+    }
+    case MARISA_TINY_CACHE: {
+      std::cout << "Tiny cache" << std::endl;
       break;
     }
   }
@@ -139,7 +168,8 @@ void benchmark_build(marisa::Keyset &keyset,
     keyset[i].set_weight(weights[i]);
   }
   Clock cl;
-  trie->build(keyset, num_tries | param_tail_mode | param_node_order);
+  trie->build(keyset, num_tries | param_tail_mode | param_node_order |
+      param_cache_level);
   std::printf(" %10lu", (unsigned long)trie->io_size());
   print_time_info(keyset.size(), cl.elasped());
 }
@@ -277,13 +307,14 @@ int main(int argc, char *argv[]) {
     { "binary-tail", 0, NULL, 'b' },
     { "weight-order", 0, NULL, 'w' },
     { "label-order", 0, NULL, 'l' },
+    { "cache-level", 1, NULL, 'c' },
     { "print-speed", 0, NULL, 'S' },
     { "print-time", 0, NULL, 's' },
     { "help", 0, NULL, 'h' },
     { NULL, 0, NULL, 0 }
   };
   ::cmdopt_t cmdopt;
-  ::cmdopt_init(&cmdopt, argc, argv, "N:n:tbwlSsh", long_options);
+  ::cmdopt_init(&cmdopt, argc, argv, "N:n:tbwlc:Ssh", long_options);
   int label;
   while ((label = ::cmdopt_get(&cmdopt)) != -1) {
     switch (label) {
@@ -294,6 +325,7 @@ int main(int argc, char *argv[]) {
             (value > MARISA_MAX_NUM_TRIES)) {
           std::cerr << "error: option `-n' with an invalid argument: "
               << cmdopt.optarg << std::endl;
+          return 1;
         }
         param_min_num_tries = (int)value;
         break;
@@ -305,6 +337,7 @@ int main(int argc, char *argv[]) {
             (value > MARISA_MAX_NUM_TRIES)) {
           std::cerr << "error: option `-n' with an invalid argument: "
               << cmdopt.optarg << std::endl;
+          return 2;
         }
         param_max_num_tries = (int)value;
         break;
@@ -323,6 +356,26 @@ int main(int argc, char *argv[]) {
       }
       case 'l': {
         param_node_order = MARISA_LABEL_ORDER;
+        break;
+      }
+      case 'c': {
+        char *end_of_value;
+        const long value = std::strtol(cmdopt.optarg, &end_of_value, 10);
+        if ((*end_of_value != '\0') || (value < 1) || (value > 5)) {
+          std::cerr << "error: option `-c' with an invalid argument: "
+              << cmdopt.optarg << std::endl;
+          return 3;
+        } else if (value == 1) {
+          param_cache_level = MARISA_TINY_CACHE;
+        } else if (value == 2) {
+          param_cache_level = MARISA_SMALL_CACHE;
+        } else if (value == 3) {
+          param_cache_level = MARISA_NORMAL_CACHE;
+        } else if (value == 4) {
+          param_cache_level = MARISA_LARGE_CACHE;
+        } else if (value == 5) {
+          param_cache_level = MARISA_HUGE_CACHE;
+        }
         break;
       }
       case 'S': {

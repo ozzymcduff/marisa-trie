@@ -7,6 +7,7 @@
 #include "config.h"
 #include "key.h"
 #include "tail.h"
+#include "cache.h"
 
 namespace marisa {
 namespace grimoire {
@@ -60,11 +61,13 @@ class LoudsTrie  {
  private:
   BitVector louds_;
   BitVector terminal_flags_;
-  Vector<UInt8> labels_;
   BitVector link_flags_;
-  FlatVector links_;
+  Vector<UInt8> bases_;
+  FlatVector extras_;
   Tail tail_;
   scoped_ptr<LoudsTrie> next_trie_;
+  Vector<Cache> cache_;
+  std::size_t cache_mask_;
   std::size_t num_l1_nodes_;
   Config config_;
   Mapper mapper_;
@@ -74,19 +77,21 @@ class LoudsTrie  {
   template <typename T>
   void build_trie(Vector<T> &keys,
       Vector<UInt32> *terminals, const Config &config, std::size_t trie_id);
-
   template <typename T>
   void build_current_trie(Vector<T> &keys,
       Vector<UInt32> *terminals, const Config &config, std::size_t trie_id);
-
-  void build_next_trie(Vector<Key> &keys,
+  template <typename T>
+  void build_next_trie(Vector<T> &keys,
       Vector<UInt32> *terminals, const Config &config, std::size_t trie_id);
-  void build_next_trie(Vector<ReverseKey> &keys,
-      Vector<UInt32> *terminals, const Config &config, std::size_t trie_id);
-
   template <typename T>
   void build_terminals(const Vector<T> &keys,
       Vector<UInt32> *terminals) const;
+
+  void reserve_cache(const Config &config, std::size_t num_keys);
+  template <typename T>
+  void cache(std::size_t parent, std::size_t child,
+      float weight, char label);
+  void fill_cache();
 
   void map_(Mapper &mapper);
   void read_(Reader &reader);
