@@ -1,5 +1,5 @@
-#AM_CXXFLAGS = -Wall -Weffc++ -Wextra
-AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG
+AM_CXXFLAGS = -Wall -Weffc++ -Wextra
+#AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG
 ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libmarisa.la
@@ -53,6 +53,7 @@ noinst_HEADERS = \
   marisa/grimoire/trie/range.h \
   marisa/grimoire/trie/entry.h \
   marisa/grimoire/trie/tail.h \
+  marisa/grimoire/trie/cache.h \
   marisa/grimoire/trie/history.h \
   marisa/grimoire/trie/state.h \
   marisa/grimoire/trie/louds-trie.h

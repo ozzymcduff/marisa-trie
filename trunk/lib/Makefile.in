@@ -211,9 +211,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-
-#AM_CXXFLAGS = -Wall -Weffc++ -Wextra
-AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG
+AM_CXXFLAGS = -Wall -Weffc++ -Wextra
+#AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG
 ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libmarisa.la
 libmarisa_la_SOURCES = \
@@ -264,6 +263,7 @@ noinst_HEADERS = \
   marisa/grimoire/trie/range.h \
   marisa/grimoire/trie/entry.h \
   marisa/grimoire/trie/tail.h \
+  marisa/grimoire/trie/cache.h \
   marisa/grimoire/trie/history.h \
   marisa/grimoire/trie/state.h \
   marisa/grimoire/trie/louds-trie.h

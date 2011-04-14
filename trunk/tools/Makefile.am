@@ -1,6 +1,6 @@
 AM_CFLAGS = -Wall -Wextra
-#AM_CXXFLAGS = -Wall -Weffc++ -Wextra -I../lib
-AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG -I../lib
+AM_CXXFLAGS = -Wall -Weffc++ -Wextra -I../lib
+#AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG -I../lib
 
 bin_PROGRAMS = \
   marisa-build \

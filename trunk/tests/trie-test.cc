@@ -21,18 +21,22 @@ void TestConfig() {
   ASSERT(config.num_tries() == MARISA_DEFAULT_NUM_TRIES);
   ASSERT(config.tail_mode() == MARISA_DEFAULT_TAIL);
   ASSERT(config.node_order() == MARISA_DEFAULT_ORDER);
+  ASSERT(config.cache_level() == MARISA_DEFAULT_CACHE);
 
-  config.parse(10 | MARISA_BINARY_TAIL | MARISA_LABEL_ORDER);
+  config.parse(10 | MARISA_BINARY_TAIL | MARISA_LABEL_ORDER |
+      MARISA_TINY_CACHE);
 
   ASSERT(config.num_tries() == 10);
   ASSERT(config.tail_mode() == MARISA_BINARY_TAIL);
   ASSERT(config.node_order() == MARISA_LABEL_ORDER);
+  ASSERT(config.cache_level() == MARISA_TINY_CACHE);
 
   config.parse(0);
 
   ASSERT(config.num_tries() == MARISA_DEFAULT_NUM_TRIES);
   ASSERT(config.tail_mode() == MARISA_DEFAULT_TAIL);
   ASSERT(config.node_order() == MARISA_DEFAULT_ORDER);
+  ASSERT(config.cache_level() == MARISA_DEFAULT_CACHE);
 
   TEST_END();
 }

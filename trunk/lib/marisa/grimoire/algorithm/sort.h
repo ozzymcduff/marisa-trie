@@ -8,19 +8,19 @@ namespace grimoire {
 namespace algorithm {
 namespace details {
 
-enum Threshold {
+enum {
   MARISA_INSERTION_SORT_THRESHOLD = 10
 };
 
-template <typename Unit>
-int get_label(const Unit &unit, std::size_t depth) {
+template <typename T>
+int get_label(const T &unit, std::size_t depth) {
   MARISA_DEBUG_IF(depth > unit.length(), MARISA_BOUND_ERROR);
 
   return (depth < unit.length()) ? (int)(UInt8)unit[depth] : -1;
 }
 
-template <typename Unit>
-int median(const Unit &a, const Unit &b, const Unit &c, std::size_t depth) {
+template <typename T>
+int median(const T &a, const T &b, const T &c, std::size_t depth) {
   const int x = get_label(a, depth);
   const int y = get_label(b, depth);
   const int z = get_label(c, depth);
@@ -39,37 +39,48 @@ int median(const Unit &a, const Unit &b, const Unit &c, std::size_t depth) {
   return y;
 }
 
-template <typename Unit>
-bool less_than(const Unit &lhs, const Unit &rhs, std::size_t depth) {
+template <typename T>
+int compare(const T &lhs, const T &rhs, std::size_t depth) {
   for (std::size_t i = depth; i < lhs.length(); ++i) {
     if (i == rhs.length()) {
-      return false;
+      return 1;
     }
     if (lhs[i] != rhs[i]) {
-      return (UInt8)lhs[i] < (UInt8)rhs[i];
+      return (UInt8)lhs[i] - (UInt8)rhs[i];
     }
   }
-  return lhs.length() < rhs.length();
+  if (lhs.length() == rhs.length()) {
+    return 0;
+  }
+  return (lhs.length() < rhs.length()) ? -1 : 1;
 }
 
 template <typename Iterator>
-void insertion_sort(Iterator l, Iterator r, std::size_t depth) {
+std::size_t insertion_sort(Iterator l, Iterator r, std::size_t depth) {
   MARISA_DEBUG_IF(l > r, MARISA_BOUND_ERROR);
 
+  std::size_t count = 1;
   for (Iterator i = l + 1; i < r; ++i) {
+    int result = 0;
     for (Iterator j = i; j > l; --j) {
-      if (!less_than(*j, *(j - 1), depth)) {
+      result = compare(*(j - 1), *j, depth);
+      if (result <= 0) {
         break;
       }
       marisa::swap(*(j - 1), *j);
     }
+    if (result != 0) {
+      ++count;
+    }
   }
+  return count;
 }
 
 template <typename Iterator>
-void sort(Iterator l, Iterator r, std::size_t depth) {
+std::size_t sort(Iterator l, Iterator r, std::size_t depth) {
   MARISA_DEBUG_IF(l > r, MARISA_BOUND_ERROR);
 
+  std::size_t count = 0;
   while ((r - l) > MARISA_INSERTION_SORT_THRESHOLD) {
     Iterator pl = l;
     Iterator pr = r;
@@ -112,52 +123,70 @@ void sort(Iterator l, Iterator r, std::size_t depth) {
     }
 
     if (((pl - l) > (pr - pl)) || ((r - pr) > (pr - pl))) {
-      if (pr - pl > 1) {
-        if (pivot != -1) {
-          sort(pl, pr, depth + 1);
+      if ((pr - pl) == 1) {
+        ++count;
+      } else if ((pr - pl) > 1) {
+        if (pivot == -1) {
+          ++count;
+        } else {
+          count += sort(pl, pr, depth + 1);
         }
       }
 
       if ((pl - l) < (r - pr)) {
-        if ((pl - l) > 1) {
-          sort(l, pl, depth);
+        if ((pl - l) == 1) {
+          ++count;
+        } else if ((pl - l) > 1) {
+          count += sort(l, pl, depth);
         }
         l = pr;
       } else {
-        if ((r - pr) > 1) {
-          sort(pr, r, depth);
+        if ((r - pr) == 1) {
+          ++count;
+        } else if ((r - pr) > 1) {
+          count += sort(pr, r, depth);
         }
         r = pl;
       }
     } else {
-      if ((pl - l) > 1) {
-        sort(l, pl, depth);
+      if ((pl - l) == 1) {
+        ++count;
+      } else if ((pl - l) > 1) {
+        count += sort(l, pl, depth);
       }
-      if ((r - pr) > 1) {
-        sort(pr, r, depth);
+
+      if ((r - pr) == 1) {
+        ++count;
+      } else if ((r - pr) > 1) {
+        count += sort(pr, r, depth);
       }
+
       l = pl, r = pr;
-      if ((pr - pl) > 1) {
-        if (pivot != -1) {
-          ++depth;
-        } else {
+      if ((pr - pl) == 1) {
+        ++count;
+      } else if ((pr - pl) > 1) {
+        if (pivot == -1) {
           l = r;
+          ++count;
+        } else {
+          ++depth;
         }
       }
     }
   }
 
-  if (r - l > 1) {
-    insertion_sort(l, r, depth);
+  if ((r - l) > 1) {
+    count += insertion_sort(l, r, depth);
   }
+  return count;
 }
 
 }  // namespace details
 
 template <typename Iterator>
-void sort(Iterator begin, Iterator end) {
+std::size_t sort(Iterator begin, Iterator end) {
   MARISA_DEBUG_IF(begin > end, MARISA_BOUND_ERROR);
-  details::sort(begin, end, 0);
+  return details::sort(begin, end, 0);
 };
 
 }  // namespace algorithm

@@ -105,7 +105,7 @@ class BitVector {
         + select0s_.total_size() + select1s_.total_size();
   }
   std::size_t io_size() const {
-    return sizeof(UInt64) + units_.io_size() + ranks_.io_size()
+    return units_.io_size() + (sizeof(UInt32) * 2) + ranks_.io_size()
         + select0s_.io_size() + select1s_.io_size();
   }
 
@@ -133,6 +133,7 @@ class BitVector {
       bool enables_select0, bool enables_select1);
 
   void map_(Mapper &mapper) {
+    units_.map(mapper);
     {
       UInt32 temp_size;
       mapper.map(&temp_size);
@@ -144,13 +145,13 @@ class BitVector {
       MARISA_THROW_IF(temp_num_1s > size_, MARISA_FORMAT_ERROR);
       num_1s_ = temp_num_1s;
     }
-    units_.map(mapper);
     ranks_.map(mapper);
     select0s_.map(mapper);
     select1s_.map(mapper);
   }
 
   void read_(Reader &reader) {
+    units_.read(reader);
     {
       UInt32 temp_size;
       reader.read(&temp_size);
@@ -162,16 +163,15 @@ class BitVector {
       MARISA_THROW_IF(temp_num_1s > size_, MARISA_FORMAT_ERROR);
       num_1s_ = temp_num_1s;
     }
-    units_.read(reader);
     ranks_.read(reader);
     select0s_.read(reader);
     select1s_.read(reader);
   }
 
   void write_(Writer &writer) const {
+    units_.write(writer);
     writer.write((UInt32)size_);
     writer.write((UInt32)num_1s_);
-    units_.write(writer);
     ranks_.write(writer);
     select0s_.write(writer);
     select1s_.write(writer);

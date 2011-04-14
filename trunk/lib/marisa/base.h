@@ -38,6 +38,7 @@ typedef uint64_t marisa_uint64;
 
 #define MARISA_INVALID_LINK_ID MARISA_UINT32_MAX
 #define MARISA_INVALID_KEY_ID  MARISA_UINT32_MAX
+#define MARISA_INVALID_EXTRA   (MARISA_UINT32_MAX >> 8)
 
 // Error codes are defined as members of marisa_error_code. This library throws
 // an exception with one of the error codes when an error occurs.
@@ -65,7 +66,7 @@ typedef enum marisa_error_code_ {
   // MARISA_CODE_ERROR means that an undefined code has appeared in operation.
   MARISA_CODE_ERROR   = 5,
 
-  // MARISA_SELF_ERROR means that a smart pointer has tried to reset itself.
+  // MARISA_RESET_ERROR means that a smart pointer has tried to reset itself.
   MARISA_RESET_ERROR  = 6,
 
   // MARISA_SIZE_ERROR means that a size has exceeded a library limitation.
@@ -89,9 +90,9 @@ typedef enum marisa_error_code_ {
 // A dictionary consists of 3 tries in default. Usually more tries make a
 // dictionary space-efficient but time-inefficient.
 typedef enum marisa_num_tries_ {
-  MARISA_MIN_NUM_TRIES     = 0x0001,
-  MARISA_MAX_NUM_TRIES     = 0x00FF,
-  MARISA_DEFAULT_NUM_TRIES = 0x0003,
+  MARISA_MIN_NUM_TRIES     = 0x0000001,
+  MARISA_MAX_NUM_TRIES     = 0x00000FF,
+  MARISA_DEFAULT_NUM_TRIES = 0x0000003,
 } marisa_num_tries;
 
 // This library provides 2 kinds of TAIL implementations.
@@ -100,13 +101,13 @@ typedef enum marisa_tail_mode_ {
   // available if and only if the last labels do not contain a NULL character.
   // If MARISA_TEXT_TAIL is specified and a NULL character exists in the last
   // labels, the setting is automatically switched to MARISA_BINARY_TAIL.
-  MARISA_TEXT_TAIL         = 0x0100,
+  MARISA_TEXT_TAIL         = 0x0000100,
 
   // MARISA_BINARY_TAIL also merges last labels but as byte sequences. It uses
   // a bit vector to detect the end of a sequence, instead of NULL characters.
   // So, MARISA_BINARY_TAIL requires a larger space if the average length of
   // labels is greater than 8.
-  MARISA_BINARY_TAIL       = 0x0200,
+  MARISA_BINARY_TAIL       = 0x0000200,
 
   MARISA_DEFAULT_TAIL      = MARISA_TEXT_TAIL,
 } marisa_tail_mode;
@@ -117,21 +118,35 @@ typedef enum marisa_node_order_ {
   // MARISA_LABEL_ORDER arranges nodes in ascending label order.
   // MARISA_LABEL_ORDER is useful if an application needs to predict keys in
   // label order.
-  MARISA_LABEL_ORDER       = 0x1000,
+  MARISA_LABEL_ORDER       = 0x0001000,
 
   // MARISA_WEIGHT_ORDER arranges nodes in descending weight order.
   // MARISA_WEIGHT_ORDER is generally a better choice because it enables faster
   // matching.
-  MARISA_WEIGHT_ORDER      = 0x2000,
+  MARISA_WEIGHT_ORDER      = 0x0002000,
 
   MARISA_DEFAULT_ORDER     = MARISA_WEIGHT_ORDER,
 } marisa_node_order;
 
+// This library uses a cache technique to accelerate search functions. The
+// following enumerated type marisa_cache_level gives a list of available cache
+// size options. A larger cache enables faster search but takes a more space.
+typedef enum marisa_cache_level_ {
+  MARISA_HUGE_CACHE        = 0x0010000,
+  MARISA_LARGE_CACHE       = 0x0040000,
+  MARISA_NORMAL_CACHE      = 0x0100000,
+  MARISA_SMALL_CACHE       = 0x0400000,
+  MARISA_TINY_CACHE        = 0x1000000,
+
+  MARISA_DEFAULT_CACHE     = MARISA_NORMAL_CACHE
+} marisa_cache_level;
+
 typedef enum marisa_config_mask_ {
-  MARISA_NUM_TRIES_MASK    = 0x00FF,
-  MARISA_TAIL_MODE_MASK    = 0x0F00,
-  MARISA_NODE_ORDER_MASK   = 0xF000,
-  MARISA_CONFIG_MASK       = 0xFFFF
+  MARISA_NUM_TRIES_MASK    = 0x00000FF,
+  MARISA_TAIL_MODE_MASK    = 0x0000F00,
+  MARISA_NODE_ORDER_MASK   = 0x000F000,
+  MARISA_CACHE_LEVEL_MASK  = 0xFFF0000,
+  MARISA_CONFIG_MASK       = 0xFFFFFFF
 } marisa_config_mask;
 
 #ifdef __cplusplus
@@ -150,6 +165,7 @@ typedef ::marisa_error_code ErrorCode;
 
 typedef ::marisa_tail_mode TailMode;
 typedef ::marisa_node_order NodeOrder;
+typedef ::marisa_cache_level CacheLevel;
 
 template <typename T>
 inline void swap(T &lhs, T &rhs) {

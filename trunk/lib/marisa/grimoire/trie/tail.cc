@@ -166,32 +166,32 @@ void Tail::build_(Vector<Entry> &entries, Vector<UInt32> *offsets,
   const Entry dummy;
   const Entry *last = &dummy;
   for (std::size_t i = entries.size(); i > 0; --i) {
-    const Entry &cur = entries[i - 1];
-    MARISA_THROW_IF(cur.length() == 0, MARISA_RANGE_ERROR);
+    const Entry &current = entries[i - 1];
+    MARISA_THROW_IF(current.length() == 0, MARISA_RANGE_ERROR);
     std::size_t match = 0;
-    while ((match < cur.length()) && (match < last->length()) &&
-        ((*last)[match] == cur[match])) {
+    while ((match < current.length()) && (match < last->length()) &&
+        ((*last)[match] == current[match])) {
       ++match;
     }
-    if ((match == cur.length()) && (last->length() != 0)) {
-      temp_offsets[cur.id()] = (UInt32)(
+    if ((match == current.length()) && (last->length() != 0)) {
+      temp_offsets[current.id()] = (UInt32)(
           temp_offsets[last->id()] + (last->length() - match));
     } else {
-      temp_offsets[cur.id()] = (UInt32)buf_.size();
-      for (std::size_t j = 1; j <= cur.length(); ++j) {
-        buf_.push_back(cur[cur.length() - j]);
+      temp_offsets[current.id()] = (UInt32)buf_.size();
+      for (std::size_t j = 1; j <= current.length(); ++j) {
+        buf_.push_back(current[current.length() - j]);
       }
       if (mode == MARISA_TEXT_TAIL) {
         buf_.push_back('\0');
       } else {
-        for (std::size_t j = 1; j < cur.length(); ++j) {
+        for (std::size_t j = 1; j < current.length(); ++j) {
           end_flags_.push_back(false);
         }
         end_flags_.push_back(true);
       }
       MARISA_THROW_IF(buf_.size() > MARISA_UINT32_MAX, MARISA_SIZE_ERROR);
     }
-    last = &cur;
+    last = &current;
   }
   buf_.shrink();
 

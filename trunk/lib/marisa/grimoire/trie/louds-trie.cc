@@ -12,8 +12,9 @@ namespace grimoire {
 namespace trie {
 
 LoudsTrie::LoudsTrie()
-    : louds_(), terminal_flags_(), labels_(), link_flags_(), links_(),
-      tail_(), next_trie_(), num_l1_nodes_(0), config_(), mapper_() {}
+    : louds_(), terminal_flags_(), link_flags_(), bases_(), extras_(),
+      tail_(), next_trie_(), cache_(), cache_mask_(0), num_l1_nodes_(0),
+      config_(), mapper_() {}
 
 LoudsTrie::~LoudsTrie() {}
 
@@ -82,8 +83,8 @@ void LoudsTrie::reverse_lookup(Agent &agent) const {
   for ( ; ; ) {
     if (link_flags_[state.node_id()]) {
       const std::size_t prev_key_pos = state.key_buf().size();
-      const std::size_t link = labels_[state.node_id()]
-          + (links_[link_flags_.rank1(state.node_id())] * 256);
+      const std::size_t link = bases_[state.node_id()]
+          + (extras_[link_flags_.rank1(state.node_id())] * 256);
       if (next_trie_.get() != NULL) {
         next_trie_->restore(agent, link);
       } else {
@@ -92,7 +93,7 @@ void LoudsTrie::reverse_lookup(Agent &agent) const {
       std::reverse(state.key_buf().begin() + prev_key_pos,
           state.key_buf().end());
     } else {
-      state.key_buf().push_back((char)labels_[state.node_id()]);
+      state.key_buf().push_back((char)bases_[state.node_id()]);
     }
 
     if (state.node_id() <= num_l1_nodes_) {
@@ -186,15 +187,15 @@ bool LoudsTrie::predictive_search(Agent &agent) const {
         } else {
           next.set_link_id(next.link_id() + 1);
         }
-        const std::size_t link = labels_[next.node_id()]
-            + (links_[next.link_id()] * 256);
+        const std::size_t link = bases_[next.node_id()]
+            + (extras_[next.link_id()] * 256);
         if (next_trie_.get() != NULL) {
           next_trie_->restore(agent, link);
         } else {
           tail_.restore(agent, link);
         }
       } else {
-        state.key_buf().push_back((char)labels_[next.node_id()]);
+        state.key_buf().push_back((char)bases_[next.node_id()]);
       }
       next.set_key_pos(state.key_buf().size());
 
@@ -224,17 +225,19 @@ bool LoudsTrie::predictive_search(Agent &agent) const {
 
 std::size_t LoudsTrie::total_size() const {
   return louds_.total_size() + terminal_flags_.total_size()
-      + labels_.total_size() + link_flags_.total_size()
-      + links_.total_size() + tail_.total_size()
-      + ((next_trie_.get() != NULL) ? next_trie_->total_size() : 0);
+      + link_flags_.total_size() + bases_.total_size()
+      + extras_.total_size() + tail_.total_size()
+      + ((next_trie_.get() != NULL) ? next_trie_->total_size() : 0)
+      + cache_.total_size();
 }
 
 std::size_t LoudsTrie::io_size() const {
-  return Header().io_size() + sizeof(UInt64) + louds_.io_size()
-      + terminal_flags_.io_size() + labels_.io_size() + link_flags_.io_size()
-      + links_.io_size() + tail_.io_size()
+  return Header().io_size() + louds_.io_size()
+      + terminal_flags_.io_size() + link_flags_.io_size()
+      + bases_.io_size() + extras_.io_size() + tail_.io_size()
       + ((next_trie_.get() != NULL) ?
-          (next_trie_->io_size() - Header().io_size()) : 0);
+          (next_trie_->io_size() - Header().io_size()) : 0)
+      + cache_.io_size() + (sizeof(UInt32) * 2);
 }
 
 void LoudsTrie::clear() {
@@ -244,11 +247,13 @@ void LoudsTrie::clear() {
 void LoudsTrie::swap(LoudsTrie &rhs) {
   louds_.swap(rhs.louds_);
   terminal_flags_.swap(rhs.terminal_flags_);
-  labels_.swap(rhs.labels_);
   link_flags_.swap(rhs.link_flags_);
-  links_.swap(rhs.links_);
+  bases_.swap(rhs.bases_);
+  extras_.swap(rhs.extras_);
   tail_.swap(rhs.tail_);
   next_trie_.swap(rhs.next_trie_);
+  cache_.swap(rhs.cache_);
+  marisa::swap(cache_mask_, rhs.cache_mask_);
   marisa::swap(num_l1_nodes_, rhs.num_l1_nodes_);
   config_.swap(rhs.config_);
   mapper_.swap(rhs.mapper_);
@@ -287,7 +292,7 @@ void LoudsTrie::build_(Keyset &keyset, const Config &config) {
       ++node_id;
     }
   }
-  while (node_id < labels_.size()) {
+  while (node_id < bases_.size()) {
     terminal_flags_.push_back(false);
     ++node_id;
   }
@@ -313,7 +318,8 @@ void LoudsTrie::build_trie(Vector<T> &keys,
     config_.parse((next_trie_->num_tries() + 1) |
         next_trie_->tail_mode() | next_trie_->node_order());
   } else {
-    config_.parse(1 | tail_.mode() | config.node_order());
+    config_.parse(1 | tail_.mode() | config.node_order() |
+        config.cache_level());
   }
 
   link_flags_.build(false, false);
@@ -322,11 +328,12 @@ void LoudsTrie::build_trie(Vector<T> &keys,
     while (!link_flags_[node_id]) {
       ++node_id;
     }
-    labels_[node_id] = (UInt8)(next_terminals[i] % 256);
+    bases_[node_id] = (UInt8)(next_terminals[i] % 256);
     next_terminals[i] /= 256;
     ++node_id;
   }
-  links_.build(next_terminals);
+  extras_.build(next_terminals);
+  fill_cache();
 }
 
 template <typename T>
@@ -336,11 +343,12 @@ void LoudsTrie::build_current_trie(Vector<T> &keys,
   for (std::size_t i = 0; i < keys.size(); ++i) {
     keys[i].set_id(i);
   }
-  Algorithm().sort(keys.begin(), keys.end());
+  const std::size_t num_keys = Algorithm().sort(keys.begin(), keys.end());
+  reserve_cache(config, num_keys);
 
   louds_.push_back(true);
   louds_.push_back(false);
-  labels_.push_back('\0');
+  bases_.push_back('\0');
   link_flags_.push_back(false);
 
   Vector<T> next_keys;
@@ -402,12 +410,14 @@ void LoudsTrie::build_current_trie(Vector<T> &keys,
         }
         ++key_pos;
       }
+      cache<T>(node_id, bases_.size(), w_range.weight(),
+          keys[w_range.begin()][w_range.key_pos()]);
 
       if (key_pos == w_range.key_pos() + 1) {
-        labels_.push_back(keys[w_range.begin()][w_range.key_pos()]);
+        bases_.push_back(keys[w_range.begin()][w_range.key_pos()]);
         link_flags_.push_back(false);
       } else {
-        labels_.push_back('\0');
+        bases_.push_back('\0');
         link_flags_.push_back(true);
         T next_key;
         next_key.set_str(keys[w_range.begin()].ptr(),
@@ -425,7 +435,7 @@ void LoudsTrie::build_current_trie(Vector<T> &keys,
 
   louds_.push_back(false);
   louds_.build(trie_id == 1, true);
-  labels_.shrink();
+  bases_.shrink();
 
   build_terminals(keys, terminals);
   keys.swap(next_keys);
@@ -433,6 +443,7 @@ void LoudsTrie::build_current_trie(Vector<T> &keys,
   MARISA_THROW(MARISA_MEMORY_ERROR, "std::bad_alloc");
 }
 
+template <>
 void LoudsTrie::build_next_trie(Vector<Key> &keys,
     Vector<UInt32> *terminals, const Config &config, std::size_t trie_id) {
   if (trie_id == config.num_tries()) {
@@ -456,6 +467,7 @@ void LoudsTrie::build_next_trie(Vector<Key> &keys,
   next_trie_->build_trie(reverse_keys, terminals, config, trie_id + 1);
 }
 
+template <>
 void LoudsTrie::build_next_trie(Vector<ReverseKey> &keys,
     Vector<UInt32> *terminals, const Config &config, std::size_t trie_id) {
   if (trie_id == config.num_tries()) {
@@ -483,7 +495,69 @@ void LoudsTrie::build_terminals(const Vector<T> &keys,
   terminals->swap(temp);
 }
 
+template <>
+void LoudsTrie::cache<Key>(std::size_t parent, std::size_t child,
+    float weight, char label) {
+  MARISA_DEBUG_IF(parent >= child, MARISA_RANGE_ERROR);
+
+  const std::size_t cache_id = (parent ^ (UInt8)label) & cache_mask_;
+  if (weight > cache_[cache_id].weight()) {
+    cache_[cache_id].set_parent(parent);
+    cache_[cache_id].set_child(child);
+    cache_[cache_id].set_weight(weight);
+  }
+}
+
+void LoudsTrie::reserve_cache(const Config &config, std::size_t num_keys) {
+  std::size_t cache_size = 256;
+  while (cache_size < (num_keys / (config.cache_level() / 0x1000))) {
+    cache_size *= 2;
+  }
+  cache_.resize(cache_size);
+  cache_mask_ = cache_size - 1;
+}
+
+template <>
+void LoudsTrie::cache<ReverseKey>(std::size_t parent, std::size_t child,
+    float weight, char) {
+  MARISA_DEBUG_IF(parent >= child, MARISA_RANGE_ERROR);
+
+  const std::size_t cache_id = child & cache_mask_;
+  if (weight > cache_[cache_id].weight()) {
+    cache_[cache_id].set_parent(parent);
+    cache_[cache_id].set_child(child);
+    cache_[cache_id].set_weight(weight);
+  }
+}
+
+void LoudsTrie::fill_cache() {
+  for (std::size_t i = 0; i < cache_.size(); ++i) {
+    const std::size_t node_id = cache_[i].child();
+    if (node_id != 0) {
+      cache_[i].set_base(bases_[node_id]);
+      cache_[i].set_extra(!link_flags_[node_id] ?
+          MARISA_INVALID_EXTRA : extras_[link_flags_.rank1(node_id)]);
+    } else {
+      cache_[i].set_parent(MARISA_UINT32_MAX);
+      cache_[i].set_child(MARISA_UINT32_MAX);
+    }
+  }
+}
+
 void LoudsTrie::map_(Mapper &mapper) {
+  louds_.map(mapper);
+  terminal_flags_.map(mapper);
+  link_flags_.map(mapper);
+  bases_.map(mapper);
+  extras_.map(mapper);
+  tail_.map(mapper);
+  if ((link_flags_.num_1s() != 0) && tail_.empty()) {
+    next_trie_.reset(new (std::nothrow) LoudsTrie);
+    MARISA_THROW_IF(next_trie_.get() == NULL, MARISA_MEMORY_ERROR);
+    next_trie_->map_(mapper);
+  }
+  cache_.map(mapper);
+  cache_mask_ = cache_.size() - 1;
   {
     UInt32 temp_num_l1_nodes;
     mapper.map(&temp_num_l1_nodes);
@@ -494,21 +568,23 @@ void LoudsTrie::map_(Mapper &mapper) {
     mapper.map(&temp_config_flags);
     config_.parse((int)temp_config_flags);
   }
-  louds_.map(mapper);
-  terminal_flags_.map(mapper);
-  labels_.map(mapper);
-  link_flags_.map(mapper);
-  links_.map(mapper);
-  tail_.map(mapper);
-  if ((link_flags_.num_1s() != 0) && tail_.empty()) {
-    next_trie_.reset(new (std::nothrow) LoudsTrie);
-    MARISA_THROW_IF(next_trie_.get() == NULL, MARISA_MEMORY_ERROR);
-    next_trie_->map_(mapper);
-  }
   mapper_.swap(mapper);
 }
 
 void LoudsTrie::read_(Reader &reader) {
+  louds_.read(reader);
+  terminal_flags_.read(reader);
+  link_flags_.read(reader);
+  bases_.read(reader);
+  extras_.read(reader);
+  tail_.read(reader);
+  if ((link_flags_.num_1s() != 0) && tail_.empty()) {
+    next_trie_.reset(new (std::nothrow) LoudsTrie);
+    MARISA_THROW_IF(next_trie_.get() == NULL, MARISA_MEMORY_ERROR);
+    next_trie_->read_(reader);
+  }
+  cache_.read(reader);
+  cache_mask_ = cache_.size() - 1;
   {
     UInt32 temp_num_l1_nodes;
     reader.read(&temp_num_l1_nodes);
@@ -519,31 +595,21 @@ void LoudsTrie::read_(Reader &reader) {
     reader.read(&temp_config_flags);
     config_.parse((int)temp_config_flags);
   }
-  louds_.read(reader);
-  terminal_flags_.read(reader);
-  labels_.read(reader);
-  link_flags_.read(reader);
-  links_.read(reader);
-  tail_.read(reader);
-  if ((link_flags_.num_1s() != 0) && tail_.empty()) {
-    next_trie_.reset(new (std::nothrow) LoudsTrie);
-    MARISA_THROW_IF(next_trie_.get() == NULL, MARISA_MEMORY_ERROR);
-    next_trie_->read_(reader);
-  }
 }
 
 void LoudsTrie::write_(Writer &writer) const {
-  writer.write((UInt32)num_l1_nodes_);
-  writer.write((UInt32)config_.flags());
   louds_.write(writer);
   terminal_flags_.write(writer);
-  labels_.write(writer);
   link_flags_.write(writer);
-  links_.write(writer);
+  bases_.write(writer);
+  extras_.write(writer);
   tail_.write(writer);
   if (next_trie_.get() != NULL) {
     next_trie_->write_(writer);
   }
+  cache_.write(writer);
+  writer.write((UInt32)num_l1_nodes_);
+  writer.write((UInt32)config_.flags());
 }
 
 bool LoudsTrie::find_child(Agent &agent) const {
@@ -551,6 +617,24 @@ bool LoudsTrie::find_child(Agent &agent) const {
       MARISA_BOUND_ERROR);
 
   State &state = agent.state();
+  const std::size_t cache_id = (state.node_id()
+      ^ (UInt8)agent.query()[state.query_pos()]) & cache_mask_;
+  if (state.node_id() == cache_[cache_id].parent()) {
+    if (cache_[cache_id].extra() != MARISA_INVALID_EXTRA) {
+      if (next_trie_.get() != NULL) {
+        if (!next_trie_->match(agent, cache_[cache_id].link())) {
+          return false;
+        }
+      } else if (!tail_.match(agent, cache_[cache_id].link())) {
+        return false;
+      }
+    } else {
+      state.set_query_pos(state.query_pos() + 1);
+    }
+    state.set_node_id(cache_[cache_id].child());
+    return true;
+  }
+
   std::size_t louds_pos = louds_.select0(state.node_id()) + 1;
   if (!louds_[louds_pos]) {
     return false;
@@ -565,8 +649,8 @@ bool LoudsTrie::find_child(Agent &agent) const {
         ++link_id;
       }
       const std::size_t prev_query_pos = state.query_pos();
-      const std::size_t link = (links_[link_id] * 256)
-          + labels_[state.node_id()];
+      const std::size_t link = (extras_[link_id] * 256)
+          + bases_[state.node_id()];
       if (next_trie_.get() != NULL) {
         if (next_trie_->match(agent, link)) {
           return true;
@@ -577,7 +661,7 @@ bool LoudsTrie::find_child(Agent &agent) const {
       if (state.query_pos() != prev_query_pos) {
         return false;
       }
-    } else if (labels_[state.node_id()] ==
+    } else if (bases_[state.node_id()] ==
         (UInt8)agent.query()[state.query_pos()]) {
       state.set_query_pos(state.query_pos() + 1);
       return true;
@@ -593,6 +677,25 @@ bool LoudsTrie::predictive_find_child(Agent &agent) const {
       MARISA_BOUND_ERROR);
 
   State &state = agent.state();
+  const std::size_t cache_id = (state.node_id()
+      ^ (UInt8)agent.query()[state.query_pos()]) & cache_mask_;
+  if (state.node_id() == cache_[cache_id].parent()) {
+    if (cache_[cache_id].extra() != MARISA_INVALID_EXTRA) {
+      if (next_trie_.get() != NULL) {
+        if (!next_trie_->prefix_match(agent, cache_[cache_id].link())) {
+          return false;
+        }
+      } else if (!tail_.prefix_match(agent, cache_[cache_id].link())) {
+        return false;
+      }
+    } else {
+      state.key_buf().push_back(cache_[cache_id].label());
+      state.set_query_pos(state.query_pos() + 1);
+    }
+    state.set_node_id(cache_[cache_id].child());
+    return true;
+  }
+
   std::size_t louds_pos = louds_.select0(state.node_id()) + 1;
   if (!louds_[louds_pos]) {
     return false;
@@ -607,8 +710,8 @@ bool LoudsTrie::predictive_find_child(Agent &agent) const {
         ++link_id;
       }
       const std::size_t prev_query_pos = state.query_pos();
-      const std::size_t link = (links_[link_id] * 256)
-          + labels_[state.node_id()];
+      const std::size_t link = (extras_[link_id] * 256)
+          + bases_[state.node_id()];
       if (next_trie_.get() != NULL) {
         if (next_trie_->prefix_match(agent, link)) {
           return true;
@@ -619,9 +722,9 @@ bool LoudsTrie::predictive_find_child(Agent &agent) const {
       if (state.query_pos() != prev_query_pos) {
         return false;
       }
-    } else if (labels_[state.node_id()] ==
+    } else if (bases_[state.node_id()] ==
         (UInt8)agent.query()[state.query_pos()]) {
-      state.key_buf().push_back((char)labels_[state.node_id()]);
+      state.key_buf().push_back((char)bases_[state.node_id()]);
       state.set_query_pos(state.query_pos() + 1);
       return true;
     }
@@ -636,16 +739,35 @@ void LoudsTrie::restore(Agent &agent, std::size_t node_id) const {
 
   State &state = agent.state();
   for ( ; ; ) {
+    const std::size_t cache_id = node_id & cache_mask_;
+    if (node_id == cache_[cache_id].child()) {
+      if (cache_[cache_id].extra() != MARISA_INVALID_EXTRA) {
+        if (next_trie_.get() != NULL) {
+          next_trie_->restore(agent,  cache_[cache_id].link());
+        } else {
+          tail_.restore(agent, cache_[cache_id].link());
+        }
+      } else {
+        state.key_buf().push_back(cache_[cache_id].label());
+      }
+
+      node_id = cache_[cache_id].parent();
+      if (node_id == 0) {
+        return;
+      }
+      continue;
+    }
+
     if (link_flags_[node_id]) {
-      const std::size_t link = labels_[node_id]
-          + (links_[link_flags_.rank1(node_id)] * 256);
+      const std::size_t link = bases_[node_id]
+          + (extras_[link_flags_.rank1(node_id)] * 256);
       if (next_trie_.get() != NULL) {
         next_trie_->restore(agent, link);
       } else {
         tail_.restore(agent, link);
       }
     } else {
-      state.key_buf().push_back((char)labels_[node_id]);
+      state.key_buf().push_back((char)bases_[node_id]);
     }
 
     if (node_id <= num_l1_nodes_) {
@@ -662,9 +784,33 @@ bool LoudsTrie::match(Agent &agent, std::size_t node_id) const {
 
   State &state = agent.state();
   for ( ; ; ) {
+    const std::size_t cache_id = node_id & cache_mask_;
+    if (node_id == cache_[cache_id].child()) {
+      if (cache_[cache_id].extra() != MARISA_INVALID_EXTRA) {
+        if (next_trie_.get() != NULL) {
+          if (!next_trie_->match(agent, cache_[cache_id].link())) {
+            return false;
+          }
+        } else if (!tail_.match(agent, cache_[cache_id].link())) {
+          return false;
+        }
+      } else if (cache_[cache_id].label() ==
+          agent.query()[state.query_pos()]) {
+        state.set_query_pos(state.query_pos() + 1);
+      } else {
+        return false;
+      }
+
+      node_id = cache_[cache_id].parent();
+      if (node_id == 0) {
+        return true;
+      }
+      continue;
+    }
+
     if (link_flags_[node_id]) {
-      const std::size_t link = labels_[node_id]
-          + (links_[link_flags_.rank1(node_id)] * 256);
+      const std::size_t link = bases_[node_id]
+          + (extras_[link_flags_.rank1(node_id)] * 256);
       if (next_trie_.get() != NULL) {
         if (!next_trie_->match(agent, link)) {
           return false;
@@ -672,7 +818,7 @@ bool LoudsTrie::match(Agent &agent, std::size_t node_id) const {
       } else if (!tail_.match(agent, link)) {
         return false;
       }
-    } else if (labels_[node_id] == (UInt8)agent.query()[state.query_pos()]) {
+    } else if (bases_[node_id] == (UInt8)agent.query()[state.query_pos()]) {
       state.set_query_pos(state.query_pos() + 1);
     } else {
       return false;
@@ -694,9 +840,34 @@ bool LoudsTrie::prefix_match(Agent &agent, std::size_t node_id) const {
 
   State &state = agent.state();
   for ( ; ; ) {
+    const std::size_t cache_id = node_id & cache_mask_;
+    if (node_id == cache_[cache_id].child()) {
+      if (cache_[cache_id].extra() != MARISA_INVALID_EXTRA) {
+        if (next_trie_.get() != NULL) {
+          if (!next_trie_->prefix_match(agent, cache_[cache_id].link())) {
+            return false;
+          }
+        } else if (!tail_.prefix_match(agent, cache_[cache_id].link())) {
+          return false;
+        }
+      } else if (cache_[cache_id].label() ==
+          agent.query()[state.query_pos()]) {
+        state.key_buf().push_back(cache_[cache_id].label());
+        state.set_query_pos(state.query_pos() + 1);
+      } else {
+        return false;
+      }
+
+      node_id = cache_[cache_id].parent();
+      if (node_id == 0) {
+        return true;
+      }
+      continue;
+    }
+
     if (link_flags_[node_id]) {
-      const std::size_t link = labels_[node_id]
-          + (links_[link_flags_.rank1(node_id)] * 256);
+      const std::size_t link = bases_[node_id]
+          + (extras_[link_flags_.rank1(node_id)] * 256);
       if (next_trie_.get() != NULL) {
         if (!next_trie_->prefix_match(agent, link)) {
           return false;
@@ -704,8 +875,8 @@ bool LoudsTrie::prefix_match(Agent &agent, std::size_t node_id) const {
       } else if (!tail_.prefix_match(agent, link)) {
         return false;
       }
-    } else if (labels_[node_id] == (UInt8)agent.query()[state.query_pos()]) {
-      state.key_buf().push_back((char)labels_[node_id]);
+    } else if (bases_[node_id] == (UInt8)agent.query()[state.query_pos()]) {
+      state.key_buf().push_back((char)bases_[node_id]);
       state.set_query_pos(state.query_pos() + 1);
     } else {
       return false;

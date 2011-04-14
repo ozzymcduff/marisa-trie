@@ -81,7 +81,7 @@ class FlatVector {
     return units_.total_size();
   }
   std::size_t io_size() const {
-    return (sizeof(UInt64) * 2) + units_.io_size();
+    return units_.io_size() + (sizeof(UInt32) * 2) + sizeof(UInt64);
   }
 
   void clear() {
@@ -138,6 +138,7 @@ class FlatVector {
   }
 
   void map_(Mapper &mapper) {
+    units_.map(mapper);
     {
       UInt32 temp_value_size;
       mapper.map(&temp_value_size);
@@ -155,10 +156,10 @@ class FlatVector {
       MARISA_THROW_IF(temp_size > MARISA_SIZE_MAX, MARISA_SIZE_ERROR);
       size_ = (std::size_t)temp_size;
     }
-    units_.map(mapper);
   }
 
   void read_(Reader &reader) {
+    units_.read(reader);
     {
       UInt32 temp_value_size;
       reader.read(&temp_value_size);
@@ -176,14 +177,13 @@ class FlatVector {
       MARISA_THROW_IF(temp_size > MARISA_SIZE_MAX, MARISA_SIZE_ERROR);
       size_ = (std::size_t)temp_size;
     }
-    units_.read(reader);
   }
 
   void write_(Writer &writer) const {
+    units_.write(writer);
     writer.write((UInt32)value_size_);
     writer.write((UInt32)mask_);
     writer.write((UInt64)size_);
-    units_.write(writer);
   }
 
   void set(std::size_t i, UInt32 value) {
