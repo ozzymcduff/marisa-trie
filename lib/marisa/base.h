@@ -104,7 +104,6 @@ typedef enum marisa_cache_level_ {
   MARISA_NORMAL_CACHE      = 0x00200,
   MARISA_SMALL_CACHE       = 0x00400,
   MARISA_TINY_CACHE        = 0x00800,
-
   MARISA_DEFAULT_CACHE     = MARISA_NORMAL_CACHE
 } marisa_cache_level;
 
@@ -163,9 +162,9 @@ typedef ::marisa_uint64 UInt64;
 
 typedef ::marisa_error_code ErrorCode;
 
+typedef ::marisa_cache_level CacheLevel;
 typedef ::marisa_tail_mode TailMode;
 typedef ::marisa_node_order NodeOrder;
-typedef ::marisa_cache_level CacheLevel;
 
 template <typename T>
 inline void swap(T &lhs, T &rhs) {
