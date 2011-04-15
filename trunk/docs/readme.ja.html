@@ -38,22 +38,26 @@
       libmarisa による辞書の構築では，登録文字列に <var>0</var> から順に固有の ID を割り当てるようになっています．ID は自動的に割り当てられるので，登録文字列に任意の ID を割り当てることはできません．検索においては，文字列あるいは ID をクエリとして受け取り，適合する登録文字列と ID の組を検索結果として返すようになっています．
      </p>
      <ul>
-      <li>辞書引き（Lookup）</li>
+      <li>辞書引き（Lookup）
        <ul>
         <li>入力文字列が登録されているかどうかを確認します．</li>
        </ul>
-      <li>逆引き（Reverse Lookup）</li>
+      </li>
+      <li>逆引き（Reverse Lookup）
        <ul>
         <li>入力された ID から登録文字列を復元します．</li>
        </ul>
-      <li>Common Prefix Search</li>
+      </li>
+      <li>Common Prefix Search
        <ul>
         <li>入力文字列の前半部分に一致する登録文字列を検索します．</li>
        </ul>
-      <li>Predictive Search</li>
+      </li>
+      <li>Predictive Search
        <ul>
         <li>入力文字列で始まる登録文字列を検索します．</li>
        </ul>
+      </li>
      </ul>
     </div><!-- subsection -->
    </div><!-- section -->
@@ -451,14 +455,14 @@ typedef enum marisa_num_tries_ {
  public:
   Keyset();
 
-  void push_back(const Key &key);
+  void push_back(const Key &amp;key);
   void push_back(const char *str);
   void push_back(const char *ptr,
                  std::size_t length,
                  float weight = 1.0);
 
-  const Key &operator[](std::size_t i) const;
-  Key &operator[](std::size_t i);
+  const Key &amp;operator[](std::size_t i) const;
+  Key &amp;operator[](std::size_t i);
 
   std::size_t num_keys();
 
@@ -469,7 +473,7 @@ typedef enum marisa_num_tries_ {
   void reset();
 
   void clear();
-  void swap(Keyset &rhs);
+  void swap(Keyset &amp;rhs);
 };</pre>
      </div><!-- float -->
      <div class="subsubsection">
@@ -508,8 +512,8 @@ typedef enum marisa_num_tries_ {
  public:
   Agent();
 
-  const Query &query() const;
-  const Key &key() const;
+  const Query &amp;query() const;
+  const Key &amp;key() const;
 
   void set_query(const char *str);
   void set_query(const char *ptr,
@@ -533,7 +537,7 @@ typedef enum marisa_num_tries_ {
  public:
   Trie();
 
-  void build(Keyset &keyset,
+  void build(Keyset &amp;keyset,
              int config_flags = 0);
 
   void mmap(const char *filename);
@@ -546,10 +550,10 @@ typedef enum marisa_num_tries_ {
   void save(const char *filename) const;
   void write(int fd) const;
 
-  bool lookup(Agent &agent) const;
-  void reverse_lookup(Agent &agent) const;
-  bool common_prefix_search(Agent &agent) const;
-  bool predictive_search(Agent &agent) const;
+  bool lookup(Agent &amp;agent) const;
+  void reverse_lookup(Agent &amp;agent) const;
+  bool common_prefix_search(Agent &amp;agent) const;
+  bool predictive_search(Agent &amp;agent) const;
 
   std::size_t num_tries() const;
   std::size_t num_keys() const;
@@ -563,7 +567,7 @@ typedef enum marisa_num_tries_ {
   std::size_t io_size() const;
 
   void clear();
-  void swap(Trie &rhs);
+  void swap(Trie &amp;rhs);
 };</pre>
      </div><!-- float -->
      <div class="subsubsection">
@@ -597,7 +601,7 @@ typedef enum marisa_num_tries_ {
       <h4>辞書からの検索</h4>
       <p>
        検索をおこなう関数は <code>lookup()</code>, <code>reverse_lookup()</code>, <code>common_prefix_search()</code>, <code>predictive_search()</code> の 4 種類です．
-      </a>
+      </p>
       <ul>
        <li>
         <code>lookup()</code>: 文字列が登録されているかどうかを確認します．登録されていれば <var>true</var> を返します．このとき，<code>agent.key()</code> には検索結果が格納されています．<code>agent.key().ptr()</code>, <code>agent.key().length()</code> については，<code>agent.query()</code> の内容を代入しただけであることに注意してください．登録されていなければ <var>false</var> を返して終了です．
@@ -625,7 +629,7 @@ typedef enum marisa_num_tries_ {
      <h3><a name="stdio">stdio</a></h3>
      <div class="float">
       <pre class="code">void fread(std::FILE *file, Trie *trie);
-void fwrite(std::FILE *file, const Trie &trie);</pre>
+void fwrite(std::FILE *file, const Trie &amp;trie);</pre>
      </div><!-- float -->
      <p>
       <code>std::FILE</code> を用いる関数は <kbd>marisa/stdio.h</kbd> で宣言されています．<code>#include &lt;cstdio&gt;</code> を入れたくないときは，<kbd>marisa.h</kbd> の代わりに <kbd>marisa/trie.h</kbd> を使ってください．
@@ -635,11 +639,11 @@ void fwrite(std::FILE *file, const Trie &trie);</pre>
     <div class="subsection">
      <h3><a name="iostream">iostream</a></h3>
      <div class="float">
-      <pre class="code">std::istream &read(std::istream &stream, Trie *trie);
-std::ostream &write(std::ostream &stream, const Trie &trie);
+      <pre class="code">std::istream &amp;read(std::istream &amp;stream, Trie *trie);
+std::ostream &amp;write(std::ostream &amp;stream, const Trie &amp;trie);
 
-std::istream &operator>>(std::istream &stream, Trie &trie);
-std::ostream &operator<<(std::ostream &stream, const Trie &trie);</pre>
+std::istream &amp;operator>>(std::istream &amp;stream, Trie &amp;trie);
+std::ostream &amp;operator<<(std::ostream &amp;stream, const Trie &amp;trie);</pre>
      </div><!-- float -->
      <p>
       <code>std::iostream</code> を用いる関数は <kbd>marisa/iostream.h</kbd> で宣言されています．<code>#include &lt;iosfwd&gt;</code> を入れたくないときは，<kbd>marisa.h</kbd> の代わりに <kbd>marisa/trie.h</kbd> を使ってください．
@@ -652,7 +656,7 @@ std::ostream &operator<<(std::ostream &stream, const Trie &trie);</pre>
     <ul>
      <li><a href="http://d.hatena.ne.jp/s-yata/20110310/1299777228">発表資料（Prefix/Patricia Trie の入れ子による辞書圧縮）</a>
       <ul>
-       <li>MARISA に関する発表資料（<a href="http://sites.google.com/site/headdythehero/cabine/2011/0311/NLP2011-F2-6.pptx?attredirects=0&d=1">NLP2011-F2-6.pptx</a>, <a href="http://sites.google.com/site/headdythehero/cabine/2011/0311/NLP2011-F2-6.pdf?attredirects=0&d=1">NLP2011-F2-6.pdf</a>, <a href="http://sites.google.com/site/headdythehero/cabine/2011/0311/NLP2011-F2-6-notes.pdf?attredirects=0&d=1">NLP2011-F2-6-notes.pdf</a>）をダウンロードできます．</li>
+       <li>MARISA に関する発表資料（<a href="http://sites.google.com/site/headdythehero/cabine/2011/0311/NLP2011-F2-6.pptx?attredirects=0&amp;d=1">NLP2011-F2-6.pptx</a>, <a href="http://sites.google.com/site/headdythehero/cabine/2011/0311/NLP2011-F2-6.pdf?attredirects=0&amp;d=1">NLP2011-F2-6.pdf</a>, <a href="http://sites.google.com/site/headdythehero/cabine/2011/0311/NLP2011-F2-6-notes.pdf?attredirects=0&amp;d=1">NLP2011-F2-6-notes.pdf</a>）をダウンロードできます．</li>
       </ul>
      </li>
     </ul>
