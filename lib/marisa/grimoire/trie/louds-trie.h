@@ -39,6 +39,9 @@ class LoudsTrie  {
     return (louds_.size() / 2) - 1;
   }
 
+  CacheLevel cache_level() const {
+    return config_.cache_level();
+  }
   TailMode tail_mode() const {
     return config_.tail_mode();
   }
@@ -100,9 +103,23 @@ class LoudsTrie  {
   inline bool find_child(Agent &agent) const;
   inline bool predictive_find_child(Agent &agent) const;
 
-  void restore(Agent &agent, std::size_t node_id) const;
-  bool match(Agent &agent, std::size_t node_id) const;
-  bool prefix_match(Agent &agent, std::size_t node_id) const;
+  inline void restore(Agent &agent, std::size_t node_id) const;
+  inline bool match(Agent &agent, std::size_t node_id) const;
+  inline bool prefix_match(Agent &agent, std::size_t node_id) const;
+
+  void restore_(Agent &agent, std::size_t node_id) const;
+  bool match_(Agent &agent, std::size_t node_id) const;
+  bool prefix_match_(Agent &agent, std::size_t node_id) const;
+
+  inline std::size_t get_cache_id(std::size_t node_id, char label) const;
+  inline std::size_t get_cache_id(std::size_t node_id) const;
+
+  inline std::size_t get_link(std::size_t node_id) const;
+  inline std::size_t get_link(std::size_t node_id,
+      std::size_t link_id) const;
+
+  inline std::size_t update_link_id(std::size_t link_id,
+      std::size_t node_id) const;
 
   // Disallows copy and assignment.
   LoudsTrie(const LoudsTrie &);
