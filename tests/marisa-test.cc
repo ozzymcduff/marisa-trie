@@ -137,10 +137,23 @@ void TestTinyTrie() {
   ASSERT(!trie.predictive_search(agent));
   agent.set_query("chat");
   ASSERT(trie.predictive_search(agent));
+  ASSERT(agent.key().length() == 4);
   ASSERT(!trie.predictive_search(agent));
+
   agent.set_query("cha");
   ASSERT(trie.predictive_search(agent));
+  ASSERT(agent.key().length() == 4);
   ASSERT(!trie.predictive_search(agent));
+
+  agent.set_query("c");
+  ASSERT(trie.predictive_search(agent));
+  ASSERT(agent.key().length() == 5);
+  ASSERT(std::memcmp(agent.key().ptr(), "check", 5) == 0);
+  ASSERT(trie.predictive_search(agent));
+  ASSERT(agent.key().length() == 4);
+  ASSERT(std::memcmp(agent.key().ptr(), "chat", 4) == 0);
+  ASSERT(!trie.predictive_search(agent));
+
   agent.set_query("ch");
   ASSERT(trie.predictive_search(agent));
   ASSERT(agent.key().length() == 5);
