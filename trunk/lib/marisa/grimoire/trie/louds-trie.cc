@@ -752,8 +752,7 @@ bool LoudsTrie::match_(Agent &agent, std::size_t node_id) const {
 
   State &state = agent.state();
   for ( ; ; ) {
-    const std::size_t cache_id = get_cache_id(
-        node_id, agent.query()[state.query_pos()]);
+    const std::size_t cache_id = get_cache_id(node_id);
     if (node_id == cache_[cache_id].child()) {
       if (cache_[cache_id].extra() != MARISA_INVALID_EXTRA) {
         if (!match(agent, cache_[cache_id].link())) {
@@ -762,6 +761,8 @@ bool LoudsTrie::match_(Agent &agent, std::size_t node_id) const {
       } else if (cache_[cache_id].label() ==
           agent.query()[state.query_pos()]) {
         state.set_query_pos(state.query_pos() + 1);
+      } else {
+        return false;
       }
 
       node_id = cache_[cache_id].parent();
@@ -801,8 +802,7 @@ bool LoudsTrie::prefix_match_(Agent &agent, std::size_t node_id) const {
 
   State &state = agent.state();
   for ( ; ; ) {
-    const std::size_t cache_id = get_cache_id(
-        node_id, agent.query()[state.query_pos()]);
+    const std::size_t cache_id = get_cache_id(node_id);
     if (node_id == cache_[cache_id].child()) {
       if (cache_[cache_id].extra() != MARISA_INVALID_EXTRA) {
         if (!prefix_match(agent, cache_[cache_id].link())) {
@@ -812,6 +812,8 @@ bool LoudsTrie::prefix_match_(Agent &agent, std::size_t node_id) const {
           agent.query()[state.query_pos()]) {
         state.key_buf().push_back(cache_[cache_id].label());
         state.set_query_pos(state.query_pos() + 1);
+      } else {
+        return false;
       }
 
       node_id = cache_[cache_id].parent();
