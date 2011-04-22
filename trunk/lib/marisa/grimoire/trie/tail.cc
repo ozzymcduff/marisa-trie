@@ -124,7 +124,7 @@ bool Tail::prefix_match(Agent &agent, std::size_t offset) const {
     ptr += state.query_pos();
     do {
       state.key_buf().push_back(*ptr);
-    } while (*ptr++ != '\0');
+    } while (*++ptr != '\0');
     return true;
   } else {
     do {
