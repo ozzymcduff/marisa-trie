@@ -32,6 +32,7 @@ void LoudsTrie::map(Mapper &mapper) {
 
   LoudsTrie temp;
   temp.map_(mapper);
+  temp.mapper_.swap(mapper);
   swap(temp);
 }
 
@@ -552,7 +553,6 @@ void LoudsTrie::map_(Mapper &mapper) {
     mapper.map(&temp_config_flags);
     config_.parse((int)temp_config_flags);
   }
-  mapper_.swap(mapper);
 }
 
 void LoudsTrie::read_(Reader &reader) {
@@ -752,7 +752,8 @@ bool LoudsTrie::match_(Agent &agent, std::size_t node_id) const {
 
   State &state = agent.state();
   for ( ; ; ) {
-    const std::size_t cache_id = get_cache_id(node_id);
+    const std::size_t cache_id = get_cache_id(
+        node_id, agent.query()[state.query_pos()]);
     if (node_id == cache_[cache_id].child()) {
       if (cache_[cache_id].extra() != MARISA_INVALID_EXTRA) {
         if (!match(agent, cache_[cache_id].link())) {
@@ -761,8 +762,6 @@ bool LoudsTrie::match_(Agent &agent, std::size_t node_id) const {
       } else if (cache_[cache_id].label() ==
           agent.query()[state.query_pos()]) {
         state.set_query_pos(state.query_pos() + 1);
-      } else {
-        return false;
       }
 
       node_id = cache_[cache_id].parent();
@@ -802,7 +801,8 @@ bool LoudsTrie::prefix_match_(Agent &agent, std::size_t node_id) const {
 
   State &state = agent.state();
   for ( ; ; ) {
-    const std::size_t cache_id = get_cache_id(node_id);
+    const std::size_t cache_id = get_cache_id(
+        node_id, agent.query()[state.query_pos()]);
     if (node_id == cache_[cache_id].child()) {
       if (cache_[cache_id].extra() != MARISA_INVALID_EXTRA) {
         if (!prefix_match(agent, cache_[cache_id].link())) {
@@ -812,34 +812,32 @@ bool LoudsTrie::prefix_match_(Agent &agent, std::size_t node_id) const {
           agent.query()[state.query_pos()]) {
         state.key_buf().push_back(cache_[cache_id].label());
         state.set_query_pos(state.query_pos() + 1);
-      } else {
-        return false;
       }
 
       node_id = cache_[cache_id].parent();
       if (node_id == 0) {
         return true;
       }
-      continue;
-    }
-
-    if (link_flags_[node_id]) {
-      if (!prefix_match(agent, get_link(node_id))) {
+    } else {
+      if (link_flags_[node_id]) {
+        if (!prefix_match(agent, get_link(node_id))) {
+          return false;
+        }
+      } else if (bases_[node_id] == (UInt8)agent.query()[state.query_pos()]) {
+        state.key_buf().push_back((char)bases_[node_id]);
+        state.set_query_pos(state.query_pos() + 1);
+      } else {
         return false;
       }
-    } else if (bases_[node_id] == (UInt8)agent.query()[state.query_pos()]) {
-      state.key_buf().push_back((char)bases_[node_id]);
-      state.set_query_pos(state.query_pos() + 1);
-    } else {
-      return false;
+
+      if (node_id <= num_l1_nodes_) {
+        return true;
+      }
+      node_id = louds_.select1(node_id) - node_id - 1;
     }
 
-    if (node_id <= num_l1_nodes_) {
-      return true;
-    }
-    node_id = louds_.select1(node_id) - node_id - 1;
     if (state.query_pos() >= agent.query().length()) {
-      restore(agent, node_id);
+      restore_(agent, node_id);
       return true;
     }
   }

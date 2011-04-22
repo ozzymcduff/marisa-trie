@@ -263,11 +263,10 @@ void TestTrie(int num_tries, marisa::TailMode tail_mode,
   TestCommonPrefixSearch(trie, keyset);
   TestPredictiveSearch(trie, keyset);
 
-  {
-    trie.save("marisa-test.dat");
-    trie.clear();
-    trie.load("marisa-test.dat");
-  }
+  trie.save("marisa-test.dat");
+
+  trie.clear();
+  trie.load("marisa-test.dat");
 
   ASSERT(trie.num_tries() == (std::size_t)num_tries);
   ASSERT(trie.num_keys() <= keyset.size());
@@ -297,6 +296,17 @@ void TestTrie(int num_tries, marisa::TailMode tail_mode,
     marisa::fread(file, &trie);
     std::fclose(file);
   }
+
+  ASSERT(trie.num_tries() == (std::size_t)num_tries);
+  ASSERT(trie.num_keys() <= keyset.size());
+
+  ASSERT(trie.tail_mode() == tail_mode);
+  ASSERT(trie.node_order() == node_order);
+
+  TestLookup(trie, keyset);
+
+  trie.clear();
+  trie.mmap("marisa-test.dat");
 
   ASSERT(trie.num_tries() == (std::size_t)num_tries);
   ASSERT(trie.num_keys() <= keyset.size());
