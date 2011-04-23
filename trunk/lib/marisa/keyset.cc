@@ -12,17 +12,47 @@ Keyset::Keyset()
 
 void Keyset::push_back(const Key &key) {
   MARISA_DEBUG_IF(size_ == MARISA_SIZE_MAX, MARISA_SIZE_ERROR);
-  push_back(key.ptr(), key.length(), key.weight());
+
+  char * const key_ptr = reserve(key.length());
+  for (std::size_t i = 0; i < key.length(); ++i) {
+    key_ptr[i] = key[i];
+  }
+
+  Key &new_key = key_blocks_[size_ / KEY_BLOCK_SIZE][size_ % KEY_BLOCK_SIZE];
+  new_key.set_str(key_ptr, key.length());
+  new_key.set_id(key.id());
+  ++size_;
+  total_length_ += new_key.length();
+}
+
+void Keyset::push_back(const Key &key, char end_marker) {
+  MARISA_DEBUG_IF(size_ == MARISA_SIZE_MAX, MARISA_SIZE_ERROR);
+
+  if ((size_ / KEY_BLOCK_SIZE) == key_blocks_size_) {
+    append_key_block();
+  }
+
+  char * const key_ptr = reserve(key.length() + 1);
+  for (std::size_t i = 0; i < key.length(); ++i) {
+    key_ptr[i] = key[i];
+  }
+  key_ptr[key.length()] = end_marker;
+
+  Key &new_key = key_blocks_[size_ / KEY_BLOCK_SIZE][size_ % KEY_BLOCK_SIZE];
+  new_key.set_str(key_ptr, key.length());
+  new_key.set_id(key.id());
+  ++size_;
+  total_length_ += new_key.length();
 }
 
 void Keyset::push_back(const char *str) {
   MARISA_DEBUG_IF(size_ == MARISA_SIZE_MAX, MARISA_SIZE_ERROR);
   MARISA_THROW_IF(str == NULL, MARISA_NULL_ERROR);
+
   std::size_t length = 0;
   while (str[length] != '\0') {
     ++length;
   }
-  MARISA_THROW_IF(length > MARISA_UINT32_MAX, MARISA_SIZE_ERROR);
   push_back(str, length);
 }
 
@@ -31,23 +61,7 @@ void Keyset::push_back(const char *ptr, std::size_t length, float weight) {
   MARISA_THROW_IF((ptr == NULL) && (length != 0), MARISA_NULL_ERROR);
   MARISA_THROW_IF(length > MARISA_UINT32_MAX, MARISA_SIZE_ERROR);
 
-  if ((size_ / KEY_BLOCK_SIZE) == key_blocks_size_) {
-    append_key_block();
-  }
-
-  char *key_ptr = NULL;
-  if (length > EXTRA_BLOCK_SIZE) {
-    append_extra_block(length);
-    key_ptr = extra_blocks_[extra_blocks_size_ - 1].get();
-  } else {
-    if (length > avail_) {
-      append_base_block();
-    }
-    key_ptr = ptr_;
-    ptr_ += length;
-    avail_ -= length;
-  }
-
+  char * const key_ptr = reserve(length);
   for (std::size_t i = 0; i < length; ++i) {
     key_ptr[i] = ptr[i];
   }
@@ -86,6 +100,24 @@ void Keyset::swap(Keyset &rhs) {
   marisa::swap(avail_, rhs.avail_);
   marisa::swap(size_, rhs.size_);
   marisa::swap(total_length_, rhs.total_length_);
+}
+
+char *Keyset::reserve(std::size_t size) {
+  if ((size_ / KEY_BLOCK_SIZE) == key_blocks_size_) {
+    append_key_block();
+  }
+
+  if (size > EXTRA_BLOCK_SIZE) {
+    append_extra_block(size);
+    return extra_blocks_[extra_blocks_size_ - 1].get();
+  } else {
+    if (size > avail_) {
+      append_base_block();
+    }
+    ptr_ += size;
+    avail_ -= size;
+    return ptr_ - size;
+  }
 }
 
 void Keyset::append_base_block() {

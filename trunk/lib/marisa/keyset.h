@@ -16,6 +16,8 @@ class Keyset {
   Keyset();
 
   void push_back(const Key &key);
+  void push_back(const Key &key, char end_marker);
+
   void push_back(const char *str);
   void push_back(const char *ptr, std::size_t length, float weight = 1.0);
 
@@ -61,6 +63,8 @@ class Keyset {
   std::size_t avail_;
   std::size_t size_;
   std::size_t total_length_;
+
+  char *reserve(std::size_t size);
 
   void append_base_block();
   void append_extra_block(std::size_t size);

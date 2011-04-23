@@ -129,6 +129,29 @@ void TestKeyset() {
 
   keyset.clear();
 
+  marisa::Key key;
+
+  key.set_str("123");
+  keyset.push_back(key);
+  ASSERT(keyset[0].length() == 3);
+  ASSERT(std::memcmp(keyset[0].ptr(), "123", 3) == 0);
+
+  key.set_str("456");
+  keyset.push_back(key, '\0');
+  ASSERT(keyset[1].length() == 3);
+  ASSERT(std::memcmp(keyset[1].ptr(), "456", 3) == 0);
+  ASSERT(std::strcmp(keyset[1].ptr(), "456") == 0);
+
+  key.set_str("789");
+  keyset.push_back(key, '0');
+  ASSERT(keyset[2].length() == 3);
+  ASSERT(std::memcmp(keyset[2].ptr(), "789", 3) == 0);
+  ASSERT(std::memcmp(keyset[2].ptr(), "7890", 4) == 0);
+
+  ASSERT(keyset.size() == 3);
+
+  keyset.clear();
+
   ASSERT(keyset.size() == 0);
   ASSERT(keyset.total_length() == 0);
 
