@@ -90,7 +90,8 @@ class LoudsTrie  {
   void build_terminals(const Vector<T> &keys,
       Vector<UInt32> *terminals) const;
 
-  void reserve_cache(const Config &config, std::size_t num_keys);
+  void reserve_cache(const Config &config, std::size_t trie_id,
+      std::size_t num_keys);
   template <typename T>
   void cache(std::size_t parent, std::size_t child,
       float weight, char label);

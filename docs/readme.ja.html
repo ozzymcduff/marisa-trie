@@ -8,7 +8,7 @@
  <body>
   <div id="header">
    <div class="left">MARISA: Matching Algorithm with Recursively Implemented StorAge</div>
-   <div class="right">Last modified: 16 April 2011</div>
+   <div class="right">Last modified: 28 April 2011</div>
    <div class="end"></div>
   </div><!-- header -->
   <div id="body">
@@ -82,7 +82,7 @@
       </li>
       <li>ソースコード
        <ul>
-        <li><a href="http://marisa-trie.googlecode.com/files/marisa-0.2.0-beta3.tar.gz">marisa-0.2.0-beta3.tar.gz</a></li>
+        <li><a href="http://marisa-trie.googlecode.com/files/marisa-0.2.0-beta4.tar.gz">marisa-0.2.0-beta4.tar.gz</a></li>
        </ul>
       </li>
      </ul>
@@ -94,8 +94,8 @@
     <div class="subsection">
      <h3><a name="gcc">GCC</a></h3>
      <div class="float">
-      <pre class="console">$ tar zxf marisa-0.2.0-beta3.tar.gz
-$ cd marisa-0.2.0-beta3
+      <pre class="console">$ tar zxf marisa-0.2.0-beta4.tar.gz
+$ cd marisa-0.2.0-beta4
 $ ./configure
 $ make
 $ make check
@@ -456,6 +456,8 @@ typedef enum marisa_num_tries_ {
   Keyset();
 
   void push_back(const Key &amp;key);
+  void push_back(const Key &amp;key, char end_marker);
+
   void push_back(const char *str);
   void push_back(const char *ptr,
                  std::size_t length,
@@ -494,7 +496,7 @@ typedef enum marisa_num_tries_ {
      <div class="subsubsection">
       <h4>検索結果の保存</h4>
       <p>
-       検索結果の保存に使う場合，後述する <a href="#agent">Agent</a> に格納されている検索結果を <code>push_back()</code> に渡すことで，文字列を複製し，ID を残しておくことができます．
+       検索結果の保存に使う場合，後述する <a href="#agent">Agent</a> に格納されている検索結果を <code>push_back()</code> に渡すことで，文字列を複製し，ID を残しておくことができます．検索結果の文字列に終端記号を加えたいときは <var>end_marker</var> を利用してください．文字列の長さには影響を与えず，<var>end_marker</var> を終端文字として加えることができます．
       </p>
       <p>
        検索結果を破棄して別の検索結果を保存するために再利用するという場合，<code>clear()</code> の代わりに <code>reset()</code> を使うことで，既に確保している領域を再利用できます．メモリの確保・解放にかかるオーバーヘッドが気になるときにご利用ください．

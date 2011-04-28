@@ -329,7 +329,7 @@ void LoudsTrie::build_current_trie(Vector<T> &keys,
     keys[i].set_id(i);
   }
   const std::size_t num_keys = Algorithm().sort(keys.begin(), keys.end());
-  reserve_cache(config, num_keys);
+  reserve_cache(config, trie_id, num_keys);
 
   louds_.push_back(true);
   louds_.push_back(false);
@@ -493,8 +493,9 @@ void LoudsTrie::cache<Key>(std::size_t parent, std::size_t child,
   }
 }
 
-void LoudsTrie::reserve_cache(const Config &config, std::size_t num_keys) {
-  std::size_t cache_size = 256;
+void LoudsTrie::reserve_cache(const Config &config, std::size_t trie_id,
+    std::size_t num_keys) {
+  std::size_t cache_size = (trie_id == 1) ? 256 : 1;
   while (cache_size < (num_keys / config.cache_level())) {
     cache_size *= 2;
   }
