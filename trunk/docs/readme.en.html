@@ -133,7 +133,7 @@ size: 44172368</pre>
       Users can specify parameters by using command line options. See <kbd>marisa-build -h</kbd> for the list of options.
      </p>
      <p>
-      If a line contains horizontal tabs, the last one serves as the delimiter between a key and its weight, which is used to optimize the order of nodes. Estimated frequency of each key, given as the weight, may improves the search performance.
+      If a line contains horizontal tabs, the last one serves as the delimiter between a key and its weight, which is used to optimize the order of nodes. Estimated frequency of each key, given as the weight, may improve the search performance.
      </p>
     </div><!-- subsection -->
     <div class="subsection">
@@ -268,18 +268,18 @@ app: 1
 apple: 2</pre>
      </div><!-- float -->
      <p>
-<!--      libmarisa のヘッダは <kbd>marisa.h</kbd> です．名前空間には <code>marisa</code> を使っています．危険なので，<code>using namespace marisa</code> とするのは避けてください．最後に，<kbd>gcc</kbd> によるリンクでは <kbd>-lmarisa</kbd> が必要となることに注意してください．-->
+      libmarisa provides <kbd>marisa.h</kbd> in which all the headers are <code>#include</code>d. Also, libmarisa uses <code>namespace marisa</code>. All the classes and functions except enumeration types are given as members of this namespace. Note that <code>using namespace marisa</code> may cause a critical error. Finally, <kbd>gcc</kbd> requires an option, <kbd>-lmarisa</kbd>, to link libmarisa.
      </p>
      <p>
-<!--      libmarisa の主要なクラスは <a href="#keyset">Keyset</a>, <a href="#agent">Agent</a>, <a href="#trie">Trie</a> の 3 つです．サンプルコードでは明示的に使っていませんが，例外のクラスとして <a href="#exception">Exception</a> があるほか，<code>Keyset</code>, <code>Agent</code> のメンバとして <a href="#key">Key</a> や <a href="#query">Query</a> が存在します．-->
+      The core components of libmarisa are <a href="#keyset">Keyset</a>, <a href="#agent">Agent</a>, and <a href="#trie">Trie</a>. In addition, libmarisa provides an exception class, <a href="#exception">Exception</a>, and two more classes, <a href="#key">Key</a> and <a href="#query">Query</a>, as members of <code>Keyset</code> and <code>Agent</code>.
      </p>
-<!--     <ul>-->
-<!--      <li><code>Keyset</code>: 文字列の集合を格納するクラスです．辞書を構築するときの入力として使うほか，検索結果の保存にも利用できます．</li>-->
-<!--      <li><code>Agent</code>: 検索の入出力と途中経過を格納するクラスです．検索用の関数はすべて Agent への参照を引数とします．</li>-->
-<!--      <li><code>Trie</code>: 辞書のクラスです．</li>-->
-<!--     </ul>-->
+     <ul>
+      <li><code>Keyset</code>: A class to store a set of keys. This class is used to build a set of keys for building a dictionary. Also, this class is useful to store search results.</li>
+      <li><code>Agent</code>: A class to store search I/O. All the search functions takes a reference to this class.</li>
+      <li><code>Trie</code>: A dictionary class.</li>
+     </ul>
      <p>
-<!--      コマンドラインツールのソースコードが <kbd>tools/</kbd> にあり，例外処理やファイル入出力，Predictive Search などのサンプルとして利用できます．-->
+      For more examples, you can find the source code of the command line tools. The source code is useful as an example of error handling, predicive search, etc.
      </p>
     </div><!-- subsection -->
 
@@ -303,10 +303,7 @@ apple: 2</pre>
 } marisa_error_code;</pre>
       </div><!-- float -->
       <p>
-<!--       libmarisa では，ファイル入出力に失敗したときや辞書のサイズが上限に到達したときなどに，<code>Exception</code> を送出します．そして，<code>Exception</code> に格納される情報の 1 つが <code>marisa_error_code</code> です．-->
-      </p>
-      <p>
-<!--       辞書の入出力に関するエラーコードである <var>MARISA_IO_ERROR</var> と <var>MARISA_FORMAT_ERROR</var> 以外については，バグによる可能性が高いと思います．各エラーコードの詳細については，<kbd>marisa/base.h</kbd> をご覧ください．-->
+       libmarisa throws an instance of <code>Exception</code> when an error occurs, such as a file I/O error (<var>MARISA_IO_ERROR</var>), a size limitation error (<var>MARISA_SIZE_ERROR</var>), etc. For details, see <kbd>marisa/base.h</kbd>.
       </p>
      </div><!-- subsubsection -->
      <div class="subsubsection">
@@ -320,10 +317,10 @@ typedef enum marisa_num_tries_ {
 } marisa_num_tries;</pre>
       </div><!-- float -->
       <p>
-<!--       MARISA は複数の Patricia Trie を組み合わせて 1 つの Trie を構成することが特徴の 1 つであり，Patricia Trie の数を増やすほど，辞書はコンパクトになるものの，検索が遅くなるという傾向があります．<code>marisa_num_tries</code> では，辞書を構成する Patricia Trie の数について，最小値・最大値とデフォルトの値を提供します．-->
+       MARISA is a recursive data structure in which a patricia trie is used to represent another patricia trie. A deeper recursion makes a dictionary more compact but degrades the search performance. For this time-space tradeoff, libmarisa provides a parameter to change the recursion depth, which is equivalent to the number of tries. <code>marisa_num_tries</code> gives the range and the default setting of the parameter.
       </p>
       <p>
-<!--       適切な設定は登録文字列やアプリケーションによって異なります．ほとんどの場合はデフォルトの設定で問題ないと思いますが，検索時間が問題になるときは，思い切って <var>1</var> にしてください．また，登録文字列が長くて少し複雑な構成になる場合，デフォルトより大きな値にすることで，辞書のサイズをさらに小さくできることがあります．設定が気になるときは，<kbd>marisa-benchmark</kbd> をお試しください．-->
+       The best setting depends the set of keys and the applications. In most cases, libmarisa works well with the default setting, <var>MARISA_DEFAULT_NUM_TRIES</var>, but if the application requires better search performance, <var>MARISA_MIN_NUM_TRIES</var> may be the best choice. Also, if the application uses long and complicated keys, a dictionary may become smaller when a larger setting is specified. <kbd>marisa-benchmark</kbd> is useful to find the best setting.
       </p>
      </div><!-- subsubsection -->
      <div class="subsubsection">
@@ -339,10 +336,10 @@ typedef enum marisa_num_tries_ {
 } marisa_cache_level;</pre>
       </div><!-- float -->
       <p>
-<!--       libmarisa では，検索時間の短縮を目的として，辞書にキャッシュを埋め込むようになっています．キャッシュの内容は通過する確率の高い遷移に関する情報であり，キャッシュを大きくすることによって，辞書は大きくなるものの，検索時間を短縮できます．-->
+       libmarisa embeds a precomputed table to a dictionary. The table serves as transition cache which improves the search performance but increases the dictionary size. Cache size is the parameter of this time-space tradeoff.
       </p>
       <p>
-<!--       <code>marisa_cache_level</code> は，キャッシュのサイズを制御するための定数を提供します．<var>MARISA_NORMAL_CACHE</var> を基準として，<var>MARISA_LARGE_CACHE</var> は 2 倍，<var>MARISA_HUGE_CACHE</var> は 4 倍になり，<var>MARISA_SMALL_CACHE</var> は 1/2，<var>MARISA_TINY_CACHE</var> は 1/4 になります．-->
+       <code>marisa_cache_level</code> gives a list of available cache size. Compared with <var>MARISA_NORMAL_CACHE</var>, <var>MARISA_LARGE_CACHE</var> is 2 times larger, <var>MARISA_HUGE_CACHE</var> is 4 times larger, <var>MARISA_SMALL_CACHE</var> is 2 times smaller, and <var>MARISA_TINY_CACHE</var> is 4 times smaller.
       </p>
      </div><!-- subsubsection -->
      <div class="subsubsection">
@@ -355,13 +352,13 @@ typedef enum marisa_num_tries_ {
 } marisa_tail_mode;</pre>
       </div><!-- float -->
       <p>
-<!--       libmarisa による辞書では，最後の Patiricia Trie について，ラベルをそのまま保存するようになっています．<code>marisa_tail_mode</code> はラベルの保存方法を選ぶためのパラメータです．-->
+       The last patricia trie of MARISA keeps its multi-byte labels as strings and <code>marisa_tail_mode</code> gives a list of TAIL implementations. In fact, libmarisa supports only two kinds of implementations.
       </p>
       <p>
-<!--       <var>MARISA_TEXT_TAIL</var> はラベルを <var>'\0'</var> を終端とする文字列として保存します．そのため，ラベルに <var>'\0'</var> が含まれるときは，自動的に <var>MARISA_BINARY_TAIL</var> へと切り替わるようになっています．明示的に <var>MARISA_BINARY_TAIL</var> を選ぶ理由はほとんどありません．-->
+       <var>MARISA_TEXT_TAIL</var> stores labels as zero-terminated strings. If the labels contain <var>'\0'</var>, the TAIL mode is automatically switched to <var>MARISA_BINARY_TAIL</var>.
       </p>
       <p>
-<!--       一方，<var>MARISA_BINARY_TAIL</var> では，ラベルの終端を検出するために，<var>'\0'</var> の代わりにビット列を使用します．そのため，ラベルの平均長が <var>8 bytes</var> を超えるときは <var>MARISA_TEXT_TAIL</var> の方がコンパクトになります．-->
+       On the other hand, <var>MARISA_BINARY_TAIL</var> uses a bit vector, instead of <var>'\0'</var>, to detect the end of labels. This means that <var>MARISA_TEXT_TAIL</var> is more space-efficient than <var>MARISA_BINARY_TAIL</var> when the average length of labels is longer than <var>8 bytes</var>.
       </p>
      </div><!-- subsubsection -->
      <div class="subsubsection">
@@ -374,10 +371,10 @@ typedef enum marisa_num_tries_ {
 } marisa_node_order;</pre>
       </div><!-- float -->
       <p>
-<!--       libmarisa では，ノードの順序が辞書のパラメータになっています．選択肢は <var>MARISA_LABEL_ORDER</var> と <var>MARISA_WEIGHT_ORDER</var> の 2 つであり，前者はラベルが昇順になるようにノードを配列し，後者は重み（出現しやすさ）が降順になるようにノードを配列します．一般的な Trie の実装では <var>MARISA_LABEL_ORDER</var> の順序を用いますが，libmarisa では <var>MARISA_WEIGHT_ORDER</var> がデフォルトになっています．-->
+       A dictionary has one more parameter, which is the order of nodes. There are two choices, <var>MARISA_LABEL_ORDER</var> and <var>MARISA_WEIGHT_ORDER</var>. The former arranges nodes in ascending order of the label and the latter arranges nodes in descending order of the weight. Many trie implementations arrange nodes in the label order but libmarisa uses <var>MARISA_WEIGHT_ORDER</var> as the default setting.
       </p>
       <p>
-<!--       <var>MARISA_WEIGHT_ORDER</var> の目的は，出現しやすいノードから順に並べておくことにより，線形探索の効率を高め，検索時間を短縮することにあります．日本語の単語やフレーズを用いた実験においては，辞書引きにかかる時間を 1/2 程度に短縮できることが確認されています．一方，<var>MARISA_LABEL_ORDER</var> については，検索時間は長くなるものの，Predictive Search の検索結果が文字列昇順になるという特徴があります．-->
+       <var>MARISA_WEIGHT_ORDER</var> optimizes the node order for linear search performed in exact match lookup, common prefix search, and predictive search. In practice, experiments for English words/phrases showed that <var>MARISA_WEIGHT_ORDER</var> halved the average search time of MARISA. On the other hand, <var>MARISA_LABEL_ORDER</var> enables predictive search to restore keys in lexicographic order.
       </p>
      </div><!-- subsubsection -->
      <div class="subsubsection">
@@ -391,7 +388,7 @@ typedef enum marisa_num_tries_ {
 }  // namespace marisa</pre>
       </div><!-- float -->
       <p>
-<!--       以上の列挙型については，マクロとの衝突を避けるために，グローバル名前空間にて定義しています．<code>namespace marisa</code> に別名を用意しているので，お好きな方をご利用ください．-->
+       The above enumeration types are defined in the global namespace to avoid collisions of the enumeration constants with macros provided by other modules. libmarisa provides type aliases and users can choose the familiar one.
       </p>
      </div><!-- subsubsection -->
     </div><!-- subsection -->
@@ -632,7 +629,7 @@ typedef enum marisa_num_tries_ {
 void fwrite(std::FILE *file, const Trie &amp;trie);</pre>
      </div><!-- float -->
      <p>
-<!--      <code>std::FILE</code> を用いる関数は <kbd>marisa/stdio.h</kbd> で宣言されています．<code>#include &lt;cstdio&gt;</code> を入れたくないときは，<kbd>marisa.h</kbd> の代わりに <kbd>marisa/trie.h</kbd> を使ってください．-->
+      The fuctions for I/O using <code>std::FILE</code> are declared in <kbd>marisa/stdio.h</kbd>. If you don't want to <code>#include &lt;cstdio&gt;</code>, use <kbd>marisa/trie.h</kbd> instead of <kbd>marisa.h</kbd>.
      </p>
     </div><!-- subsection -->
 
@@ -646,7 +643,7 @@ std::istream &amp;operator>>(std::istream &amp;stream, Trie &amp;trie);
 std::ostream &amp;operator<<(std::ostream &amp;stream, const Trie &amp;trie);</pre>
      </div><!-- float -->
      <p>
-<!--      <code>std::iostream</code> を用いる関数は <kbd>marisa/iostream.h</kbd> で宣言されています．<code>#include &lt;iosfwd&gt;</code> を入れたくないときは，<kbd>marisa.h</kbd> の代わりに <kbd>marisa/trie.h</kbd> を使ってください．-->
+      The fuctions for I/O using <code>std::iostream</code> are declared in <kbd>marisa/iostream.h</kbd>. If you don't want to <code>#include &lt;iosfwd&gt;</code>, use <kbd>marisa/trie.h</kbd> instead of <kbd>marisa.h</kbd>.
      </p>
     </div><!-- subsection -->
    </div><!-- section -->
