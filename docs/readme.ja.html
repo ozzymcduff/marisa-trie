@@ -8,7 +8,7 @@
  <body>
   <div id="header">
    <div class="left">MARISA: Matching Algorithm with Recursively Implemented StorAge</div>
-   <div class="right">Last modified: 28 April 2011</div>
+   <div class="right">Last modified: 2 May 2011</div>
    <div class="end"></div>
   </div><!-- header -->
   <div id="body">
@@ -578,13 +578,13 @@ typedef enum marisa_num_tries_ {
        <code>Trie</code> は辞書のクラスです．libmarisa において最も重要なクラスであり，辞書の構築・検索からファイル入出力にいたるまで，あらゆる操作に必要となります．
       </p>
       <p>
-       実際には，辞書のハンドルに相当するクラスであり，辞書の実体がない状況では，<code>build()</code>, <code>mmap()</code>, <code>map()</code>, <code>load()</code>, <code>read()</code> 以外の関数を呼び出すと例外が送出されます．
+       実際には，辞書のハンドルに相当するクラスであり，辞書の実体がない状況では，<code>build()</code>, <code>mmap()</code>, <code>map()</code>, <code>load()</code>, <code>read()</code>, <code>clear()</code>, <code>swap()</code> 以外の関数を呼び出すと例外が送出されます．
       </p>
      </div><!-- subsubsection -->
      <div class="subsubsection">
       <h4>辞書の構築</h4>
       <p>
-       辞書の構築には <code>build()</code> を使います．引数は，前述の <a href="#keyset">Keyset</a> と，辞書の設定を XOR（<code>|</code>） で組み合わせた <var>config_flags</var> です．<var>config_flags</var> については，<var>2 | MARISA_BINARY_TAIL</var> のように指定します．この例では，辞書を構成する Patricia Trie の数を <var>2</var> つに制限し，ラベルの保存方法を <var>MARISA_BINARY_TAIL</var> に固定します．省略したノードの順序については，デフォルトの設定である <var>MARISA_DEFAULT_TAIL</var> が採用されます．
+       辞書の構築には <code>build()</code> を使います．引数は，前述の <a href="#keyset">Keyset</a> と，辞書の設定を XOR（<code>|</code>） で組み合わせた <var>config_flags</var> です．<var>config_flags</var> については，<var>2 | MARISA_BINARY_TAIL</var> のように指定します．この例では，辞書を構成する Patricia Trie の数を <var>2</var> つに制限し，ラベルの保存方法を <var>MARISA_BINARY_TAIL</var> に固定します．省略されているノードの順序とキャッシュのサイズについては，デフォルトの設定である <var>MARISA_DEFAULT_ORDER</var> と <var>MARISA_DEFAULT_CACHE</var> が採用されます．
       </p>
       <p>
        辞書の構築において登録文字列に割り当てられた ID は，<var>keyset</var> の <code>operator[]()</code> を使って確認できます．登録文字列に対して関連付ける情報がある場合にご利用ください．
@@ -606,7 +606,7 @@ typedef enum marisa_num_tries_ {
       </p>
       <ul>
        <li>
-        <code>lookup()</code>: 文字列が登録されているかどうかを確認します．登録されていれば <var>true</var> を返します．このとき，<code>agent.key()</code> には検索結果が格納されています．<code>agent.key().ptr()</code>, <code>agent.key().length()</code> については，<code>agent.query()</code> の内容を代入しただけであることに注意してください．登録されていなければ <var>false</var> を返して終了です．
+        <code>lookup()</code>: 文字列が登録されているかどうかを確認します．登録されていれば <var>true</var> を返します．このとき，<code>agent.key()</code> により検索結果を取り出すことができます．ただし，<code>agent.key().ptr()</code> については，入力として渡された文字列を指しているだけであり，文字列の複製を持っているわけではないことに注意してください．登録されていなければ <var>false</var> を返して終了です．
        </li>
        <li>
         <code>reverse_lookup()</code>: ID から登録文字列を復元します．返り値はなく，復元された文字列は <var>agent.key()</var> を介してアクセスできます．文字列の実体は <var>agent</var> 内部に保持されています．<var>agent</var> を使って次の検索をおこなった段階で失われるものと考えてください．ID が範囲外であれば例外を送出して終了です．
@@ -622,7 +622,7 @@ typedef enum marisa_num_tries_ {
        繰り返しにより検索が進行する <code>common_prefix_search()</code> と <code>predictive_search()</code> については，<code>agent</code> が検索の途中経過を保持するようになっています．そのため，<code>agent</code> を別の関数に渡したり，<code>agent.set_query()</code> を呼び出したりした時点で，検索の進行はリセットされます．
       </p>
       <p>
-       <code>empty()</code> は登録文字列が存在しないかどうかを返す関数です．<code>size()</code> は <code>num_keys()</code> と同じく登録文字列の数を返す関数であり，<code>io_size()</code> は辞書をファイルに出力した場合のサイズを返す関数です．
+       <code>empty()</code> は登録文字列が存在するかどうかを返す関数です．<code>size()</code> は <code>num_keys()</code> と同じく登録文字列の数を返す関数であり，<code>io_size()</code> は辞書をファイルに出力した場合のサイズを返す関数です．
       </p>
      </div><!-- subsubsection -->
     </div><!-- subsection -->
