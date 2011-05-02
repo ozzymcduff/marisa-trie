@@ -9,7 +9,7 @@ body {
  color: #222;
  margin: 10px 20px;
  text-align: justify;
- text-justify: auto;
+ text-justify: inter-ideograph;
 }
 
 a {
