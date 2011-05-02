@@ -8,8 +8,6 @@ body {
  background: lightgray;
  color: #222;
  margin: 10px 20px;
- text-align: justify;
- text-justify: inter-ideograph;
 }
 
 a {
@@ -127,7 +125,6 @@ div#body p#authors span.author {
 div#body p#abstract {
  margin: 15px auto;
  text-align: auto;
- text-justify: inter-ideograph;
  width: 75%;
 }
 div#body p#abstract span#heading {
