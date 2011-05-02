@@ -35,7 +35,7 @@
     <div class="subsection">
      <h3><a name="ability">Functionality</a></h3>
      <p>
-      libmarisa associates string keys with unique IDs, from <var>0</var> to <var>(n - 1)</var>, where <var>n</var> is the number of keys. Note that users cannot specify the IDs because the mapping is given by MARISA. A search function takes a string or an ID and returns the search result, actually a pair of the resultant key and its ID.
+      libmarisa associates string keys with unique IDs, from <var>0</var> to <var>(n - 1)</var>, where <var>n</var> is the number of keys. Note that users cannot specify the IDs because the mapping is given by MARISA. Every search function takes a string or an ID and returns the search result which is actually a pair of the resultant key and its ID.
      </p>
      <ul>
       <li>Lookup
@@ -225,7 +225,7 @@ Total length: 162863684
       <kbd>marisa-benchmark</kbd> is a tool to benchmark libmarisa. This tool takes the same input as <kbd>marisa-build</kbd> and measures the performance of libmarisa for the given set of keys. This tool is useful to fix dictionary settings.
      </p>
      <p>
-      For the lookups and the searches, <kbd>marisa-benchmark</kbd> measures the time to lookup or search keys in input order. When the keys are given in lexicographic order, few cache misses will occur in the benchmark. In contrast, when the keys are given in random order, many cache misses will occur in the benchmark.
+      For the search performance, <kbd>marisa-benchmark</kbd> measures the time to lookup or search keys in input order. When the keys are given in lexicographic order, few cache misses will occur in the benchmark. In contrast, when the keys are given in random order, many cache misses will occur in the benchmark.
      </p>
      <p>
       See <kbd>marisa-benchmark -h</kbd> for the list of options.
@@ -275,7 +275,7 @@ apple: 2</pre>
      </p>
      <ul>
       <li><code>Keyset</code>: A class to store a set of keys. This class is used to build a set of keys for building a dictionary. Also, this class is useful to store search results.</li>
-      <li><code>Agent</code>: A class to store search I/O. All the search functions takes a reference to this class.</li>
+      <li><code>Agent</code>: A class to store a query and a result of search operations. Every search function takes a reference to this class.</li>
       <li><code>Trie</code>: A dictionary class.</li>
      </ul>
      <p>
@@ -407,7 +407,7 @@ typedef enum marisa_num_tries_ {
 };</pre>
      </div><!-- float -->
      <p>
-<!--      <code>Exception</code> は libmarisa が例外として送出するクラスです．エラーが検出されたファイルの名前（<code>__FILE__</code>）と行番号（<code>__LINE__</code>），さらにエラーコードを取り出せるようになっています．<code>what()</code> は使いやすさのために用意した関数であり，<code>error_message()</code> と同じく，<var>__FILE__:__LINE__: error_code: error_message</var> という書式の文字列を返します．-->
+      <code>Exception</code> is an exception class. libmarisa throws an instance of <code>Exception</code> with the file name (<code>__FILE__</code>), the line number (<code>__LINE__</code>), and an error code (<code>ErrorCode</code>) when an error is detected. The instance also has an error message formatted <var>__FILE__:__LINE__: error_code: error_message</var>.
      </p>
     </div><!-- subsection -->
 
@@ -423,7 +423,7 @@ typedef enum marisa_num_tries_ {
 };</pre>
      </div><!-- float -->
      <p>
-<!--      <code>Key</code> は後述する <a href="#keyset">Keyset</a> および <a href="#agent">Agent</a> のメンバになっているクラスです．登録しようとしている文字列や，検索で見つけた登録文字列の情報を格納するために使われています．基本的な使い方では，既に情報が格納されたインスタンスのみを目にすることになります．-->
+      <code>Key</code> is a member of <a href="#keyset">Keyset</a> and <a href="#agent">Agent</a>. This class represents a key, e.g., each key of <code>Keyset</code> and a search result of <code>Agent</code> are represented by <code>Key</code>.
      </p>
     </div><!-- subsection -->
 
@@ -439,7 +439,7 @@ typedef enum marisa_num_tries_ {
 };</pre>
      </div><!-- float -->
      <p>
-<!--      <code>Query</code> は後述する <a href="#agent">Agent</a> のメンバになっているクラスです．検索しようとしている文字列や参照したい登録文字列の ID を格納するようになっています．<code>Query</code> に対する文字列や ID の設定は <code>Agent</code> を介しておこなうため，基本的な使い方では，意識する必要はありません．内容を確認したいときに参照する程度です．-->
+      <code>Query</code> is a member of <a href="#agent">Agent</a>. This class stores a query string and a key ID as input for search functions. Users should not make changes directly to <code>Query</code> because <code>Agent</code> has an interface to overwrite its query.
      </p>
     </div><!-- subsection -->
 
@@ -476,28 +476,28 @@ typedef enum marisa_num_tries_ {
      <div class="subsubsection">
       <h4>Overview</h4>
       <p>
-<!--       <code>Keyset</code> は辞書に登録しようとしている文字列もしくは登録されている文字列を詰め込むためのクラスです．辞書を構築するときの入力として，あるいは検索結果を保存しておくために使います．-->
+       <code>Keyset</code> is used to store a set of keys for dictionary construction or to save the results of search functions.
       </p>
      </div><!-- subsubsection -->
      <div class="subsubsection">
       <h4>Dictionary Source</h4>
       <p>
-<!--       辞書の構築に使う場合，<code>push_back()</code> で登録したい文字列を追加してから，後述する <a href="#trie">Trie</a> の <code>build()</code> に渡します．<var>weight</var> は文字列の出現しやすさを示す重みであり，同じ文字列を繰り返し追加した場合，辞書を構築する段階で加算されるようになっています．-->
+       For dictionary construction, users append keys to <code>Keyset</code> by using <code>push_back()</code> and then pass the keyset to <code>build()</code> of <a href="#trie">Trie</a>. The <var>weight</var> is an argument to receive the frequency or possibility of each key. If there are same keys, the weights are accumulated in dictionary construction.
       </p>
       <p>
-<!--       辞書を構築した後は，<code>operator[]()</code> により登録文字列の ID を確認できます．その代わり，<code>Key</code> は重みと ID を共用体のメンバとして持つため，辞書の構築に使用した重みを参照できなくなります．-->
+       After dictionary construction, users can read key IDs through <code>operator[]()</code>. Instead, the weights of the keys are overwritten by the key IDs because <code>Key</code> uses a <code>union</code> to store a weight or a key ID.
       </p>
      </div><!-- subsubsection -->
      <div class="subsubsection">
       <h4>Search Result</h4>
       <p>
-<!--       検索結果の保存に使う場合，後述する <a href="#agent">Agent</a> に格納されている検索結果を <code>push_back()</code> に渡すことで，文字列を複製し，ID を残しておくことができます．検索結果の文字列に終端記号を加えたいときは <var>end_marker</var> を利用してください．文字列の長さには影響を与えず，<var>end_marker</var> を終端文字として加えることができます．-->
+       For search results, pass the search result in <a href="#agent">Agent</a> to <code>push_back()</code>. A copy of the search result is stored in <code>Keyset</code>. If you want to append an end marker, such as <code>'\0'</code>, use <var>end_marker</var> of <code>push_back()</code>.
       </p>
       <p>
-<!--       検索結果を破棄して別の検索結果を保存するために再利用するという場合，<code>clear()</code> の代わりに <code>reset()</code> を使うことで，既に確保している領域を再利用できます．メモリの確保・解放にかかるオーバーヘッドが気になるときにご利用ください．-->
+       If you want to reuse an instance of <code>Keyset</code>, <code>reset()</code> may be a better choice than <code>clear()</code> because <code>reset()</code> keeps allocated memory in order to reduce memory allocation overhead.
       </p>
       <p>
-<!--       <code>empty()</code> は文字列が格納されていないかどうかを返す関数です．<code>size()</code> は <code>num_keys()</code> と同じく格納されている文字列の数を返す関数であり，<code>total_length()</code> は格納されている文字列の合計長を byte 単位で返す関数です．-->
+       <code>empty()</code> checks if there are keys in <code>Keyset</code> or not. <code>size</code> and <code>num_keys()</code> return the number of keys. <code>total_length()</code> returns the total length in byte.
       </p>
      </div><!-- subsubsection -->
     </div><!-- subsection -->
@@ -520,10 +520,10 @@ typedef enum marisa_num_tries_ {
 };</pre>
      </div><!-- float -->
      <p>
-<!--      <code>Agent</code> は <code>Query</code> と <code>Key</code> をメンバとして持つクラスです．検索における入出力の受け渡し，および途中経過の保存に使います．後述する <a href="#trie">Trie</a> の検索関数は，例外なく <code>Agent</code> への参照を引数として受け取るようになっています．-->
+      <code>Agent</code> is actually a tuple of <code>Query</code>, <code>Key</code>, and <code>State</code>. This class is used as I/O of search functions. Also, <code>State</code> is an incomplete type to keep the internal state of search operation.
      </p>
      <p>
-<!--      検索の手順は，<code>set_query()</code> を使って検索したい文字列もしくは参照したい登録文字列の ID を設定し，<code>Trie</code> の関数に渡した後，<code>key()</code> により検索結果を取り出すという流れになります．-->
+      A lookup operation goes as follows: 1. sets a query string by <code>set_query()</code> of <code>Agent</code>, 2. passes the agent to <code>lookup()</code> of <code>Trie</code>, and 3. gets the search result by <code>key()</code> of <code>Agent</code>. The other operations go as well as the lookup operation.
      </p>
     </div><!-- subsection -->
 
