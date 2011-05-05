@@ -2,15 +2,17 @@ SUBDIRS = lib tools tests
 
 EXTRA_DIST = \
   bindings/Makefile \
-  bindings/marisa-swig.cxx \
-  bindings/marisa-swig.h \
-  bindings/marisa-swig.i \
   bindings/perl/Makefile.PL \
-  bindings/perl/sample.pl \
-  bindings/python/sample.py \
+  bindings/perl/marisa.pm \
   bindings/python/setup.py \
+  bindings/python/marisa.py \
   bindings/ruby/extconf.rb \
-  bindings/ruby/sample.rb \
+  bindings/*.cxx \
+  bindings/*.h \
+  bindings/*.i \
+  bindings/*/*.cxx \
+  bindings/*/*.h \
+  bindings/*/sample.* \
   docs/*.html \
   docs/*.css \
   vs2008/vs2008.* \
