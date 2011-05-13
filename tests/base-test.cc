@@ -215,7 +215,7 @@ void TestQuery() {
 
   ASSERT(query.ptr() == NULL);
   ASSERT(query.length() == 0);
-  ASSERT(query.key_id() == 0);
+  ASSERT(query.id() == 0);
 
   const char *str = "apple";
   query.set_str(str);
@@ -228,15 +228,15 @@ void TestQuery() {
   ASSERT(query.ptr() == str);
   ASSERT(query.length() == 3);
 
-  query.set_key_id(100);
+  query.set_id(100);
 
-  ASSERT(query.key_id() == 100);
+  ASSERT(query.id() == 100);
 
   query.clear();
 
   ASSERT(query.ptr() == NULL);
   ASSERT(query.length() == 0);
-  ASSERT(query.key_id() == 0);
+  ASSERT(query.id() == 0);
 
   TEST_END();
 }
@@ -248,7 +248,7 @@ void TestAgent() {
 
   ASSERT(agent.query().ptr() == NULL);
   ASSERT(agent.query().length() == 0);
-  ASSERT(agent.query().key_id() == 0);
+  ASSERT(agent.query().id() == 0);
 
   ASSERT(agent.key().ptr() == NULL);
   ASSERT(agent.key().length() == 0);
@@ -265,7 +265,7 @@ void TestAgent() {
 
   ASSERT(agent.query().ptr() == query_str);
   ASSERT(agent.query().length() == std::strlen(query_str));
-  ASSERT(agent.query().key_id() == 123);
+  ASSERT(agent.query().id() == 123);
 
   ASSERT(agent.key().ptr() == key_str);
   ASSERT(agent.key().length() == std::strlen(key_str));
@@ -281,7 +281,7 @@ void TestAgent() {
 
   ASSERT(agent.query().ptr() == NULL);
   ASSERT(agent.query().length() == 0);
-  ASSERT(agent.query().key_id() == 0);
+  ASSERT(agent.query().id() == 0);
 
   ASSERT(agent.key().ptr() == NULL);
   ASSERT(agent.key().length() == 0);

@@ -5,9 +5,5 @@ marisa_module = Extension("_marisa",
                           libraries=["marisa"])
 
 setup(name = "marisa",
-      version = "0.2.0-beta4",
-      author = "Susumu Yata",
-      url = "http://code.google.com/p/marisa-trie/",
-      description = """Python binding for libmarisa""",
       ext_modules = [marisa_module],
       py_modules = ["marisa"])

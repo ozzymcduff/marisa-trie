@@ -5,7 +5,7 @@
 
 namespace marisa_swig {
 
-#define MARISA_SWIG_ENUM_COPY(name) MARISA_ ## name = MARISA_ ## name
+#define MARISA_SWIG_ENUM_COPY(name) name = MARISA_ ## name
 
 enum ErrorCode {
   MARISA_SWIG_ENUM_COPY(OK),
@@ -52,8 +52,7 @@ enum NodeOrder {
 
 class Key {
  public:
-  void str(const char **ptr, std::size_t *length) const;
-  std::size_t length() const;
+  void str(const char **ptr_out, std::size_t *length_out) const;
   std::size_t id() const;
   float weight() const;
 
@@ -67,9 +66,8 @@ class Key {
 
 class Query {
  public:
-  void str(const char **ptr, std::size_t *length) const;
-  std::size_t length() const;
-  std::size_t key_id() const;
+  void str(const char **ptr_out, std::size_t *length_out) const;
+  std::size_t id() const;
 
  private:
   const marisa::Query query_;
@@ -87,11 +85,14 @@ class Keyset {
   ~Keyset();
 
   void push_back(const marisa::Key &key);
-  void push_back(const marisa::Key &key, char end_marker);
-
   void push_back(const char *ptr, std::size_t length, float weight = 1.0);
 
   const Key &key(std::size_t i) const;
+
+  void key_str(std::size_t i,
+      const char **ptr_out, std::size_t *length_out) const;
+  std::size_t key_id(std::size_t i) const;
+
   std::size_t num_keys() const;
 
   bool empty() const;
@@ -116,15 +117,21 @@ class Agent {
   ~Agent();
 
   void set_query(const char *ptr, std::size_t length);
-  void set_query(std::size_t key_id);
+  void set_query(std::size_t id);
 
   const Key &key() const;
   const Query &query() const;
 
+  void key_str(const char **ptr_out, std::size_t *length_out) const;
+  std::size_t key_id() const;
+
+  void query_str(const char **ptr_out, std::size_t *length_out) const;
+  std::size_t query_id() const;
+
  private:
   marisa::Agent *agent_;
   char *buf_;
-  std::size_t size_;
+  std::size_t buf_size_;
 
   Agent(const Agent &);
   Agent &operator=(const Agent &);
@@ -145,6 +152,10 @@ class Trie {
   void reverse_lookup(Agent &agent) const;
   bool common_prefix_search(Agent &agent) const;
   bool predictive_search(Agent &agent) const;
+
+  std::size_t lookup(const char *ptr, std::size_t length) const;
+  void reverse_lookup(std::size_t id,
+      const char **ptr_out_to_be_deleted, std::size_t *length_out) const;
 
   std::size_t num_tries() const;
   std::size_t num_keys() const;
