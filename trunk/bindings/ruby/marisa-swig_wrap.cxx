@@ -4706,6 +4706,6 @@ SWIGEXPORT void Init_marisa(void) {
   SwigClassTrie.mark = 0;
   SwigClassTrie.destroy = (void (*)(void *)) free_marisa_swig_Trie;
   SwigClassTrie.trackObjects = 0;
-  rb_define_const(mMarisa, "INVALID_KEY_ID", SWIG_From_int(static_cast< int >(MARISA_INVALID_KEY_ID)));
+  rb_define_const(mMarisa, "INVALID_KEY_ID", SWIG_From_size_t(static_cast< size_t >(MARISA_INVALID_KEY_ID)));
 }
 

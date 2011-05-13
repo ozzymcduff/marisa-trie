@@ -23,8 +23,16 @@ $agent->set_query("cookie");
 $trie->lookup($agent);
 print($agent->query_str(), ": ", $agent->key_id(), "\n");
 
+$agent->set_query("cockoo");
+if ($trie->lookup(agent)) {
+  print($agent->query_str(), ": not found\n");
+}
+
 print("ice: ", $trie->lookup("ice"), "\n");
 print("ice-cream: ", $trie->lookup("ice-cream"), "\n");
+if ($trie->lookup("ice-age") == $marisa::INVALID_KEY_ID) {
+  print("ice-age: not found\n");
+}
 
 $trie->save("sample.dic");
 $trie->load("sample.dic");

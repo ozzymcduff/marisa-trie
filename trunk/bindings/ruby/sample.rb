@@ -23,8 +23,16 @@ agent.set_query("cookie")
 trie.lookup(agent)
 print(agent.query_str(), ": ", agent.key_id(), "\n")
 
+agent.set_query("cockoo")
+if not trie.lookup(agent)
+  print(agent.query_str(), ": not found\n")
+end
+
 print("ice: ", trie.lookup("ice"), "\n")
 print("ice-cream: ", trie.lookup("ice-cream"), "\n")
+if trie.lookup("ice-age") == Marisa::INVALID_KEY_ID
+  print("ice-age: not found\n")
+end
 
 trie.save("sample.dic")
 trie.load("sample.dic")
@@ -32,6 +40,7 @@ trie.load("sample.dic")
 agent.set_query(0)
 trie.reverse_lookup(agent)
 print(agent.query_id(), ": ", agent.key_str(), "\n")
+
 agent.set_query(1)
 trie.reverse_lookup(agent)
 print(agent.query_id(), ": ", agent.key_str(), "\n")

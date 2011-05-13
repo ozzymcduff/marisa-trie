@@ -6081,7 +6081,7 @@ SWIG_init(void) {
   SWIG_Python_SetConstant(d, "LABEL_ORDER",SWIG_From_int(static_cast< int >(marisa_swig::LABEL_ORDER)));
   SWIG_Python_SetConstant(d, "WEIGHT_ORDER",SWIG_From_int(static_cast< int >(marisa_swig::WEIGHT_ORDER)));
   SWIG_Python_SetConstant(d, "DEFAULT_ORDER",SWIG_From_int(static_cast< int >(marisa_swig::DEFAULT_ORDER)));
-  SWIG_Python_SetConstant(d, "INVALID_KEY_ID",SWIG_From_int(static_cast< int >(MARISA_INVALID_KEY_ID)));
+  SWIG_Python_SetConstant(d, "INVALID_KEY_ID",SWIG_From_size_t(static_cast< size_t >(MARISA_INVALID_KEY_ID)));
 #if PY_VERSION_HEX >= 0x03000000
   return m;
 #else
