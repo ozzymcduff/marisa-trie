@@ -5159,7 +5159,7 @@ XS(SWIG_init) {
   SWIG_TypeClientData(SWIGTYPE_p_marisa_swig__Trie, (void*) "marisa::Trie");
   /*@SWIG:/usr/local/share/swig/2.0.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
     SV *sv = get_sv((char*) SWIG_prefix "INVALID_KEY_ID", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(MARISA_INVALID_KEY_ID)));
+    sv_setsv(sv, SWIG_From_size_t  SWIG_PERL_CALL_ARGS_1(static_cast< size_t >(MARISA_INVALID_KEY_ID)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   ST(0) = &PL_sv_yes;

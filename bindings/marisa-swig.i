@@ -25,4 +25,4 @@
 
 %include "marisa-swig.h"
 
-%constant int INVALID_KEY_ID = MARISA_INVALID_KEY_ID;
+%constant size_t INVALID_KEY_ID = MARISA_INVALID_KEY_ID;
