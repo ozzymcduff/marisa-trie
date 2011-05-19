@@ -7,14 +7,14 @@ namespace marisa {
 
 class Query {
  public:
-  Query() : ptr_(NULL), length_(0), id_(0) {}
+  Query() : ptr_(NULL), length_(0), key_id_(0) {}
   Query(const Query &query)
-      : ptr_(query.ptr_), length_(query.length_), id_(query.id_) {}
+      : ptr_(query.ptr_), length_(query.length_), key_id_(query.key_id_) {}
 
   Query &operator=(const Query &query) {
     ptr_ = query.ptr_;
     length_ = query.length_;
-    id_ = query.id_;
+    key_id_ = query.key_id_;
     return *this;
   }
 
@@ -37,8 +37,8 @@ class Query {
     ptr_ = ptr;
     length_ = length;
   }
-  void set_id(std::size_t id) {
-    id_ = id;
+  void set_key_id(std::size_t key_id) {
+    key_id_ = key_id;
   }
 
   const char *ptr() const {
@@ -47,8 +47,8 @@ class Query {
   std::size_t length() const {
     return length_;
   }
-  std::size_t id() const {
-    return id_;
+  std::size_t key_id() const {
+    return key_id_;
   }
 
   void clear() {
@@ -57,13 +57,13 @@ class Query {
   void swap(Query &rhs) {
     marisa::swap(ptr_, rhs.ptr_);
     marisa::swap(length_, rhs.length_);
-    marisa::swap(id_, rhs.id_);
+    marisa::swap(key_id_, rhs.key_id_);
   }
 
  private:
   const char *ptr_;
   std::size_t length_;
-  std::size_t id_;
+  std::size_t key_id_;
 };
 
 }  // namespace marisa

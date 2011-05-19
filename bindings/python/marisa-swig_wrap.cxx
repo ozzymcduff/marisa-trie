@@ -2940,7 +2940,38 @@ SWIG_AsCharPtrAndSize(PyObject *obj, char** cptr, size_t* psize, int *alloc)
 }
 
 
-#include <float.h>
+SWIGINTERN int
+SWIG_AsCharArray(PyObject * obj, char *val, size_t size)
+{ 
+  char* cptr = 0; size_t csize = 0; int alloc = SWIG_OLDOBJ;
+  int res = SWIG_AsCharPtrAndSize(obj, &cptr, &csize, &alloc);
+  if (SWIG_IsOK(res)) {
+    if ((csize == size + 1) && cptr && !(cptr[csize-1])) --csize;
+    if (csize <= size) {
+      if (val) {
+	if (csize) memcpy(val, cptr, csize*sizeof(char));
+	if (csize < size) memset(val + csize, 0, (size - csize)*sizeof(char));
+      }
+      if (alloc == SWIG_NEWOBJ) {
+	delete[] cptr;
+	res = SWIG_DelNewMask(res);
+      }      
+      return res;
+    }
+    if (alloc == SWIG_NEWOBJ) delete[] cptr;
+  }
+  return SWIG_TypeError;
+}
+
+
+#include <limits.h>
+#if !defined(SWIG_NO_LLONG_MAX)
+# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
+#   define LLONG_MAX __LONG_LONG_MAX__
+#   define LLONG_MIN (-LLONG_MAX - 1LL)
+#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
+# endif
+#endif
 
 
 SWIGINTERN int
@@ -2987,23 +3018,7 @@ SWIG_AsVal_double (PyObject *obj, double *val)
 }
 
 
-SWIGINTERN int
-SWIG_AsVal_float (PyObject * obj, float *val)
-{
-  double v;
-  int res = SWIG_AsVal_double (obj, &v);
-  if (SWIG_IsOK(res)) {
-    if ((v < -FLT_MAX || v > FLT_MAX)) {
-      return SWIG_OverflowError;
-    } else {
-      if (val) *val = static_cast< float >(v);
-    }
-  }  
-  return res;
-}
-
-
-
+#include <float.h>
 
 
 #include <math.h>
@@ -3037,6 +3052,83 @@ SWIG_CanCastAsInteger(double *d, double min, double max) {
   }
   return 0;
 }
+
+
+SWIGINTERN int
+SWIG_AsVal_long (PyObject *obj, long* val)
+{
+  if (PyInt_Check(obj)) {
+    if (val) *val = PyInt_AsLong(obj);
+    return SWIG_OK;
+  } else if (PyLong_Check(obj)) {
+    long v = PyLong_AsLong(obj);
+    if (!PyErr_Occurred()) {
+      if (val) *val = v;
+      return SWIG_OK;
+    } else {
+      PyErr_Clear();
+    }
+  }
+#ifdef SWIG_PYTHON_CAST_MODE
+  {
+    int dispatch = 0;
+    long v = PyInt_AsLong(obj);
+    if (!PyErr_Occurred()) {
+      if (val) *val = v;
+      return SWIG_AddCast(SWIG_OK);
+    } else {
+      PyErr_Clear();
+    }
+    if (!dispatch) {
+      double d;
+      int res = SWIG_AddCast(SWIG_AsVal_double (obj,&d));
+      if (SWIG_IsOK(res) && SWIG_CanCastAsInteger(&d, LONG_MIN, LONG_MAX)) {
+	if (val) *val = (long)(d);
+	return res;
+      }
+    }
+  }
+#endif
+  return SWIG_TypeError;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_char (PyObject * obj, char *val)
+{    
+  int res = SWIG_AsCharArray(obj, val, 1);
+  if (!SWIG_IsOK(res)) {
+    long v;
+    res = SWIG_AddCast(SWIG_AsVal_long (obj, &v));
+    if (SWIG_IsOK(res)) {
+      if ((CHAR_MIN <= v) && (v <= CHAR_MAX)) {
+	if (val) *val = static_cast< char >(v);
+      } else {
+	res = SWIG_OverflowError;
+      }
+    }
+  }
+  return res;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_float (PyObject * obj, float *val)
+{
+  double v;
+  int res = SWIG_AsVal_double (obj, &v);
+  if (SWIG_IsOK(res)) {
+    if ((v < -FLT_MAX || v > FLT_MAX)) {
+      return SWIG_OverflowError;
+    } else {
+      if (val) *val = static_cast< float >(v);
+    }
+  }  
+  return res;
+}
+
+
+
 
 
 SWIGINTERN int
@@ -3100,55 +3192,6 @@ SWIGINTERNINLINE PyObject*
 }
 
 
-#include <limits.h>
-#if !defined(SWIG_NO_LLONG_MAX)
-# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
-#   define LLONG_MAX __LONG_LONG_MAX__
-#   define LLONG_MIN (-LLONG_MAX - 1LL)
-#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
-# endif
-#endif
-
-
-SWIGINTERN int
-SWIG_AsVal_long (PyObject *obj, long* val)
-{
-  if (PyInt_Check(obj)) {
-    if (val) *val = PyInt_AsLong(obj);
-    return SWIG_OK;
-  } else if (PyLong_Check(obj)) {
-    long v = PyLong_AsLong(obj);
-    if (!PyErr_Occurred()) {
-      if (val) *val = v;
-      return SWIG_OK;
-    } else {
-      PyErr_Clear();
-    }
-  }
-#ifdef SWIG_PYTHON_CAST_MODE
-  {
-    int dispatch = 0;
-    long v = PyInt_AsLong(obj);
-    if (!PyErr_Occurred()) {
-      if (val) *val = v;
-      return SWIG_AddCast(SWIG_OK);
-    } else {
-      PyErr_Clear();
-    }
-    if (!dispatch) {
-      double d;
-      int res = SWIG_AddCast(SWIG_AsVal_double (obj,&d));
-      if (SWIG_IsOK(res) && SWIG_CanCastAsInteger(&d, LONG_MIN, LONG_MAX)) {
-	if (val) *val = (long)(d);
-	return res;
-      }
-    }
-  }
-#endif
-  return SWIG_TypeError;
-}
-
-
 SWIGINTERN int
 SWIG_AsVal_int (PyObject * obj, int *val)
 {
@@ -3199,6 +3242,36 @@ SWIGINTERN PyObject *_wrap_Key_str(PyObject *SWIGUNUSEDPARM(self), PyObject *arg
     resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_FromCharPtrAndSize(*arg2,*arg3));
     ;
   }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Key_length(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  marisa_swig::Key *arg1 = (marisa_swig::Key *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::size_t result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Key_length",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_marisa_swig__Key, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Key_length" "', argument " "1"" of type '" "marisa_swig::Key const *""'"); 
+  }
+  arg1 = reinterpret_cast< marisa_swig::Key * >(argp1);
+  {
+    try {
+      result = ((marisa_swig::Key const *)arg1)->length();
+    } catch (const marisa::Exception &ex) {
+      SWIG_exception(SWIG_RuntimeError, ex.what());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError,"Unknown exception");
+    }
+  }
+  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
   return resultobj;
 fail:
   return NULL;
@@ -3339,7 +3412,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Query_id(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_Query_length(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   marisa_swig::Query *arg1 = (marisa_swig::Query *) 0 ;
   void *argp1 = 0 ;
@@ -3347,15 +3420,45 @@ SWIGINTERN PyObject *_wrap_Query_id(PyObject *SWIGUNUSEDPARM(self), PyObject *ar
   PyObject * obj0 = 0 ;
   std::size_t result;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:Query_id",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:Query_length",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_marisa_swig__Query, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Query_id" "', argument " "1"" of type '" "marisa_swig::Query const *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Query_length" "', argument " "1"" of type '" "marisa_swig::Query const *""'"); 
   }
   arg1 = reinterpret_cast< marisa_swig::Query * >(argp1);
   {
     try {
-      result = ((marisa_swig::Query const *)arg1)->id();
+      result = ((marisa_swig::Query const *)arg1)->length();
+    } catch (const marisa::Exception &ex) {
+      SWIG_exception(SWIG_RuntimeError, ex.what());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError,"Unknown exception");
+    }
+  }
+  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Query_key_id(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  marisa_swig::Query *arg1 = (marisa_swig::Query *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::size_t result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Query_key_id",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_marisa_swig__Query, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Query_key_id" "', argument " "1"" of type '" "marisa_swig::Query const *""'"); 
+  }
+  arg1 = reinterpret_cast< marisa_swig::Query * >(argp1);
+  {
+    try {
+      result = ((marisa_swig::Query const *)arg1)->key_id();
     } catch (const marisa::Exception &ex) {
       SWIG_exception(SWIG_RuntimeError, ex.what());
     } catch (...) {
@@ -3499,6 +3602,56 @@ fail:
 SWIGINTERN PyObject *_wrap_Keyset_push_back__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   marisa_swig::Keyset *arg1 = (marisa_swig::Keyset *) 0 ;
+  marisa::Key *arg2 = 0 ;
+  char arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  char val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:Keyset_push_back",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_marisa_swig__Keyset, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Keyset_push_back" "', argument " "1"" of type '" "marisa_swig::Keyset *""'"); 
+  }
+  arg1 = reinterpret_cast< marisa_swig::Keyset * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_marisa__Key,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Keyset_push_back" "', argument " "2"" of type '" "marisa::Key const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Keyset_push_back" "', argument " "2"" of type '" "marisa::Key const &""'"); 
+  }
+  arg2 = reinterpret_cast< marisa::Key * >(argp2);
+  ecode3 = SWIG_AsVal_char(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "Keyset_push_back" "', argument " "3"" of type '" "char""'");
+  } 
+  arg3 = static_cast< char >(val3);
+  {
+    try {
+      (arg1)->push_back((marisa::Key const &)*arg2,arg3);
+    } catch (const marisa::Exception &ex) {
+      SWIG_exception(SWIG_RuntimeError, ex.what());
+    } catch (...) {
+      SWIG_exception(SWIG_UnknownError,"Unknown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Keyset_push_back__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  marisa_swig::Keyset *arg1 = (marisa_swig::Keyset *) 0 ;
   char *arg2 = (char *) 0 ;
   std::size_t arg3 ;
   float arg4 ;
@@ -3549,7 +3702,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Keyset_push_back__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_Keyset_push_back__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   marisa_swig::Keyset *arg1 = (marisa_swig::Keyset *) 0 ;
   char *arg2 = (char *) 0 ;
@@ -3626,14 +3779,33 @@ SWIGINTERN PyObject *_wrap_Keyset_push_back(PyObject *self, PyObject *args) {
       _v = SWIG_CheckState(res);
       if (_v) {
         if (argc <= 2) {
-          return _wrap_Keyset_push_back__SWIG_2(self, args);
+          return _wrap_Keyset_push_back__SWIG_3(self, args);
         }
         {
           int res = SWIG_AsVal_size_t(argv[2], NULL);
           _v = SWIG_CheckState(res);
         }
         if (_v) {
-          return _wrap_Keyset_push_back__SWIG_2(self, args);
+          return _wrap_Keyset_push_back__SWIG_3(self, args);
+        }
+      }
+    }
+  }
+  if (argc == 3) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_marisa_swig__Keyset, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_marisa__Key, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        {
+          int res = SWIG_AsVal_char(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          return _wrap_Keyset_push_back__SWIG_1(self, args);
         }
       }
     }
@@ -3652,7 +3824,7 @@ SWIGINTERN PyObject *_wrap_Keyset_push_back(PyObject *self, PyObject *args) {
           _v = SWIG_CheckState(res);
         }
         if (_v) {
-          return _wrap_Keyset_push_back__SWIG_1(self, args);
+          return _wrap_Keyset_push_back__SWIG_2(self, args);
         }
       }
     }
@@ -3662,6 +3834,7 @@ fail:
   SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'Keyset_push_back'.\n"
     "  Possible C/C++ prototypes are:\n"
     "    push_back(marisa_swig::Keyset *,marisa::Key const &)\n"
+    "    push_back(marisa_swig::Keyset *,marisa::Key const &,char)\n"
     "    push_back(marisa_swig::Keyset *,char const *,std::size_t,float)\n"
     "    push_back(marisa_swig::Keyset *,char const *,std::size_t)\n");
   return NULL;
@@ -3701,92 +3874,6 @@ SWIGINTERN PyObject *_wrap_Keyset_key(PyObject *SWIGUNUSEDPARM(self), PyObject *
     }
   }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_marisa_swig__Key, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_Keyset_key_str(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  marisa_swig::Keyset *arg1 = (marisa_swig::Keyset *) 0 ;
-  std::size_t arg2 ;
-  char **arg3 = (char **) 0 ;
-  std::size_t *arg4 = (std::size_t *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  size_t val2 ;
-  int ecode2 = 0 ;
-  char *temp3 = 0 ;
-  std::size_t tempn3 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  arg3 = &temp3; arg4 = &tempn3;
-  if (!PyArg_ParseTuple(args,(char *)"OO:Keyset_key_str",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_marisa_swig__Keyset, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Keyset_key_str" "', argument " "1"" of type '" "marisa_swig::Keyset const *""'"); 
-  }
-  arg1 = reinterpret_cast< marisa_swig::Keyset * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Keyset_key_str" "', argument " "2"" of type '" "std::size_t""'");
-  } 
-  arg2 = static_cast< std::size_t >(val2);
-  {
-    try {
-      ((marisa_swig::Keyset const *)arg1)->key_str(arg2,(char const **)arg3,arg4);
-    } catch (const marisa::Exception &ex) {
-      SWIG_exception(SWIG_RuntimeError, ex.what());
-    } catch (...) {
-      SWIG_exception(SWIG_UnknownError,"Unknown exception");
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  if (*arg3) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_FromCharPtrAndSize(*arg3,*arg4));
-    ;
-  }
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_Keyset_key_id(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  marisa_swig::Keyset *arg1 = (marisa_swig::Keyset *) 0 ;
-  std::size_t arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  size_t val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  std::size_t result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:Keyset_key_id",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_marisa_swig__Keyset, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Keyset_key_id" "', argument " "1"" of type '" "marisa_swig::Keyset const *""'"); 
-  }
-  arg1 = reinterpret_cast< marisa_swig::Keyset * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Keyset_key_id" "', argument " "2"" of type '" "std::size_t""'");
-  } 
-  arg2 = static_cast< std::size_t >(val2);
-  {
-    try {
-      result = ((marisa_swig::Keyset const *)arg1)->key_id(arg2);
-    } catch (const marisa::Exception &ex) {
-      SWIG_exception(SWIG_RuntimeError, ex.what());
-    } catch (...) {
-      SWIG_exception(SWIG_UnknownError,"Unknown exception");
-    }
-  }
-  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
   return resultobj;
 fail:
   return NULL;
@@ -4227,142 +4314,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Agent_key_str(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  marisa_swig::Agent *arg1 = (marisa_swig::Agent *) 0 ;
-  char **arg2 = (char **) 0 ;
-  std::size_t *arg3 = (std::size_t *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  char *temp2 = 0 ;
-  std::size_t tempn2 ;
-  PyObject * obj0 = 0 ;
-  
-  arg2 = &temp2; arg3 = &tempn2;
-  if (!PyArg_ParseTuple(args,(char *)"O:Agent_key_str",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_marisa_swig__Agent, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Agent_key_str" "', argument " "1"" of type '" "marisa_swig::Agent const *""'"); 
-  }
-  arg1 = reinterpret_cast< marisa_swig::Agent * >(argp1);
-  {
-    try {
-      ((marisa_swig::Agent const *)arg1)->key_str((char const **)arg2,arg3);
-    } catch (const marisa::Exception &ex) {
-      SWIG_exception(SWIG_RuntimeError, ex.what());
-    } catch (...) {
-      SWIG_exception(SWIG_UnknownError,"Unknown exception");
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  if (*arg2) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_FromCharPtrAndSize(*arg2,*arg3));
-    ;
-  }
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_Agent_key_id(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  marisa_swig::Agent *arg1 = (marisa_swig::Agent *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::size_t result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:Agent_key_id",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_marisa_swig__Agent, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Agent_key_id" "', argument " "1"" of type '" "marisa_swig::Agent const *""'"); 
-  }
-  arg1 = reinterpret_cast< marisa_swig::Agent * >(argp1);
-  {
-    try {
-      result = ((marisa_swig::Agent const *)arg1)->key_id();
-    } catch (const marisa::Exception &ex) {
-      SWIG_exception(SWIG_RuntimeError, ex.what());
-    } catch (...) {
-      SWIG_exception(SWIG_UnknownError,"Unknown exception");
-    }
-  }
-  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_Agent_query_str(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  marisa_swig::Agent *arg1 = (marisa_swig::Agent *) 0 ;
-  char **arg2 = (char **) 0 ;
-  std::size_t *arg3 = (std::size_t *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  char *temp2 = 0 ;
-  std::size_t tempn2 ;
-  PyObject * obj0 = 0 ;
-  
-  arg2 = &temp2; arg3 = &tempn2;
-  if (!PyArg_ParseTuple(args,(char *)"O:Agent_query_str",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_marisa_swig__Agent, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Agent_query_str" "', argument " "1"" of type '" "marisa_swig::Agent const *""'"); 
-  }
-  arg1 = reinterpret_cast< marisa_swig::Agent * >(argp1);
-  {
-    try {
-      ((marisa_swig::Agent const *)arg1)->query_str((char const **)arg2,arg3);
-    } catch (const marisa::Exception &ex) {
-      SWIG_exception(SWIG_RuntimeError, ex.what());
-    } catch (...) {
-      SWIG_exception(SWIG_UnknownError,"Unknown exception");
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  if (*arg2) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_FromCharPtrAndSize(*arg2,*arg3));
-    ;
-  }
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_Agent_query_id(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  marisa_swig::Agent *arg1 = (marisa_swig::Agent *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::size_t result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:Agent_query_id",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_marisa_swig__Agent, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Agent_query_id" "', argument " "1"" of type '" "marisa_swig::Agent const *""'"); 
-  }
-  arg1 = reinterpret_cast< marisa_swig::Agent * >(argp1);
-  {
-    try {
-      result = ((marisa_swig::Agent const *)arg1)->query_id();
-    } catch (const marisa::Exception &ex) {
-      SWIG_exception(SWIG_RuntimeError, ex.what());
-    } catch (...) {
-      SWIG_exception(SWIG_UnknownError,"Unknown exception");
-    }
-  }
-  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *Agent_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *obj;
   if (!PyArg_ParseTuple(args,(char*)"O:swigregister", &obj)) return NULL;
@@ -4688,7 +4639,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Trie_lookup__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_Trie_lookup(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   marisa_swig::Trie *arg1 = (marisa_swig::Trie *) 0 ;
   marisa_swig::Agent *arg2 = 0 ;
@@ -4730,7 +4681,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Trie_reverse_lookup__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_Trie_reverse_lookup(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   marisa_swig::Trie *arg1 = (marisa_swig::Trie *) 0 ;
   marisa_swig::Agent *arg2 = 0 ;
@@ -4851,203 +4802,6 @@ SWIGINTERN PyObject *_wrap_Trie_predictive_search(PyObject *SWIGUNUSEDPARM(self)
   resultobj = SWIG_From_bool(static_cast< bool >(result));
   return resultobj;
 fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_Trie_lookup__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  marisa_swig::Trie *arg1 = (marisa_swig::Trie *) 0 ;
-  char *arg2 = (char *) 0 ;
-  std::size_t arg3 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int res2 ;
-  char *buf2 = 0 ;
-  size_t size2 = 0 ;
-  int alloc2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  std::size_t result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:Trie_lookup",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_marisa_swig__Trie, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Trie_lookup" "', argument " "1"" of type '" "marisa_swig::Trie const *""'"); 
-  }
-  arg1 = reinterpret_cast< marisa_swig::Trie * >(argp1);
-  res2 = SWIG_AsCharPtrAndSize(obj1, &buf2, &size2, &alloc2);
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Trie_lookup" "', argument " "2"" of type '" "char const *""'");
-  }  
-  arg2 = reinterpret_cast< char * >(buf2);
-  arg3 = static_cast< std::size_t >(size2 - 1);
-  {
-    try {
-      result = ((marisa_swig::Trie const *)arg1)->lookup((char const *)arg2,arg3);
-    } catch (const marisa::Exception &ex) {
-      SWIG_exception(SWIG_RuntimeError, ex.what());
-    } catch (...) {
-      SWIG_exception(SWIG_UnknownError,"Unknown exception");
-    }
-  }
-  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
-  return resultobj;
-fail:
-  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_Trie_lookup(PyObject *self, PyObject *args) {
-  int argc;
-  PyObject *argv[3];
-  int ii;
-  
-  if (!PyTuple_Check(args)) SWIG_fail;
-  argc = (int)PyObject_Length(args);
-  for (ii = 0; (ii < argc) && (ii < 2); ii++) {
-    argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 2) {
-    int _v;
-    void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_marisa_swig__Trie, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      void *vptr = 0;
-      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_marisa_swig__Agent, 0);
-      _v = SWIG_CheckState(res);
-      if (_v) {
-        return _wrap_Trie_lookup__SWIG_0(self, args);
-      }
-    }
-  }
-  if (argc == 2) {
-    int _v;
-    void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_marisa_swig__Trie, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      int res = SWIG_AsCharPtrAndSize(argv[1], 0, NULL, 0);
-      _v = SWIG_CheckState(res);
-      if (_v) {
-        if (argc <= 2) {
-          return _wrap_Trie_lookup__SWIG_1(self, args);
-        }
-        {
-          int res = SWIG_AsVal_size_t(argv[2], NULL);
-          _v = SWIG_CheckState(res);
-        }
-        if (_v) {
-          return _wrap_Trie_lookup__SWIG_1(self, args);
-        }
-      }
-    }
-  }
-  
-fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'Trie_lookup'.\n"
-    "  Possible C/C++ prototypes are:\n"
-    "    lookup(marisa_swig::Trie const *,marisa_swig::Agent &)\n"
-    "    lookup(marisa_swig::Trie const *,char const *,std::size_t)\n");
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_Trie_reverse_lookup__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  marisa_swig::Trie *arg1 = (marisa_swig::Trie *) 0 ;
-  std::size_t arg2 ;
-  char **arg3 = (char **) 0 ;
-  std::size_t *arg4 = (std::size_t *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  size_t val2 ;
-  int ecode2 = 0 ;
-  char *temp3 = 0 ;
-  std::size_t tempn3 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  arg3 = &temp3; arg4 = &tempn3;
-  if (!PyArg_ParseTuple(args,(char *)"OO:Trie_reverse_lookup",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_marisa_swig__Trie, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Trie_reverse_lookup" "', argument " "1"" of type '" "marisa_swig::Trie const *""'"); 
-  }
-  arg1 = reinterpret_cast< marisa_swig::Trie * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Trie_reverse_lookup" "', argument " "2"" of type '" "std::size_t""'");
-  } 
-  arg2 = static_cast< std::size_t >(val2);
-  {
-    try {
-      ((marisa_swig::Trie const *)arg1)->reverse_lookup(arg2,(char const **)arg3,arg4);
-    } catch (const marisa::Exception &ex) {
-      SWIG_exception(SWIG_RuntimeError, ex.what());
-    } catch (...) {
-      SWIG_exception(SWIG_UnknownError,"Unknown exception");
-    }
-  }
-  resultobj = SWIG_Py_Void();
-  if (*arg3) {
-    resultobj = SWIG_Python_AppendOutput(resultobj, SWIG_FromCharPtrAndSize(*arg3,*arg4));
-    delete [] (*arg3);
-  }
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_Trie_reverse_lookup(PyObject *self, PyObject *args) {
-  int argc;
-  PyObject *argv[3];
-  int ii;
-  
-  if (!PyTuple_Check(args)) SWIG_fail;
-  argc = (int)PyObject_Length(args);
-  for (ii = 0; (ii < argc) && (ii < 2); ii++) {
-    argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 2) {
-    int _v;
-    void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_marisa_swig__Trie, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      void *vptr = 0;
-      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_marisa_swig__Agent, 0);
-      _v = SWIG_CheckState(res);
-      if (_v) {
-        return _wrap_Trie_reverse_lookup__SWIG_0(self, args);
-      }
-    }
-  }
-  if (argc == 2) {
-    int _v;
-    void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_marisa_swig__Trie, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      {
-        int res = SWIG_AsVal_size_t(argv[1], NULL);
-        _v = SWIG_CheckState(res);
-      }
-      if (_v) {
-        return _wrap_Trie_reverse_lookup__SWIG_1(self, args);
-      }
-    }
-  }
-  
-fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'Trie_reverse_lookup'.\n"
-    "  Possible C/C++ prototypes are:\n"
-    "    reverse_lookup(marisa_swig::Trie const *,marisa_swig::Agent &)\n"
-    "    reverse_lookup(marisa_swig::Trie const *,std::size_t,char const **,std::size_t *)\n");
   return NULL;
 }
 
@@ -5361,20 +5115,20 @@ SWIGINTERN PyObject *Trie_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject 
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
 	 { (char *)"Key_str", _wrap_Key_str, METH_VARARGS, NULL},
+	 { (char *)"Key_length", _wrap_Key_length, METH_VARARGS, NULL},
 	 { (char *)"Key_id", _wrap_Key_id, METH_VARARGS, NULL},
 	 { (char *)"Key_weight", _wrap_Key_weight, METH_VARARGS, NULL},
 	 { (char *)"delete_Key", _wrap_delete_Key, METH_VARARGS, NULL},
 	 { (char *)"Key_swigregister", Key_swigregister, METH_VARARGS, NULL},
 	 { (char *)"Query_str", _wrap_Query_str, METH_VARARGS, NULL},
-	 { (char *)"Query_id", _wrap_Query_id, METH_VARARGS, NULL},
+	 { (char *)"Query_length", _wrap_Query_length, METH_VARARGS, NULL},
+	 { (char *)"Query_key_id", _wrap_Query_key_id, METH_VARARGS, NULL},
 	 { (char *)"delete_Query", _wrap_delete_Query, METH_VARARGS, NULL},
 	 { (char *)"Query_swigregister", Query_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_Keyset", _wrap_new_Keyset, METH_VARARGS, NULL},
 	 { (char *)"delete_Keyset", _wrap_delete_Keyset, METH_VARARGS, NULL},
 	 { (char *)"Keyset_push_back", _wrap_Keyset_push_back, METH_VARARGS, NULL},
 	 { (char *)"Keyset_key", _wrap_Keyset_key, METH_VARARGS, NULL},
-	 { (char *)"Keyset_key_str", _wrap_Keyset_key_str, METH_VARARGS, NULL},
-	 { (char *)"Keyset_key_id", _wrap_Keyset_key_id, METH_VARARGS, NULL},
 	 { (char *)"Keyset_num_keys", _wrap_Keyset_num_keys, METH_VARARGS, NULL},
 	 { (char *)"Keyset_empty", _wrap_Keyset_empty, METH_VARARGS, NULL},
 	 { (char *)"Keyset_size", _wrap_Keyset_size, METH_VARARGS, NULL},
@@ -5387,10 +5141,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Agent_set_query", _wrap_Agent_set_query, METH_VARARGS, NULL},
 	 { (char *)"Agent_key", _wrap_Agent_key, METH_VARARGS, NULL},
 	 { (char *)"Agent_query", _wrap_Agent_query, METH_VARARGS, NULL},
-	 { (char *)"Agent_key_str", _wrap_Agent_key_str, METH_VARARGS, NULL},
-	 { (char *)"Agent_key_id", _wrap_Agent_key_id, METH_VARARGS, NULL},
-	 { (char *)"Agent_query_str", _wrap_Agent_query_str, METH_VARARGS, NULL},
-	 { (char *)"Agent_query_id", _wrap_Agent_query_id, METH_VARARGS, NULL},
 	 { (char *)"Agent_swigregister", Agent_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_Trie", _wrap_new_Trie, METH_VARARGS, NULL},
 	 { (char *)"delete_Trie", _wrap_delete_Trie, METH_VARARGS, NULL},
@@ -5398,10 +5148,10 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Trie_mmap", _wrap_Trie_mmap, METH_VARARGS, NULL},
 	 { (char *)"Trie_load", _wrap_Trie_load, METH_VARARGS, NULL},
 	 { (char *)"Trie_save", _wrap_Trie_save, METH_VARARGS, NULL},
-	 { (char *)"Trie_common_prefix_search", _wrap_Trie_common_prefix_search, METH_VARARGS, NULL},
-	 { (char *)"Trie_predictive_search", _wrap_Trie_predictive_search, METH_VARARGS, NULL},
 	 { (char *)"Trie_lookup", _wrap_Trie_lookup, METH_VARARGS, NULL},
 	 { (char *)"Trie_reverse_lookup", _wrap_Trie_reverse_lookup, METH_VARARGS, NULL},
+	 { (char *)"Trie_common_prefix_search", _wrap_Trie_common_prefix_search, METH_VARARGS, NULL},
+	 { (char *)"Trie_predictive_search", _wrap_Trie_predictive_search, METH_VARARGS, NULL},
 	 { (char *)"Trie_num_tries", _wrap_Trie_num_tries, METH_VARARGS, NULL},
 	 { (char *)"Trie_num_keys", _wrap_Trie_num_keys, METH_VARARGS, NULL},
 	 { (char *)"Trie_num_nodes", _wrap_Trie_num_nodes, METH_VARARGS, NULL},
@@ -6054,33 +5804,32 @@ SWIG_init(void) {
   SWIG_InstallConstants(d,swig_const_table);
   
   
-  SWIG_Python_SetConstant(d, "OK",SWIG_From_int(static_cast< int >(marisa_swig::OK)));
-  SWIG_Python_SetConstant(d, "STATE_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::STATE_ERROR)));
-  SWIG_Python_SetConstant(d, "NULL_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::NULL_ERROR)));
-  SWIG_Python_SetConstant(d, "BOUND_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::BOUND_ERROR)));
-  SWIG_Python_SetConstant(d, "RANGE_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::RANGE_ERROR)));
-  SWIG_Python_SetConstant(d, "CODE_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::CODE_ERROR)));
-  SWIG_Python_SetConstant(d, "RESET_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::RESET_ERROR)));
-  SWIG_Python_SetConstant(d, "SIZE_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::SIZE_ERROR)));
-  SWIG_Python_SetConstant(d, "MEMORY_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::MEMORY_ERROR)));
-  SWIG_Python_SetConstant(d, "IO_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::IO_ERROR)));
-  SWIG_Python_SetConstant(d, "FORMAT_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::FORMAT_ERROR)));
-  SWIG_Python_SetConstant(d, "MIN_NUM_TRIES",SWIG_From_int(static_cast< int >(marisa_swig::MIN_NUM_TRIES)));
-  SWIG_Python_SetConstant(d, "MAX_NUM_TRIES",SWIG_From_int(static_cast< int >(marisa_swig::MAX_NUM_TRIES)));
-  SWIG_Python_SetConstant(d, "DEFAULT_NUM_TRIES",SWIG_From_int(static_cast< int >(marisa_swig::DEFAULT_NUM_TRIES)));
-  SWIG_Python_SetConstant(d, "HUGE_CACHE",SWIG_From_int(static_cast< int >(marisa_swig::HUGE_CACHE)));
-  SWIG_Python_SetConstant(d, "LARGE_CACHE",SWIG_From_int(static_cast< int >(marisa_swig::LARGE_CACHE)));
-  SWIG_Python_SetConstant(d, "NORMAL_CACHE",SWIG_From_int(static_cast< int >(marisa_swig::NORMAL_CACHE)));
-  SWIG_Python_SetConstant(d, "SMALL_CACHE",SWIG_From_int(static_cast< int >(marisa_swig::SMALL_CACHE)));
-  SWIG_Python_SetConstant(d, "TINY_CACHE",SWIG_From_int(static_cast< int >(marisa_swig::TINY_CACHE)));
-  SWIG_Python_SetConstant(d, "DEFAULT_CACHE",SWIG_From_int(static_cast< int >(marisa_swig::DEFAULT_CACHE)));
-  SWIG_Python_SetConstant(d, "TEXT_TAIL",SWIG_From_int(static_cast< int >(marisa_swig::TEXT_TAIL)));
-  SWIG_Python_SetConstant(d, "BINARY_TAIL",SWIG_From_int(static_cast< int >(marisa_swig::BINARY_TAIL)));
-  SWIG_Python_SetConstant(d, "DEFAULT_TAIL",SWIG_From_int(static_cast< int >(marisa_swig::DEFAULT_TAIL)));
-  SWIG_Python_SetConstant(d, "LABEL_ORDER",SWIG_From_int(static_cast< int >(marisa_swig::LABEL_ORDER)));
-  SWIG_Python_SetConstant(d, "WEIGHT_ORDER",SWIG_From_int(static_cast< int >(marisa_swig::WEIGHT_ORDER)));
-  SWIG_Python_SetConstant(d, "DEFAULT_ORDER",SWIG_From_int(static_cast< int >(marisa_swig::DEFAULT_ORDER)));
-  SWIG_Python_SetConstant(d, "INVALID_KEY_ID",SWIG_From_size_t(static_cast< size_t >(MARISA_INVALID_KEY_ID)));
+  SWIG_Python_SetConstant(d, "MARISA_OK",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_OK)));
+  SWIG_Python_SetConstant(d, "MARISA_STATE_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_STATE_ERROR)));
+  SWIG_Python_SetConstant(d, "MARISA_NULL_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_NULL_ERROR)));
+  SWIG_Python_SetConstant(d, "MARISA_BOUND_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_BOUND_ERROR)));
+  SWIG_Python_SetConstant(d, "MARISA_RANGE_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_RANGE_ERROR)));
+  SWIG_Python_SetConstant(d, "MARISA_CODE_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_CODE_ERROR)));
+  SWIG_Python_SetConstant(d, "MARISA_RESET_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_RESET_ERROR)));
+  SWIG_Python_SetConstant(d, "MARISA_SIZE_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_SIZE_ERROR)));
+  SWIG_Python_SetConstant(d, "MARISA_MEMORY_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_MEMORY_ERROR)));
+  SWIG_Python_SetConstant(d, "MARISA_IO_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_IO_ERROR)));
+  SWIG_Python_SetConstant(d, "MARISA_FORMAT_ERROR",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_FORMAT_ERROR)));
+  SWIG_Python_SetConstant(d, "MARISA_MIN_NUM_TRIES",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_MIN_NUM_TRIES)));
+  SWIG_Python_SetConstant(d, "MARISA_MAX_NUM_TRIES",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_MAX_NUM_TRIES)));
+  SWIG_Python_SetConstant(d, "MARISA_DEFAULT_NUM_TRIES",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_DEFAULT_NUM_TRIES)));
+  SWIG_Python_SetConstant(d, "MARISA_HUGE_CACHE",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_HUGE_CACHE)));
+  SWIG_Python_SetConstant(d, "MARISA_LARGE_CACHE",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_LARGE_CACHE)));
+  SWIG_Python_SetConstant(d, "MARISA_NORMAL_CACHE",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_NORMAL_CACHE)));
+  SWIG_Python_SetConstant(d, "MARISA_SMALL_CACHE",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_SMALL_CACHE)));
+  SWIG_Python_SetConstant(d, "MARISA_TINY_CACHE",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_TINY_CACHE)));
+  SWIG_Python_SetConstant(d, "MARISA_DEFAULT_CACHE",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_DEFAULT_CACHE)));
+  SWIG_Python_SetConstant(d, "MARISA_TEXT_TAIL",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_TEXT_TAIL)));
+  SWIG_Python_SetConstant(d, "MARISA_BINARY_TAIL",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_BINARY_TAIL)));
+  SWIG_Python_SetConstant(d, "MARISA_DEFAULT_TAIL",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_DEFAULT_TAIL)));
+  SWIG_Python_SetConstant(d, "MARISA_LABEL_ORDER",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_LABEL_ORDER)));
+  SWIG_Python_SetConstant(d, "MARISA_WEIGHT_ORDER",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_WEIGHT_ORDER)));
+  SWIG_Python_SetConstant(d, "MARISA_DEFAULT_ORDER",SWIG_From_int(static_cast< int >(marisa_swig::MARISA_DEFAULT_ORDER)));
 #if PY_VERSION_HEX >= 0x03000000
   return m;
 #else

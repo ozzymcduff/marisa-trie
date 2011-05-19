@@ -70,15 +70,15 @@ bool LoudsTrie::lookup(Agent &agent) const {
 
 void LoudsTrie::reverse_lookup(Agent &agent) const {
   MARISA_DEBUG_IF(!agent.has_state(), MARISA_STATE_ERROR);
-  MARISA_THROW_IF(agent.query().id() >= size(), MARISA_BOUND_ERROR);
+  MARISA_THROW_IF(agent.query().key_id() >= size(), MARISA_BOUND_ERROR);
 
   State &state = agent.state();
   state.reverse_lookup_init();
 
-  state.set_node_id(terminal_flags_.select1(agent.query().id()));
+  state.set_node_id(terminal_flags_.select1(agent.query().key_id()));
   if (state.node_id() == 0) {
     agent.set_key(state.key_buf().begin(), state.key_buf().size());
-    agent.set_key(agent.query().id());
+    agent.set_key(agent.query().key_id());
     return;
   }
   for ( ; ; ) {
@@ -94,7 +94,7 @@ void LoudsTrie::reverse_lookup(Agent &agent) const {
     if (state.node_id() <= num_l1_nodes_) {
       std::reverse(state.key_buf().begin(), state.key_buf().end());
       agent.set_key(state.key_buf().begin(), state.key_buf().size());
-      agent.set_key(agent.query().id());
+      agent.set_key(agent.query().key_id());
       return;
     }
     state.set_node_id(louds_.select1(state.node_id()) - state.node_id() - 1);

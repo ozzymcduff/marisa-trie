@@ -66,32 +66,32 @@ except AttributeError:
     _newclass = 0
 
 
-OK = _marisa.OK
-STATE_ERROR = _marisa.STATE_ERROR
-NULL_ERROR = _marisa.NULL_ERROR
-BOUND_ERROR = _marisa.BOUND_ERROR
-RANGE_ERROR = _marisa.RANGE_ERROR
-CODE_ERROR = _marisa.CODE_ERROR
-RESET_ERROR = _marisa.RESET_ERROR
-SIZE_ERROR = _marisa.SIZE_ERROR
-MEMORY_ERROR = _marisa.MEMORY_ERROR
-IO_ERROR = _marisa.IO_ERROR
-FORMAT_ERROR = _marisa.FORMAT_ERROR
-MIN_NUM_TRIES = _marisa.MIN_NUM_TRIES
-MAX_NUM_TRIES = _marisa.MAX_NUM_TRIES
-DEFAULT_NUM_TRIES = _marisa.DEFAULT_NUM_TRIES
-HUGE_CACHE = _marisa.HUGE_CACHE
-LARGE_CACHE = _marisa.LARGE_CACHE
-NORMAL_CACHE = _marisa.NORMAL_CACHE
-SMALL_CACHE = _marisa.SMALL_CACHE
-TINY_CACHE = _marisa.TINY_CACHE
-DEFAULT_CACHE = _marisa.DEFAULT_CACHE
-TEXT_TAIL = _marisa.TEXT_TAIL
-BINARY_TAIL = _marisa.BINARY_TAIL
-DEFAULT_TAIL = _marisa.DEFAULT_TAIL
-LABEL_ORDER = _marisa.LABEL_ORDER
-WEIGHT_ORDER = _marisa.WEIGHT_ORDER
-DEFAULT_ORDER = _marisa.DEFAULT_ORDER
+MARISA_OK = _marisa.MARISA_OK
+MARISA_STATE_ERROR = _marisa.MARISA_STATE_ERROR
+MARISA_NULL_ERROR = _marisa.MARISA_NULL_ERROR
+MARISA_BOUND_ERROR = _marisa.MARISA_BOUND_ERROR
+MARISA_RANGE_ERROR = _marisa.MARISA_RANGE_ERROR
+MARISA_CODE_ERROR = _marisa.MARISA_CODE_ERROR
+MARISA_RESET_ERROR = _marisa.MARISA_RESET_ERROR
+MARISA_SIZE_ERROR = _marisa.MARISA_SIZE_ERROR
+MARISA_MEMORY_ERROR = _marisa.MARISA_MEMORY_ERROR
+MARISA_IO_ERROR = _marisa.MARISA_IO_ERROR
+MARISA_FORMAT_ERROR = _marisa.MARISA_FORMAT_ERROR
+MARISA_MIN_NUM_TRIES = _marisa.MARISA_MIN_NUM_TRIES
+MARISA_MAX_NUM_TRIES = _marisa.MARISA_MAX_NUM_TRIES
+MARISA_DEFAULT_NUM_TRIES = _marisa.MARISA_DEFAULT_NUM_TRIES
+MARISA_HUGE_CACHE = _marisa.MARISA_HUGE_CACHE
+MARISA_LARGE_CACHE = _marisa.MARISA_LARGE_CACHE
+MARISA_NORMAL_CACHE = _marisa.MARISA_NORMAL_CACHE
+MARISA_SMALL_CACHE = _marisa.MARISA_SMALL_CACHE
+MARISA_TINY_CACHE = _marisa.MARISA_TINY_CACHE
+MARISA_DEFAULT_CACHE = _marisa.MARISA_DEFAULT_CACHE
+MARISA_TEXT_TAIL = _marisa.MARISA_TEXT_TAIL
+MARISA_BINARY_TAIL = _marisa.MARISA_BINARY_TAIL
+MARISA_DEFAULT_TAIL = _marisa.MARISA_DEFAULT_TAIL
+MARISA_LABEL_ORDER = _marisa.MARISA_LABEL_ORDER
+MARISA_WEIGHT_ORDER = _marisa.MARISA_WEIGHT_ORDER
+MARISA_DEFAULT_ORDER = _marisa.MARISA_DEFAULT_ORDER
 class Key(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Key, name, value)
@@ -100,6 +100,7 @@ class Key(_object):
     def __init__(self, *args, **kwargs): raise AttributeError("No constructor defined")
     __repr__ = _swig_repr
     def str(self): return _marisa.Key_str(self)
+    def length(self): return _marisa.Key_length(self)
     def id(self): return _marisa.Key_id(self)
     def weight(self): return _marisa.Key_weight(self)
     __swig_destroy__ = _marisa.delete_Key
@@ -115,7 +116,8 @@ class Query(_object):
     def __init__(self, *args, **kwargs): raise AttributeError("No constructor defined")
     __repr__ = _swig_repr
     def str(self): return _marisa.Query_str(self)
-    def id(self): return _marisa.Query_id(self)
+    def length(self): return _marisa.Query_length(self)
+    def key_id(self): return _marisa.Query_key_id(self)
     __swig_destroy__ = _marisa.delete_Query
     __del__ = lambda self : None;
 Query_swigregister = _marisa.Query_swigregister
@@ -135,8 +137,6 @@ class Keyset(_object):
     __del__ = lambda self : None;
     def push_back(self, *args): return _marisa.Keyset_push_back(self, *args)
     def key(self, *args): return _marisa.Keyset_key(self, *args)
-    def key_str(self, *args): return _marisa.Keyset_key_str(self, *args)
-    def key_id(self, *args): return _marisa.Keyset_key_id(self, *args)
     def num_keys(self): return _marisa.Keyset_num_keys(self)
     def empty(self): return _marisa.Keyset_empty(self)
     def size(self): return _marisa.Keyset_size(self)
@@ -161,10 +161,6 @@ class Agent(_object):
     def set_query(self, *args): return _marisa.Agent_set_query(self, *args)
     def key(self): return _marisa.Agent_key(self)
     def query(self): return _marisa.Agent_query(self)
-    def key_str(self): return _marisa.Agent_key_str(self)
-    def key_id(self): return _marisa.Agent_key_id(self)
-    def query_str(self): return _marisa.Agent_query_str(self)
-    def query_id(self): return _marisa.Agent_query_id(self)
 Agent_swigregister = _marisa.Agent_swigregister
 Agent_swigregister(Agent)
 
@@ -184,10 +180,10 @@ class Trie(_object):
     def mmap(self, *args): return _marisa.Trie_mmap(self, *args)
     def load(self, *args): return _marisa.Trie_load(self, *args)
     def save(self, *args): return _marisa.Trie_save(self, *args)
-    def common_prefix_search(self, *args): return _marisa.Trie_common_prefix_search(self, *args)
-    def predictive_search(self, *args): return _marisa.Trie_predictive_search(self, *args)
     def lookup(self, *args): return _marisa.Trie_lookup(self, *args)
     def reverse_lookup(self, *args): return _marisa.Trie_reverse_lookup(self, *args)
+    def common_prefix_search(self, *args): return _marisa.Trie_common_prefix_search(self, *args)
+    def predictive_search(self, *args): return _marisa.Trie_predictive_search(self, *args)
     def num_tries(self): return _marisa.Trie_num_tries(self)
     def num_keys(self): return _marisa.Trie_num_keys(self)
     def num_nodes(self): return _marisa.Trie_num_nodes(self)
@@ -201,6 +197,5 @@ class Trie(_object):
 Trie_swigregister = _marisa.Trie_swigregister
 Trie_swigregister(Trie)
 
-INVALID_KEY_ID = _marisa.INVALID_KEY_ID
 
 

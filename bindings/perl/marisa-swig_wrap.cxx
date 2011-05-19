@@ -1707,26 +1707,41 @@ SWIG_AsCharPtrAndSize(SV *obj, char** cptr, size_t* psize, int *alloc)
 }
 
 
-#include <float.h>
-
-
 SWIGINTERN int
-SWIG_AsVal_float SWIG_PERL_DECL_ARGS_2(SV * obj, float *val)
-{
-  double v;
-  int res = SWIG_AsVal_double SWIG_PERL_CALL_ARGS_2(obj, &v);
+SWIG_AsCharArray(SV * obj, char *val, size_t size)
+{ 
+  char* cptr = 0; size_t csize = 0; int alloc = SWIG_OLDOBJ;
+  int res = SWIG_AsCharPtrAndSize(obj, &cptr, &csize, &alloc);
   if (SWIG_IsOK(res)) {
-    if ((v < -FLT_MAX || v > FLT_MAX)) {
-      return SWIG_OverflowError;
-    } else {
-      if (val) *val = static_cast< float >(v);
+    if ((csize == size + 1) && cptr && !(cptr[csize-1])) --csize;
+    if (csize <= size) {
+      if (val) {
+	if (csize) memcpy(val, cptr, csize*sizeof(char));
+	if (csize < size) memset(val + csize, 0, (size - csize)*sizeof(char));
+      }
+      if (alloc == SWIG_NEWOBJ) {
+	delete[] cptr;
+	res = SWIG_DelNewMask(res);
+      }      
+      return res;
     }
-  }  
-  return res;
+    if (alloc == SWIG_NEWOBJ) delete[] cptr;
+  }
+  return SWIG_TypeError;
 }
 
 
+#include <limits.h>
+#if !defined(SWIG_NO_LLONG_MAX)
+# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
+#   define LLONG_MAX __LONG_LONG_MAX__
+#   define LLONG_MIN (-LLONG_MAX - 1LL)
+#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
+# endif
+#endif
 
+
+#include <float.h>
 
 
 #include <math.h>
@@ -1760,6 +1775,81 @@ SWIG_CanCastAsInteger(double *d, double min, double max) {
   }
   return 0;
 }
+
+
+SWIGINTERN int
+SWIG_AsVal_long SWIG_PERL_DECL_ARGS_2(SV *obj, long* val)
+{
+  if (SvIOK(obj)) {
+    if (val) *val = SvIV(obj);
+    return SWIG_OK;
+  } else {
+    int dispatch = 0;
+    const char *nptr = SvPV_nolen(obj);
+    if (nptr) {
+      char *endptr;
+      long v;
+      errno = 0;
+      v = strtol(nptr, &endptr,0);
+      if (errno == ERANGE) {
+	errno = 0;
+	return SWIG_OverflowError;
+      } else {
+	if (*endptr == '\0') {
+	  if (val) *val = v;
+	  return SWIG_Str2NumCast(SWIG_OK);
+	}
+      }
+    }
+    if (!dispatch) {
+      double d;
+      int res = SWIG_AddCast(SWIG_AsVal_double SWIG_PERL_CALL_ARGS_2(obj,&d));
+      if (SWIG_IsOK(res) && SWIG_CanCastAsInteger(&d, LONG_MIN, LONG_MAX)) {
+	if (val) *val = (long)(d);
+	return res;
+      }
+    }
+  }
+  return SWIG_TypeError;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_char SWIG_PERL_DECL_ARGS_2(SV * obj, char *val)
+{    
+  int res = SWIG_AsCharArray(obj, val, 1);
+  if (!SWIG_IsOK(res)) {
+    long v;
+    res = SWIG_AddCast(SWIG_AsVal_long SWIG_PERL_CALL_ARGS_2(obj, &v));
+    if (SWIG_IsOK(res)) {
+      if ((CHAR_MIN <= v) && (v <= CHAR_MAX)) {
+	if (val) *val = static_cast< char >(v);
+      } else {
+	res = SWIG_OverflowError;
+      }
+    }
+  }
+  return res;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_float SWIG_PERL_DECL_ARGS_2(SV * obj, float *val)
+{
+  double v;
+  int res = SWIG_AsVal_double SWIG_PERL_CALL_ARGS_2(obj, &v);
+  if (SWIG_IsOK(res)) {
+    if ((v < -FLT_MAX || v > FLT_MAX)) {
+      return SWIG_OverflowError;
+    } else {
+      if (val) *val = static_cast< float >(v);
+    }
+  }  
+  return res;
+}
+
+
+
 
 
 SWIGINTERN int
@@ -1830,53 +1920,6 @@ SWIG_From_bool  SWIG_PERL_DECL_ARGS_1(bool value)
 }
 
 
-#include <limits.h>
-#if !defined(SWIG_NO_LLONG_MAX)
-# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
-#   define LLONG_MAX __LONG_LONG_MAX__
-#   define LLONG_MIN (-LLONG_MAX - 1LL)
-#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
-# endif
-#endif
-
-
-SWIGINTERN int
-SWIG_AsVal_long SWIG_PERL_DECL_ARGS_2(SV *obj, long* val)
-{
-  if (SvIOK(obj)) {
-    if (val) *val = SvIV(obj);
-    return SWIG_OK;
-  } else {
-    int dispatch = 0;
-    const char *nptr = SvPV_nolen(obj);
-    if (nptr) {
-      char *endptr;
-      long v;
-      errno = 0;
-      v = strtol(nptr, &endptr,0);
-      if (errno == ERANGE) {
-	errno = 0;
-	return SWIG_OverflowError;
-      } else {
-	if (*endptr == '\0') {
-	  if (val) *val = v;
-	  return SWIG_Str2NumCast(SWIG_OK);
-	}
-      }
-    }
-    if (!dispatch) {
-      double d;
-      int res = SWIG_AddCast(SWIG_AsVal_double SWIG_PERL_CALL_ARGS_2(obj,&d));
-      if (SWIG_IsOK(res) && SWIG_CanCastAsInteger(&d, LONG_MIN, LONG_MAX)) {
-	if (val) *val = (long)(d);
-	return res;
-      }
-    }
-  }
-  return SWIG_TypeError;
-}
-
-
 SWIGINTERN int
 SWIG_AsVal_int SWIG_PERL_DECL_ARGS_2(SV * obj, int *val)
 {
@@ -1935,7 +1978,7 @@ XS(_wrap_Key_str) {
     
     arg2 = &temp2; arg3 = &tempn2;
     if ((items < 1) || (items > 1)) {
-      SWIG_croak("Usage: Key_str(self,length_out);");
+      SWIG_croak("Usage: Key_str(self,length);");
     }
     res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Key, 0 |  0 );
     if (!SWIG_IsOK(res1)) {
@@ -1961,6 +2004,42 @@ XS(_wrap_Key_str) {
     XSRETURN(argvi);
   fail:
     
+    
+    SWIG_croak_null();
+  }
+}
+
+
+XS(_wrap_Key_length) {
+  {
+    marisa_swig::Key *arg1 = (marisa_swig::Key *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    int argvi = 0;
+    std::size_t result;
+    dXSARGS;
+    
+    if ((items < 1) || (items > 1)) {
+      SWIG_croak("Usage: Key_length(self);");
+    }
+    res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Key, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Key_length" "', argument " "1"" of type '" "marisa_swig::Key const *""'"); 
+    }
+    arg1 = reinterpret_cast< marisa_swig::Key * >(argp1);
+    {
+      try {
+        result = ((marisa_swig::Key const *)arg1)->length();
+      } catch (const marisa::Exception &ex) {
+        SWIG_exception(SWIG_RuntimeError, ex.what());
+      } catch (...) {
+        SWIG_exception(SWIG_UnknownError,"Unknown exception");
+      }
+    }
+    ST(argvi) = SWIG_From_size_t  SWIG_PERL_CALL_ARGS_1(static_cast< size_t >(result)); argvi++ ;
+    
+    XSRETURN(argvi);
+  fail:
     
     SWIG_croak_null();
   }
@@ -2088,7 +2167,7 @@ XS(_wrap_Query_str) {
     
     arg2 = &temp2; arg3 = &tempn2;
     if ((items < 1) || (items > 1)) {
-      SWIG_croak("Usage: Query_str(self,length_out);");
+      SWIG_croak("Usage: Query_str(self,length);");
     }
     res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Query, 0 |  0 );
     if (!SWIG_IsOK(res1)) {
@@ -2120,7 +2199,7 @@ XS(_wrap_Query_str) {
 }
 
 
-XS(_wrap_Query_id) {
+XS(_wrap_Query_length) {
   {
     marisa_swig::Query *arg1 = (marisa_swig::Query *) 0 ;
     void *argp1 = 0 ;
@@ -2130,16 +2209,52 @@ XS(_wrap_Query_id) {
     dXSARGS;
     
     if ((items < 1) || (items > 1)) {
-      SWIG_croak("Usage: Query_id(self);");
+      SWIG_croak("Usage: Query_length(self);");
     }
     res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Query, 0 |  0 );
     if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Query_id" "', argument " "1"" of type '" "marisa_swig::Query const *""'"); 
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Query_length" "', argument " "1"" of type '" "marisa_swig::Query const *""'"); 
     }
     arg1 = reinterpret_cast< marisa_swig::Query * >(argp1);
     {
       try {
-        result = ((marisa_swig::Query const *)arg1)->id();
+        result = ((marisa_swig::Query const *)arg1)->length();
+      } catch (const marisa::Exception &ex) {
+        SWIG_exception(SWIG_RuntimeError, ex.what());
+      } catch (...) {
+        SWIG_exception(SWIG_UnknownError,"Unknown exception");
+      }
+    }
+    ST(argvi) = SWIG_From_size_t  SWIG_PERL_CALL_ARGS_1(static_cast< size_t >(result)); argvi++ ;
+    
+    XSRETURN(argvi);
+  fail:
+    
+    SWIG_croak_null();
+  }
+}
+
+
+XS(_wrap_Query_key_id) {
+  {
+    marisa_swig::Query *arg1 = (marisa_swig::Query *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    int argvi = 0;
+    std::size_t result;
+    dXSARGS;
+    
+    if ((items < 1) || (items > 1)) {
+      SWIG_croak("Usage: Query_key_id(self);");
+    }
+    res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Query, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Query_key_id" "', argument " "1"" of type '" "marisa_swig::Query const *""'"); 
+    }
+    arg1 = reinterpret_cast< marisa_swig::Query * >(argp1);
+    {
+      try {
+        result = ((marisa_swig::Query const *)arg1)->key_id();
       } catch (const marisa::Exception &ex) {
         SWIG_exception(SWIG_RuntimeError, ex.what());
       } catch (...) {
@@ -2303,6 +2418,64 @@ XS(_wrap_Keyset_push_back__SWIG_0) {
 XS(_wrap_Keyset_push_back__SWIG_1) {
   {
     marisa_swig::Keyset *arg1 = (marisa_swig::Keyset *) 0 ;
+    marisa::Key *arg2 = 0 ;
+    char arg3 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    void *argp2 ;
+    int res2 = 0 ;
+    char val3 ;
+    int ecode3 = 0 ;
+    int argvi = 0;
+    dXSARGS;
+    
+    if ((items < 3) || (items > 3)) {
+      SWIG_croak("Usage: Keyset_push_back(self,key,end_marker);");
+    }
+    res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Keyset, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Keyset_push_back" "', argument " "1"" of type '" "marisa_swig::Keyset *""'"); 
+    }
+    arg1 = reinterpret_cast< marisa_swig::Keyset * >(argp1);
+    res2 = SWIG_ConvertPtr(ST(1), &argp2, SWIGTYPE_p_marisa__Key,  0 );
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Keyset_push_back" "', argument " "2"" of type '" "marisa::Key const &""'"); 
+    }
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Keyset_push_back" "', argument " "2"" of type '" "marisa::Key const &""'"); 
+    }
+    arg2 = reinterpret_cast< marisa::Key * >(argp2);
+    ecode3 = SWIG_AsVal_char SWIG_PERL_CALL_ARGS_2(ST(2), &val3);
+    if (!SWIG_IsOK(ecode3)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "Keyset_push_back" "', argument " "3"" of type '" "char""'");
+    } 
+    arg3 = static_cast< char >(val3);
+    {
+      try {
+        (arg1)->push_back((marisa::Key const &)*arg2,arg3);
+      } catch (const marisa::Exception &ex) {
+        SWIG_exception(SWIG_RuntimeError, ex.what());
+      } catch (...) {
+        SWIG_exception(SWIG_UnknownError,"Unknown exception");
+      }
+    }
+    ST(argvi) = sv_newmortal();
+    
+    
+    
+    XSRETURN(argvi);
+  fail:
+    
+    
+    
+    SWIG_croak_null();
+  }
+}
+
+
+XS(_wrap_Keyset_push_back__SWIG_2) {
+  {
+    marisa_swig::Keyset *arg1 = (marisa_swig::Keyset *) 0 ;
     char *arg2 = (char *) 0 ;
     std::size_t arg3 ;
     float arg4 ;
@@ -2359,7 +2532,7 @@ XS(_wrap_Keyset_push_back__SWIG_1) {
 }
 
 
-XS(_wrap_Keyset_push_back__SWIG_2) {
+XS(_wrap_Keyset_push_back__SWIG_3) {
   {
     marisa_swig::Keyset *arg1 = (marisa_swig::Keyset *) 0 ;
     char *arg2 = (char *) 0 ;
@@ -2500,7 +2673,8 @@ XS(_wrap_Keyset_push_back) {
       _rankm += _pi;
       _pi *= SWIG_MAXCASTRANK;
       {
-        int res = SWIG_AsCharPtrAndSize(ST(1), 0, NULL, 0);
+        void *vptr = 0;
+        int res = SWIG_ConvertPtr(ST(1), &vptr, SWIGTYPE_p_marisa__Key, 0);
         _v = SWIG_CheckState(res);
       }
       if (!_v) goto check_3;
@@ -2509,7 +2683,7 @@ XS(_wrap_Keyset_push_back) {
       _pi *= SWIG_MAXCASTRANK;
       {
         {
-          int res = SWIG_AsVal_float SWIG_PERL_CALL_ARGS_2(ST(2), NULL);
+          int res = SWIG_AsVal_char SWIG_PERL_CALL_ARGS_2(ST(2), NULL);
           _v = SWIG_CheckState(res);
         }
       }
@@ -2524,14 +2698,55 @@ XS(_wrap_Keyset_push_back) {
     }
   check_3:
     
+    if (items == 3) {
+      SWIG_TypeRank _ranki = 0;
+      SWIG_TypeRank _rankm = 0;
+      SWIG_TypeRank _pi = 1;
+      int _v = 0;
+      {
+        void *vptr = 0;
+        int res = SWIG_ConvertPtr(ST(0), &vptr, SWIGTYPE_p_marisa_swig__Keyset, 0);
+        _v = SWIG_CheckState(res);
+      }
+      if (!_v) goto check_4;
+      _ranki += _v*_pi;
+      _rankm += _pi;
+      _pi *= SWIG_MAXCASTRANK;
+      {
+        int res = SWIG_AsCharPtrAndSize(ST(1), 0, NULL, 0);
+        _v = SWIG_CheckState(res);
+      }
+      if (!_v) goto check_4;
+      _ranki += _v*_pi;
+      _rankm += _pi;
+      _pi *= SWIG_MAXCASTRANK;
+      {
+        {
+          int res = SWIG_AsVal_float SWIG_PERL_CALL_ARGS_2(ST(2), NULL);
+          _v = SWIG_CheckState(res);
+        }
+      }
+      if (!_v) goto check_4;
+      _ranki += _v*_pi;
+      _rankm += _pi;
+      _pi *= SWIG_MAXCASTRANK;
+      if (!_index || (_ranki < _rank)) {
+        _rank = _ranki; _index = 4;
+        if (_rank == _rankm) goto dispatch;
+      }
+    }
+  check_4:
+    
   dispatch:
     switch(_index) {
     case 1:
       ++PL_markstack_ptr; SWIG_CALLXS(_wrap_Keyset_push_back__SWIG_0); return;
     case 2:
-      ++PL_markstack_ptr; SWIG_CALLXS(_wrap_Keyset_push_back__SWIG_2); return;
+      ++PL_markstack_ptr; SWIG_CALLXS(_wrap_Keyset_push_back__SWIG_3); return;
     case 3:
       ++PL_markstack_ptr; SWIG_CALLXS(_wrap_Keyset_push_back__SWIG_1); return;
+    case 4:
+      ++PL_markstack_ptr; SWIG_CALLXS(_wrap_Keyset_push_back__SWIG_2); return;
     }
   }
   
@@ -2575,108 +2790,6 @@ XS(_wrap_Keyset_key) {
       }
     }
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_marisa_swig__Key, 0 | SWIG_SHADOW); argvi++ ;
-    
-    
-    XSRETURN(argvi);
-  fail:
-    
-    
-    SWIG_croak_null();
-  }
-}
-
-
-XS(_wrap_Keyset_key_str) {
-  {
-    marisa_swig::Keyset *arg1 = (marisa_swig::Keyset *) 0 ;
-    std::size_t arg2 ;
-    char **arg3 = (char **) 0 ;
-    std::size_t *arg4 = (std::size_t *) 0 ;
-    void *argp1 = 0 ;
-    int res1 = 0 ;
-    size_t val2 ;
-    int ecode2 = 0 ;
-    char *temp3 = 0 ;
-    std::size_t tempn3 ;
-    int argvi = 0;
-    dXSARGS;
-    
-    arg3 = &temp3; arg4 = &tempn3;
-    if ((items < 2) || (items > 2)) {
-      SWIG_croak("Usage: Keyset_key_str(self,i,length_out);");
-    }
-    res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Keyset, 0 |  0 );
-    if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Keyset_key_str" "', argument " "1"" of type '" "marisa_swig::Keyset const *""'"); 
-    }
-    arg1 = reinterpret_cast< marisa_swig::Keyset * >(argp1);
-    ecode2 = SWIG_AsVal_size_t SWIG_PERL_CALL_ARGS_2(ST(1), &val2);
-    if (!SWIG_IsOK(ecode2)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Keyset_key_str" "', argument " "2"" of type '" "std::size_t""'");
-    } 
-    arg2 = static_cast< std::size_t >(val2);
-    {
-      try {
-        ((marisa_swig::Keyset const *)arg1)->key_str(arg2,(char const **)arg3,arg4);
-      } catch (const marisa::Exception &ex) {
-        SWIG_exception(SWIG_RuntimeError, ex.what());
-      } catch (...) {
-        SWIG_exception(SWIG_UnknownError,"Unknown exception");
-      }
-    }
-    ST(argvi) = sv_newmortal();
-    if (*arg3) {
-      if (argvi >= items) EXTEND(sp,1);  ST(argvi) = SWIG_FromCharPtrAndSize(*arg3,*arg4); argvi++  ;
-      ;
-    }
-    
-    
-    
-    XSRETURN(argvi);
-  fail:
-    
-    
-    
-    SWIG_croak_null();
-  }
-}
-
-
-XS(_wrap_Keyset_key_id) {
-  {
-    marisa_swig::Keyset *arg1 = (marisa_swig::Keyset *) 0 ;
-    std::size_t arg2 ;
-    void *argp1 = 0 ;
-    int res1 = 0 ;
-    size_t val2 ;
-    int ecode2 = 0 ;
-    int argvi = 0;
-    std::size_t result;
-    dXSARGS;
-    
-    if ((items < 2) || (items > 2)) {
-      SWIG_croak("Usage: Keyset_key_id(self,i);");
-    }
-    res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Keyset, 0 |  0 );
-    if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Keyset_key_id" "', argument " "1"" of type '" "marisa_swig::Keyset const *""'"); 
-    }
-    arg1 = reinterpret_cast< marisa_swig::Keyset * >(argp1);
-    ecode2 = SWIG_AsVal_size_t SWIG_PERL_CALL_ARGS_2(ST(1), &val2);
-    if (!SWIG_IsOK(ecode2)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Keyset_key_id" "', argument " "2"" of type '" "std::size_t""'");
-    } 
-    arg2 = static_cast< std::size_t >(val2);
-    {
-      try {
-        result = ((marisa_swig::Keyset const *)arg1)->key_id(arg2);
-      } catch (const marisa::Exception &ex) {
-        SWIG_exception(SWIG_RuntimeError, ex.what());
-      } catch (...) {
-        SWIG_exception(SWIG_UnknownError,"Unknown exception");
-      }
-    }
-    ST(argvi) = SWIG_From_size_t  SWIG_PERL_CALL_ARGS_1(static_cast< size_t >(result)); argvi++ ;
     
     
     XSRETURN(argvi);
@@ -3024,7 +3137,7 @@ XS(_wrap_Agent_set_query__SWIG_1) {
     dXSARGS;
     
     if ((items < 2) || (items > 2)) {
-      SWIG_croak("Usage: Agent_set_query(self,id);");
+      SWIG_croak("Usage: Agent_set_query(self,key_id);");
     }
     res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Agent, 0 |  0 );
     if (!SWIG_IsOK(res1)) {
@@ -3212,170 +3325,6 @@ XS(_wrap_Agent_query) {
       }
     }
     ST(argvi) = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_marisa_swig__Query, 0 | SWIG_SHADOW); argvi++ ;
-    
-    XSRETURN(argvi);
-  fail:
-    
-    SWIG_croak_null();
-  }
-}
-
-
-XS(_wrap_Agent_key_str) {
-  {
-    marisa_swig::Agent *arg1 = (marisa_swig::Agent *) 0 ;
-    char **arg2 = (char **) 0 ;
-    std::size_t *arg3 = (std::size_t *) 0 ;
-    void *argp1 = 0 ;
-    int res1 = 0 ;
-    char *temp2 = 0 ;
-    std::size_t tempn2 ;
-    int argvi = 0;
-    dXSARGS;
-    
-    arg2 = &temp2; arg3 = &tempn2;
-    if ((items < 1) || (items > 1)) {
-      SWIG_croak("Usage: Agent_key_str(self,length_out);");
-    }
-    res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Agent, 0 |  0 );
-    if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Agent_key_str" "', argument " "1"" of type '" "marisa_swig::Agent const *""'"); 
-    }
-    arg1 = reinterpret_cast< marisa_swig::Agent * >(argp1);
-    {
-      try {
-        ((marisa_swig::Agent const *)arg1)->key_str((char const **)arg2,arg3);
-      } catch (const marisa::Exception &ex) {
-        SWIG_exception(SWIG_RuntimeError, ex.what());
-      } catch (...) {
-        SWIG_exception(SWIG_UnknownError,"Unknown exception");
-      }
-    }
-    ST(argvi) = sv_newmortal();
-    if (*arg2) {
-      if (argvi >= items) EXTEND(sp,1);  ST(argvi) = SWIG_FromCharPtrAndSize(*arg2,*arg3); argvi++  ;
-      ;
-    }
-    
-    
-    XSRETURN(argvi);
-  fail:
-    
-    
-    SWIG_croak_null();
-  }
-}
-
-
-XS(_wrap_Agent_key_id) {
-  {
-    marisa_swig::Agent *arg1 = (marisa_swig::Agent *) 0 ;
-    void *argp1 = 0 ;
-    int res1 = 0 ;
-    int argvi = 0;
-    std::size_t result;
-    dXSARGS;
-    
-    if ((items < 1) || (items > 1)) {
-      SWIG_croak("Usage: Agent_key_id(self);");
-    }
-    res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Agent, 0 |  0 );
-    if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Agent_key_id" "', argument " "1"" of type '" "marisa_swig::Agent const *""'"); 
-    }
-    arg1 = reinterpret_cast< marisa_swig::Agent * >(argp1);
-    {
-      try {
-        result = ((marisa_swig::Agent const *)arg1)->key_id();
-      } catch (const marisa::Exception &ex) {
-        SWIG_exception(SWIG_RuntimeError, ex.what());
-      } catch (...) {
-        SWIG_exception(SWIG_UnknownError,"Unknown exception");
-      }
-    }
-    ST(argvi) = SWIG_From_size_t  SWIG_PERL_CALL_ARGS_1(static_cast< size_t >(result)); argvi++ ;
-    
-    XSRETURN(argvi);
-  fail:
-    
-    SWIG_croak_null();
-  }
-}
-
-
-XS(_wrap_Agent_query_str) {
-  {
-    marisa_swig::Agent *arg1 = (marisa_swig::Agent *) 0 ;
-    char **arg2 = (char **) 0 ;
-    std::size_t *arg3 = (std::size_t *) 0 ;
-    void *argp1 = 0 ;
-    int res1 = 0 ;
-    char *temp2 = 0 ;
-    std::size_t tempn2 ;
-    int argvi = 0;
-    dXSARGS;
-    
-    arg2 = &temp2; arg3 = &tempn2;
-    if ((items < 1) || (items > 1)) {
-      SWIG_croak("Usage: Agent_query_str(self,length_out);");
-    }
-    res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Agent, 0 |  0 );
-    if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Agent_query_str" "', argument " "1"" of type '" "marisa_swig::Agent const *""'"); 
-    }
-    arg1 = reinterpret_cast< marisa_swig::Agent * >(argp1);
-    {
-      try {
-        ((marisa_swig::Agent const *)arg1)->query_str((char const **)arg2,arg3);
-      } catch (const marisa::Exception &ex) {
-        SWIG_exception(SWIG_RuntimeError, ex.what());
-      } catch (...) {
-        SWIG_exception(SWIG_UnknownError,"Unknown exception");
-      }
-    }
-    ST(argvi) = sv_newmortal();
-    if (*arg2) {
-      if (argvi >= items) EXTEND(sp,1);  ST(argvi) = SWIG_FromCharPtrAndSize(*arg2,*arg3); argvi++  ;
-      ;
-    }
-    
-    
-    XSRETURN(argvi);
-  fail:
-    
-    
-    SWIG_croak_null();
-  }
-}
-
-
-XS(_wrap_Agent_query_id) {
-  {
-    marisa_swig::Agent *arg1 = (marisa_swig::Agent *) 0 ;
-    void *argp1 = 0 ;
-    int res1 = 0 ;
-    int argvi = 0;
-    std::size_t result;
-    dXSARGS;
-    
-    if ((items < 1) || (items > 1)) {
-      SWIG_croak("Usage: Agent_query_id(self);");
-    }
-    res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Agent, 0 |  0 );
-    if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Agent_query_id" "', argument " "1"" of type '" "marisa_swig::Agent const *""'"); 
-    }
-    arg1 = reinterpret_cast< marisa_swig::Agent * >(argp1);
-    {
-      try {
-        result = ((marisa_swig::Agent const *)arg1)->query_id();
-      } catch (const marisa::Exception &ex) {
-        SWIG_exception(SWIG_RuntimeError, ex.what());
-      } catch (...) {
-        SWIG_exception(SWIG_UnknownError,"Unknown exception");
-      }
-    }
-    ST(argvi) = SWIG_From_size_t  SWIG_PERL_CALL_ARGS_1(static_cast< size_t >(result)); argvi++ ;
     
     XSRETURN(argvi);
   fail:
@@ -3780,7 +3729,7 @@ XS(_wrap_Trie_save) {
 }
 
 
-XS(_wrap_Trie_lookup__SWIG_0) {
+XS(_wrap_Trie_lookup) {
   {
     marisa_swig::Trie *arg1 = (marisa_swig::Trie *) 0 ;
     marisa_swig::Agent *arg2 = 0 ;
@@ -3829,7 +3778,7 @@ XS(_wrap_Trie_lookup__SWIG_0) {
 }
 
 
-XS(_wrap_Trie_reverse_lookup__SWIG_0) {
+XS(_wrap_Trie_reverse_lookup) {
   {
     marisa_swig::Trie *arg1 = (marisa_swig::Trie *) 0 ;
     marisa_swig::Agent *arg2 = 0 ;
@@ -3972,284 +3921,6 @@ XS(_wrap_Trie_predictive_search) {
     
     SWIG_croak_null();
   }
-}
-
-
-XS(_wrap_Trie_lookup__SWIG_1) {
-  {
-    marisa_swig::Trie *arg1 = (marisa_swig::Trie *) 0 ;
-    char *arg2 = (char *) 0 ;
-    std::size_t arg3 ;
-    void *argp1 = 0 ;
-    int res1 = 0 ;
-    int res2 ;
-    char *buf2 = 0 ;
-    size_t size2 = 0 ;
-    int alloc2 = 0 ;
-    int argvi = 0;
-    std::size_t result;
-    dXSARGS;
-    
-    if ((items < 2) || (items > 2)) {
-      SWIG_croak("Usage: Trie_lookup(self,ptr,length);");
-    }
-    res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Trie, 0 |  0 );
-    if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Trie_lookup" "', argument " "1"" of type '" "marisa_swig::Trie const *""'"); 
-    }
-    arg1 = reinterpret_cast< marisa_swig::Trie * >(argp1);
-    res2 = SWIG_AsCharPtrAndSize(ST(1), &buf2, &size2, &alloc2);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Trie_lookup" "', argument " "2"" of type '" "char const *""'");
-    }  
-    arg2 = reinterpret_cast< char * >(buf2);
-    arg3 = static_cast< std::size_t >(size2 - 1);
-    {
-      try {
-        result = ((marisa_swig::Trie const *)arg1)->lookup((char const *)arg2,arg3);
-      } catch (const marisa::Exception &ex) {
-        SWIG_exception(SWIG_RuntimeError, ex.what());
-      } catch (...) {
-        SWIG_exception(SWIG_UnknownError,"Unknown exception");
-      }
-    }
-    ST(argvi) = SWIG_From_size_t  SWIG_PERL_CALL_ARGS_1(static_cast< size_t >(result)); argvi++ ;
-    
-    if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
-    XSRETURN(argvi);
-  fail:
-    
-    if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
-    SWIG_croak_null();
-  }
-}
-
-
-XS(_wrap_Trie_lookup) {
-  dXSARGS;
-  
-  {
-    unsigned long _index = 0;
-    SWIG_TypeRank _rank = 0; 
-    if (items == 2) {
-      SWIG_TypeRank _ranki = 0;
-      SWIG_TypeRank _rankm = 0;
-      SWIG_TypeRank _pi = 1;
-      int _v = 0;
-      {
-        void *vptr = 0;
-        int res = SWIG_ConvertPtr(ST(0), &vptr, SWIGTYPE_p_marisa_swig__Trie, 0);
-        _v = SWIG_CheckState(res);
-      }
-      if (!_v) goto check_1;
-      _ranki += _v*_pi;
-      _rankm += _pi;
-      _pi *= SWIG_MAXCASTRANK;
-      {
-        void *vptr = 0;
-        int res = SWIG_ConvertPtr(ST(1), &vptr, SWIGTYPE_p_marisa_swig__Agent, 0);
-        _v = SWIG_CheckState(res);
-      }
-      if (!_v) goto check_1;
-      _ranki += _v*_pi;
-      _rankm += _pi;
-      _pi *= SWIG_MAXCASTRANK;
-      if (!_index || (_ranki < _rank)) {
-        _rank = _ranki; _index = 1;
-        if (_rank == _rankm) goto dispatch;
-      }
-    }
-  check_1:
-    
-    if (items == 2) {
-      SWIG_TypeRank _ranki = 0;
-      SWIG_TypeRank _rankm = 0;
-      SWIG_TypeRank _pi = 1;
-      int _v = 0;
-      {
-        void *vptr = 0;
-        int res = SWIG_ConvertPtr(ST(0), &vptr, SWIGTYPE_p_marisa_swig__Trie, 0);
-        _v = SWIG_CheckState(res);
-      }
-      if (!_v) goto check_2;
-      _ranki += _v*_pi;
-      _rankm += _pi;
-      _pi *= SWIG_MAXCASTRANK;
-      {
-        int res = SWIG_AsCharPtrAndSize(ST(1), 0, NULL, 0);
-        _v = SWIG_CheckState(res);
-      }
-      if (!_v) goto check_2;
-      _ranki += _v*_pi;
-      _rankm += _pi;
-      _pi *= SWIG_MAXCASTRANK;
-      if (items > 2) {
-        {
-          {
-            int res = SWIG_AsVal_size_t SWIG_PERL_CALL_ARGS_2(ST(2), NULL);
-            _v = SWIG_CheckState(res);
-          }
-        }
-        if (!_v) goto check_2;
-        _ranki += _v*_pi;
-        _rankm += _pi;
-        _pi *= SWIG_MAXCASTRANK;
-      }
-      if (!_index || (_ranki < _rank)) {
-        _rank = _ranki; _index = 2;
-        if (_rank == _rankm) goto dispatch;
-      }
-    }
-  check_2:
-    
-  dispatch:
-    switch(_index) {
-    case 1:
-      ++PL_markstack_ptr; SWIG_CALLXS(_wrap_Trie_lookup__SWIG_0); return;
-    case 2:
-      ++PL_markstack_ptr; SWIG_CALLXS(_wrap_Trie_lookup__SWIG_1); return;
-    }
-  }
-  
-  croak("No matching function for overloaded 'Trie_lookup'");
-  XSRETURN(0);
-}
-
-
-XS(_wrap_Trie_reverse_lookup__SWIG_1) {
-  {
-    marisa_swig::Trie *arg1 = (marisa_swig::Trie *) 0 ;
-    std::size_t arg2 ;
-    char **arg3 = (char **) 0 ;
-    std::size_t *arg4 = (std::size_t *) 0 ;
-    void *argp1 = 0 ;
-    int res1 = 0 ;
-    size_t val2 ;
-    int ecode2 = 0 ;
-    char *temp3 = 0 ;
-    std::size_t tempn3 ;
-    int argvi = 0;
-    dXSARGS;
-    
-    arg3 = &temp3; arg4 = &tempn3;
-    if ((items < 2) || (items > 2)) {
-      SWIG_croak("Usage: Trie_reverse_lookup(self,id,length_out);");
-    }
-    res1 = SWIG_ConvertPtr(ST(0), &argp1,SWIGTYPE_p_marisa_swig__Trie, 0 |  0 );
-    if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Trie_reverse_lookup" "', argument " "1"" of type '" "marisa_swig::Trie const *""'"); 
-    }
-    arg1 = reinterpret_cast< marisa_swig::Trie * >(argp1);
-    ecode2 = SWIG_AsVal_size_t SWIG_PERL_CALL_ARGS_2(ST(1), &val2);
-    if (!SWIG_IsOK(ecode2)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Trie_reverse_lookup" "', argument " "2"" of type '" "std::size_t""'");
-    } 
-    arg2 = static_cast< std::size_t >(val2);
-    {
-      try {
-        ((marisa_swig::Trie const *)arg1)->reverse_lookup(arg2,(char const **)arg3,arg4);
-      } catch (const marisa::Exception &ex) {
-        SWIG_exception(SWIG_RuntimeError, ex.what());
-      } catch (...) {
-        SWIG_exception(SWIG_UnknownError,"Unknown exception");
-      }
-    }
-    ST(argvi) = sv_newmortal();
-    if (*arg3) {
-      if (argvi >= items) EXTEND(sp,1);  ST(argvi) = SWIG_FromCharPtrAndSize(*arg3,*arg4); argvi++  ;
-      delete [] (*arg3);
-    }
-    
-    
-    
-    XSRETURN(argvi);
-  fail:
-    
-    
-    
-    SWIG_croak_null();
-  }
-}
-
-
-XS(_wrap_Trie_reverse_lookup) {
-  dXSARGS;
-  
-  {
-    unsigned long _index = 0;
-    SWIG_TypeRank _rank = 0; 
-    if (items == 2) {
-      SWIG_TypeRank _ranki = 0;
-      SWIG_TypeRank _rankm = 0;
-      SWIG_TypeRank _pi = 1;
-      int _v = 0;
-      {
-        void *vptr = 0;
-        int res = SWIG_ConvertPtr(ST(0), &vptr, SWIGTYPE_p_marisa_swig__Trie, 0);
-        _v = SWIG_CheckState(res);
-      }
-      if (!_v) goto check_1;
-      _ranki += _v*_pi;
-      _rankm += _pi;
-      _pi *= SWIG_MAXCASTRANK;
-      {
-        void *vptr = 0;
-        int res = SWIG_ConvertPtr(ST(1), &vptr, SWIGTYPE_p_marisa_swig__Agent, 0);
-        _v = SWIG_CheckState(res);
-      }
-      if (!_v) goto check_1;
-      _ranki += _v*_pi;
-      _rankm += _pi;
-      _pi *= SWIG_MAXCASTRANK;
-      if (!_index || (_ranki < _rank)) {
-        _rank = _ranki; _index = 1;
-        if (_rank == _rankm) goto dispatch;
-      }
-    }
-  check_1:
-    
-    if (items == 2) {
-      SWIG_TypeRank _ranki = 0;
-      SWIG_TypeRank _rankm = 0;
-      SWIG_TypeRank _pi = 1;
-      int _v = 0;
-      {
-        void *vptr = 0;
-        int res = SWIG_ConvertPtr(ST(0), &vptr, SWIGTYPE_p_marisa_swig__Trie, 0);
-        _v = SWIG_CheckState(res);
-      }
-      if (!_v) goto check_2;
-      _ranki += _v*_pi;
-      _rankm += _pi;
-      _pi *= SWIG_MAXCASTRANK;
-      {
-        {
-          int res = SWIG_AsVal_size_t SWIG_PERL_CALL_ARGS_2(ST(1), NULL);
-          _v = SWIG_CheckState(res);
-        }
-      }
-      if (!_v) goto check_2;
-      _ranki += _v*_pi;
-      _rankm += _pi;
-      _pi *= SWIG_MAXCASTRANK;
-      if (!_index || (_ranki < _rank)) {
-        _rank = _ranki; _index = 2;
-        if (_rank == _rankm) goto dispatch;
-      }
-    }
-  check_2:
-    
-  dispatch:
-    switch(_index) {
-    case 1:
-      ++PL_markstack_ptr; SWIG_CALLXS(_wrap_Trie_reverse_lookup__SWIG_0); return;
-    case 2:
-      ++PL_markstack_ptr; SWIG_CALLXS(_wrap_Trie_reverse_lookup__SWIG_1); return;
-    }
-  }
-  
-  croak("No matching function for overloaded 'Trie_reverse_lookup'");
-  XSRETURN(0);
 }
 
 
@@ -4673,18 +4344,18 @@ static swig_variable_info swig_variables[] = {
 };
 static swig_command_info swig_commands[] = {
 {"marisac::Key_str", _wrap_Key_str},
+{"marisac::Key_length", _wrap_Key_length},
 {"marisac::Key_id", _wrap_Key_id},
 {"marisac::Key_weight", _wrap_Key_weight},
 {"marisac::delete_Key", _wrap_delete_Key},
 {"marisac::Query_str", _wrap_Query_str},
-{"marisac::Query_id", _wrap_Query_id},
+{"marisac::Query_length", _wrap_Query_length},
+{"marisac::Query_key_id", _wrap_Query_key_id},
 {"marisac::delete_Query", _wrap_delete_Query},
 {"marisac::new_Keyset", _wrap_new_Keyset},
 {"marisac::delete_Keyset", _wrap_delete_Keyset},
 {"marisac::Keyset_push_back", _wrap_Keyset_push_back},
 {"marisac::Keyset_key", _wrap_Keyset_key},
-{"marisac::Keyset_key_str", _wrap_Keyset_key_str},
-{"marisac::Keyset_key_id", _wrap_Keyset_key_id},
 {"marisac::Keyset_num_keys", _wrap_Keyset_num_keys},
 {"marisac::Keyset_empty", _wrap_Keyset_empty},
 {"marisac::Keyset_size", _wrap_Keyset_size},
@@ -4696,20 +4367,16 @@ static swig_command_info swig_commands[] = {
 {"marisac::Agent_set_query", _wrap_Agent_set_query},
 {"marisac::Agent_key", _wrap_Agent_key},
 {"marisac::Agent_query", _wrap_Agent_query},
-{"marisac::Agent_key_str", _wrap_Agent_key_str},
-{"marisac::Agent_key_id", _wrap_Agent_key_id},
-{"marisac::Agent_query_str", _wrap_Agent_query_str},
-{"marisac::Agent_query_id", _wrap_Agent_query_id},
 {"marisac::new_Trie", _wrap_new_Trie},
 {"marisac::delete_Trie", _wrap_delete_Trie},
 {"marisac::Trie_build", _wrap_Trie_build},
 {"marisac::Trie_mmap", _wrap_Trie_mmap},
 {"marisac::Trie_load", _wrap_Trie_load},
 {"marisac::Trie_save", _wrap_Trie_save},
-{"marisac::Trie_common_prefix_search", _wrap_Trie_common_prefix_search},
-{"marisac::Trie_predictive_search", _wrap_Trie_predictive_search},
 {"marisac::Trie_lookup", _wrap_Trie_lookup},
 {"marisac::Trie_reverse_lookup", _wrap_Trie_reverse_lookup},
+{"marisac::Trie_common_prefix_search", _wrap_Trie_common_prefix_search},
+{"marisac::Trie_predictive_search", _wrap_Trie_predictive_search},
 {"marisac::Trie_num_tries", _wrap_Trie_num_tries},
 {"marisac::Trie_num_keys", _wrap_Trie_num_keys},
 {"marisac::Trie_num_nodes", _wrap_Trie_num_nodes},
@@ -5015,133 +4682,133 @@ XS(SWIG_init) {
   }
   
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "OK", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::OK)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_OK", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_OK)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "STATE_ERROR", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::STATE_ERROR)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_STATE_ERROR", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_STATE_ERROR)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "NULL_ERROR", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::NULL_ERROR)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_NULL_ERROR", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_NULL_ERROR)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "BOUND_ERROR", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::BOUND_ERROR)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_BOUND_ERROR", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_BOUND_ERROR)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "RANGE_ERROR", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::RANGE_ERROR)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_RANGE_ERROR", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_RANGE_ERROR)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "CODE_ERROR", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::CODE_ERROR)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_CODE_ERROR", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_CODE_ERROR)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "RESET_ERROR", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::RESET_ERROR)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_RESET_ERROR", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_RESET_ERROR)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "SIZE_ERROR", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::SIZE_ERROR)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_SIZE_ERROR", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_SIZE_ERROR)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "MEMORY_ERROR", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MEMORY_ERROR)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_MEMORY_ERROR", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_MEMORY_ERROR)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "IO_ERROR", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::IO_ERROR)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_IO_ERROR", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_IO_ERROR)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "FORMAT_ERROR", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::FORMAT_ERROR)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_FORMAT_ERROR", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_FORMAT_ERROR)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "MIN_NUM_TRIES", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MIN_NUM_TRIES)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_MIN_NUM_TRIES", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_MIN_NUM_TRIES)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "MAX_NUM_TRIES", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MAX_NUM_TRIES)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_MAX_NUM_TRIES", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_MAX_NUM_TRIES)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "DEFAULT_NUM_TRIES", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::DEFAULT_NUM_TRIES)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_DEFAULT_NUM_TRIES", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_DEFAULT_NUM_TRIES)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "HUGE_CACHE", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::HUGE_CACHE)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_HUGE_CACHE", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_HUGE_CACHE)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "LARGE_CACHE", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::LARGE_CACHE)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_LARGE_CACHE", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_LARGE_CACHE)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "NORMAL_CACHE", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::NORMAL_CACHE)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_NORMAL_CACHE", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_NORMAL_CACHE)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "SMALL_CACHE", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::SMALL_CACHE)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_SMALL_CACHE", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_SMALL_CACHE)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "TINY_CACHE", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::TINY_CACHE)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_TINY_CACHE", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_TINY_CACHE)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "DEFAULT_CACHE", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::DEFAULT_CACHE)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_DEFAULT_CACHE", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_DEFAULT_CACHE)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "TEXT_TAIL", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::TEXT_TAIL)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_TEXT_TAIL", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_TEXT_TAIL)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "BINARY_TAIL", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::BINARY_TAIL)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_BINARY_TAIL", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_BINARY_TAIL)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "DEFAULT_TAIL", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::DEFAULT_TAIL)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_DEFAULT_TAIL", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_DEFAULT_TAIL)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "LABEL_ORDER", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::LABEL_ORDER)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_LABEL_ORDER", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_LABEL_ORDER)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "WEIGHT_ORDER", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::WEIGHT_ORDER)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_WEIGHT_ORDER", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_WEIGHT_ORDER)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "DEFAULT_ORDER", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::DEFAULT_ORDER)));
+    SV *sv = get_sv((char*) SWIG_prefix "MARISA_DEFAULT_ORDER", TRUE | 0x2 | GV_ADDMULTI);
+    sv_setsv(sv, SWIG_From_int  SWIG_PERL_CALL_ARGS_1(static_cast< int >(marisa_swig::MARISA_DEFAULT_ORDER)));
     SvREADONLY_on(sv);
   } while(0) /*@SWIG@*/;
   SWIG_TypeClientData(SWIGTYPE_p_marisa_swig__Key, (void*) "marisa::Key");
@@ -5149,11 +4816,6 @@ XS(SWIG_init) {
   SWIG_TypeClientData(SWIGTYPE_p_marisa_swig__Keyset, (void*) "marisa::Keyset");
   SWIG_TypeClientData(SWIGTYPE_p_marisa_swig__Agent, (void*) "marisa::Agent");
   SWIG_TypeClientData(SWIGTYPE_p_marisa_swig__Trie, (void*) "marisa::Trie");
-  /*@SWIG:/usr/share/swig1.3/perl5/perltypemaps.swg,65,%set_constant@*/ do {
-    SV *sv = get_sv((char*) SWIG_prefix "INVALID_KEY_ID", TRUE | 0x2 | GV_ADDMULTI);
-    sv_setsv(sv, SWIG_From_size_t  SWIG_PERL_CALL_ARGS_1(static_cast< size_t >(MARISA_INVALID_KEY_ID)));
-    SvREADONLY_on(sv);
-  } while(0) /*@SWIG@*/;
   ST(0) = &PL_sv_yes;
   XSRETURN(1);
 }
