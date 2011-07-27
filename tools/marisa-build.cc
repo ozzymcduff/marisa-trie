@@ -18,14 +18,14 @@ const char *output_filename = NULL;
 void print_help(const char *cmd) {
   std::cerr << "Usage: " << cmd << " [OPTION]... [FILE]...\n\n"
       "Options:\n"
-      "  -n, --num-tries=[N]  limits the number of tries"
+      "  -n, --num-tries=[N]  limit the number of tries"
       " [" << MARISA_MIN_NUM_TRIES << ", " << MARISA_MAX_NUM_TRIES
       << "] (default: 3)\n"
       "  -t, --text-tail      build a dictionary with text TAIL (default)\n"
       "  -b, --binary-tail    build a dictionary with binary TAIL\n"
-      "  -w, --weight-order   arranges siblings in weight order (default)\n"
-      "  -l, --label-order    arranges siblings in label order\n"
-      "  -c, --cache-level=[N]    specifies the cache size"
+      "  -w, --weight-order   arrange siblings in weight order (default)\n"
+      "  -l, --label-order    arrange siblings in label order\n"
+      "  -c, --cache-level=[N]    specify the cache size"
       " [1, 5] (default: 3)\n"
       "  -o, --output=[FILE]  write tries to FILE (default: stdout)\n"
       "  -h, --help           print this help\n"
