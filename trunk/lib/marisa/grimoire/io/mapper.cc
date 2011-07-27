@@ -113,7 +113,7 @@ void Mapper::open_(const char *filename) {
   size_ = (std::size_t)st.st_size;
 
   file_ = ::CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ,
-    NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+      NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   MARISA_THROW_IF(file_ == NULL, MARISA_IO_ERROR);
 
   map_ = ::CreateFileMapping(file_, NULL, PAGE_READONLY, 0, 0, NULL);

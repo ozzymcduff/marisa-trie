@@ -17,7 +17,8 @@ int param_max_num_tries = 5;
 marisa::TailMode param_tail_mode = MARISA_DEFAULT_TAIL;
 marisa::NodeOrder param_node_order = MARISA_DEFAULT_ORDER;
 marisa::CacheLevel param_cache_level = MARISA_DEFAULT_CACHE;
-bool speed_flag = true;
+bool param_with_predict = true;
+bool param_print_speed = true;
 
 class Clock {
  public:
@@ -39,18 +40,20 @@ class Clock {
 void print_help(const char *cmd) {
   std::cerr << "Usage: " << cmd << " [OPTION]... [FILE]...\n\n"
       "Options:\n"
-      "  -N, --min-num-tries=[N]  limits the number of tries"
+      "  -N, --min-num-tries=[N]  limit the number of tries"
       " [" << MARISA_MIN_NUM_TRIES << ", " << MARISA_MAX_NUM_TRIES
       << "] (default: 1)\n"
-      "  -n, --max-num-tries=[N]  limits the number of tries"
+      "  -n, --max-num-tries=[N]  limit the number of tries"
       " [" << MARISA_MIN_NUM_TRIES << ", " << MARISA_MAX_NUM_TRIES
       << "] (default: 10)\n"
       "  -t, --text-tail      build a dictionary with text TAIL (default)\n"
       "  -b, --binary-tail    build a dictionary with binary TAIL\n"
-      "  -w, --weight-order   arranges siblings in weight order (default)\n"
-      "  -l, --label-order    arranges siblings in label order\n"
+      "  -w, --weight-order   arrange siblings in weight order (default)\n"
+      "  -l, --label-order    arrange siblings in label order\n"
       "  -c, --cache-level=[N]    specifies the cache size"
       " [1, 5] (default: 3)\n"
+      "  -P, --with-predict       include predictive search (default)\n"
+      "  -p, --without-predict    skip predictive search\n"
       "  -S, --print-speed    print speed [1000 keys/s] (default)\n"
       "  -s, --print-time     print time [ns/key]\n"
       "  -h, --help           print this help\n"
@@ -111,7 +114,7 @@ void print_config() {
 }
 
 void print_time_info(std::size_t num_keys, double elasped) {
-  if (speed_flag) {
+  if (param_print_speed) {
     if (elasped == 0.0) {
       std::printf(" %8s", "-");
     } else {
@@ -228,6 +231,11 @@ void benchmark_common_prefix_search(const marisa::Trie &trie,
 
 void benchmark_predictive_search(const marisa::Trie &trie,
     const marisa::Keyset &keyset) {
+  if (!param_with_predict) {
+    print_time_info(keyset.size(), 0.0);
+    return;
+  }
+
   Clock cl;
   marisa::Agent agent;
   for (std::size_t i = 0; i < keyset.size(); ++i) {
@@ -274,7 +282,7 @@ int benchmark(const char * const *args, std::size_t num_args) try {
       "#tries", "size", "build", "lookup", "reverse", "prefix", "predict");
   std::printf("%6s %10s %8s %8s %8s %8s %8s\n",
       "", "", "", "", "lookup", "search", "search");
-  if (speed_flag) {
+  if (param_print_speed) {
     std::printf("%6s %10s %8s %8s %8s %8s %8s\n",
         "", "[bytes]",
         "[K/s]", "[K/s]", "[K/s]", "[K/s]", "[K/s]");
@@ -308,13 +316,15 @@ int main(int argc, char *argv[]) {
     { "weight-order", 0, NULL, 'w' },
     { "label-order", 0, NULL, 'l' },
     { "cache-level", 1, NULL, 'c' },
+    { "predict-on", 0, NULL, 'P' },
+    { "predict-off", 0, NULL, 'p' },
     { "print-speed", 0, NULL, 'S' },
     { "print-time", 0, NULL, 's' },
     { "help", 0, NULL, 'h' },
     { NULL, 0, NULL, 0 }
   };
   ::cmdopt_t cmdopt;
-  ::cmdopt_init(&cmdopt, argc, argv, "N:n:tbwlc:Ssh", long_options);
+  ::cmdopt_init(&cmdopt, argc, argv, "N:n:tbwlc:PpSsh", long_options);
   int label;
   while ((label = ::cmdopt_get(&cmdopt)) != -1) {
     switch (label) {
@@ -378,12 +388,20 @@ int main(int argc, char *argv[]) {
         }
         break;
       }
+      case 'P': {
+        param_with_predict = true;
+        break;
+      }
+      case 'p': {
+        param_with_predict = false;
+        break;
+      }
       case 'S': {
-        speed_flag = true;
+        param_print_speed = true;
         break;
       }
       case 's': {
-        speed_flag = false;
+        param_print_speed = false;
         break;
       }
       case 'h': {

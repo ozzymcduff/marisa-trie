@@ -14,7 +14,7 @@ bool mmap_flag = true;
 void print_help(const char *cmd) {
   std::cerr << "Usage: " << cmd << " [OPTION]... DIC\n\n"
       "Options:\n"
-      "  -n, --max-num-results=[N]  limits the number of results to N"
+      "  -n, --max-num-results=[N]  limit the number of results to N"
       " (default: 10)\n"
       "                             0: no limit\n"
       "  -m, --mmap-dictionary  use memory-mapped I/O to load a dictionary"
