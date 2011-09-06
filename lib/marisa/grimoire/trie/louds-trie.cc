@@ -769,6 +769,8 @@ bool LoudsTrie::match_(Agent &agent, std::size_t node_id) const {
       node_id = cache_[cache_id].parent();
       if (node_id == 0) {
         return true;
+      } else if (state.query_pos() >= agent.query().length()) {
+        return false;
       }
       continue;
     }
@@ -847,7 +849,7 @@ bool LoudsTrie::prefix_match_(Agent &agent, std::size_t node_id) const {
 }
 
 std::size_t LoudsTrie::get_cache_id(std::size_t node_id, char label) const {
-  return ((node_id) ^ (node_id << 5) ^ (UInt8)label) & cache_mask_;
+  return (node_id ^ (node_id << 5) ^ (UInt8)label) & cache_mask_;
 }
 
 std::size_t LoudsTrie::get_cache_id(std::size_t node_id) const {
