@@ -9,7 +9,7 @@
 || *OS*         || 64-bit Ubuntu Desktop 10.04 ||
 || *コンパイラ* || gcc version 4.4.3           ||
 
- * version: 0.1.4
+ * version: 0.1.5
 
 <wiki:toc max_depth="2" />
 
