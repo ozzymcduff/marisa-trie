@@ -1,9 +1,10 @@
+#include <cstdlib>
 #include <iostream>
 #include <string>
 
 #include <marisa.h>
 
-#include "cmdopt.h"
+#include "./cmdopt.h"
 
 namespace {
 
@@ -21,7 +22,7 @@ void print_help(const char *cmd) {
 
 int lookup(const char * const *args, std::size_t num_args) {
   if (num_args == 0) {
-    std::cerr << "error: dictionary is not specified" << std::endl;
+    std::cerr << "error: a dictionary is not specified" << std::endl;
     return 10;
   } else if (num_args > 1) {
     std::cerr << "error: more than one dictionaries are specified"
@@ -30,39 +31,33 @@ int lookup(const char * const *args, std::size_t num_args) {
   }
 
   marisa::Trie trie;
+  marisa::Mapper mapper;
   if (mmap_flag) {
     try {
-      trie.mmap(args[0]);
+      trie.mmap(&mapper, args[0]);
     } catch (const marisa::Exception &ex) {
-      std::cerr << ex.what() << ": failed to mmap a dictionary file: "
-          << args[0] << std::endl;
+      std::cerr << ex.filename() << ':' << ex.line() << ": " << ex.what()
+          << ": failed to mmap a dictionary file: " << args[0] << std::endl;
       return 20;
     }
   } else {
     try {
       trie.load(args[0]);
     } catch (const marisa::Exception &ex) {
-      std::cerr << ex.what() << ": failed to load a dictionary file: "
-          << args[0] << std::endl;
+      std::cerr << ex.filename() << ':' << ex.line() << ": " << ex.what()
+          << ": failed to load a dictionary file: " << args[0] << std::endl;
       return 21;
     }
   }
 
-  marisa::Agent agent;
   std::string str;
   while (std::getline(std::cin, str)) {
-    try {
-      agent.set_query(str.c_str(), str.length());
-      if (trie.lookup(agent)) {
-        std::cout << agent.key().id() << '\t' << str << '\n';
-      } else {
-        std::cout << "-1\t" << str << '\n';
-      }
-    } catch (const marisa::Exception &ex) {
-      std::cerr << ex.what() << ": lookup() failed: " << str << std::endl;
-      return 30;
+    const marisa::UInt32 key_id = trie.lookup(str);
+    if (key_id != trie.notfound()) {
+      std::cout << key_id << '\t' << str << '\n';
+    } else {
+      std::cout << "-1\t" << str << '\n';
     }
-
     if (!std::cout) {
       std::cerr << "error: failed to write results to standard output"
           << std::endl;

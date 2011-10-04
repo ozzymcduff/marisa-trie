@@ -1,249 +1,161 @@
-#include "stdio.h"
-#include "iostream.h"
+#include <algorithm>
+#include <stdexcept>
+
 #include "trie.h"
-#include "grimoire/trie.h"
 
 namespace marisa {
 
-Trie::Trie() : trie_() {}
+Trie::Trie()
+    : louds_(), labels_(), terminal_flags_(), link_flags_(), links_(),
+      trie_(), tail_(), num_first_branches_(0), num_keys_(0) {}
 
-Trie::~Trie() {}
-
-void Trie::build(Keyset &keyset, int config_flags) {
-  scoped_ptr<grimoire::LoudsTrie> temp(new (std::nothrow) grimoire::LoudsTrie);
-  MARISA_THROW_IF(temp.get() == NULL, MARISA_MEMORY_ERROR);
-
-  temp->build(keyset, config_flags);
-  trie_.swap(temp);
-}
-
-void Trie::mmap(const char *filename) {
-  MARISA_THROW_IF(filename == NULL, MARISA_NULL_ERROR);
-
-  scoped_ptr<grimoire::LoudsTrie> temp(new (std::nothrow) grimoire::LoudsTrie);
-  MARISA_THROW_IF(temp.get() == NULL, MARISA_MEMORY_ERROR);
-
-  grimoire::Mapper mapper;
-  mapper.open(filename);
-  temp->map(mapper);
-  trie_.swap(temp);
+void Trie::mmap(Mapper *mapper, const char *filename,
+    long offset, int whence) {
+  MARISA_THROW_IF(mapper == NULL, MARISA_PARAM_ERROR);
+  Mapper temp_mapper;
+  temp_mapper.open(filename, offset, whence);
+  map(temp_mapper);
+  temp_mapper.swap(mapper);
 }
 
 void Trie::map(const void *ptr, std::size_t size) {
-  MARISA_THROW_IF((ptr == NULL) && (size != 0), MARISA_NULL_ERROR);
-
-  scoped_ptr<grimoire::LoudsTrie> temp(new (std::nothrow) grimoire::LoudsTrie);
-  MARISA_THROW_IF(temp.get() == NULL, MARISA_MEMORY_ERROR);
-
-  grimoire::Mapper mapper;
-  mapper.open(ptr, size);
-  temp->map(mapper);
-  trie_.swap(temp);
+  Mapper mapper(ptr, size);
+  map(mapper);
 }
 
-void Trie::load(const char *filename) {
-  MARISA_THROW_IF(filename == NULL, MARISA_NULL_ERROR);
+void Trie::map(Mapper &mapper) {
+  Trie temp;
+  temp.louds_.map(mapper);
+  temp.labels_.map(mapper);
+  temp.terminal_flags_.map(mapper);
+  temp.link_flags_.map(mapper);
+  temp.links_.map(mapper);
+  temp.tail_.map(mapper);
+  mapper.map(&temp.num_first_branches_);
+  mapper.map(&temp.num_keys_);
 
-  scoped_ptr<grimoire::LoudsTrie> temp(new (std::nothrow) grimoire::LoudsTrie);
-  MARISA_THROW_IF(temp.get() == NULL, MARISA_MEMORY_ERROR);
+  if (temp.has_link() && !temp.has_tail()) {
+    temp.trie_.reset(new (std::nothrow) Trie);
+    MARISA_THROW_IF(!temp.has_trie(), MARISA_MEMORY_ERROR);
+    temp.trie_->map(mapper);
+  }
+  temp.swap(this);
+}
 
-  grimoire::Reader reader;
-  reader.open(filename);
-  temp->read(reader);
-  trie_.swap(temp);
+void Trie::load(const char *filename,
+    long offset, int whence) {
+  Reader reader;
+  reader.open(filename, offset, whence);
+  read(reader);
+}
+
+void Trie::fread(std::FILE *file) {
+  Reader reader(file);
+  read(reader);
 }
 
 void Trie::read(int fd) {
-  MARISA_THROW_IF(fd == -1, MARISA_CODE_ERROR);
-
-  scoped_ptr<grimoire::LoudsTrie> temp(new (std::nothrow) grimoire::LoudsTrie);
-  MARISA_THROW_IF(temp.get() == NULL, MARISA_MEMORY_ERROR);
-
-  grimoire::Reader reader;
-  reader.open(fd);
-  temp->read(reader);
-  trie_.swap(temp);
+  Reader reader(fd);
+  read(reader);
 }
 
-void Trie::save(const char *filename) const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  MARISA_THROW_IF(filename == NULL, MARISA_NULL_ERROR);
+void Trie::read(std::istream &stream) {
+  Reader reader(&stream);
+  read(reader);
+}
 
-  grimoire::Writer writer;
-  writer.open(filename);
-  trie_->write(writer);
+void Trie::read(Reader &reader) {
+  Trie temp;
+  temp.louds_.read(reader);
+  temp.labels_.read(reader);
+  temp.terminal_flags_.read(reader);
+  temp.link_flags_.read(reader);
+  temp.links_.read(reader);
+  temp.tail_.read(reader);
+  reader.read(&temp.num_first_branches_);
+  reader.read(&temp.num_keys_);
+
+  if (temp.has_link() && !temp.has_tail()) {
+    temp.trie_.reset(new (std::nothrow) Trie);
+    MARISA_THROW_IF(!temp.has_trie(), MARISA_MEMORY_ERROR);
+    temp.trie_->read(reader);
+  }
+  temp.swap(this);
+}
+
+void Trie::save(const char *filename, bool trunc_flag,
+    long offset, int whence) const {
+  Writer writer;
+  writer.open(filename, trunc_flag, offset, whence);
+  write(writer);
+}
+
+void Trie::fwrite(std::FILE *file) const {
+  Writer writer(file);
+  write(writer);
 }
 
 void Trie::write(int fd) const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  MARISA_THROW_IF(fd == -1, MARISA_CODE_ERROR);
-
-  grimoire::Writer writer;
-  writer.open(fd);
-  trie_->write(writer);
+  Writer writer(fd);
+  write(writer);
 }
 
-bool Trie::lookup(Agent &agent) const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  if (!agent.has_state()) {
-    agent.init_state();
-  }
-  return trie_->lookup(agent);
+void Trie::write(std::ostream &stream) const {
+  Writer writer(&stream);
+  write(writer);
 }
 
-void Trie::reverse_lookup(Agent &agent) const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  if (!agent.has_state()) {
-    agent.init_state();
+void Trie::write(Writer &writer) const {
+  louds_.write(writer);
+  labels_.write(writer);
+  terminal_flags_.write(writer);
+  link_flags_.write(writer);
+  links_.write(writer);
+  tail_.write(writer);
+  writer.write(num_first_branches_);
+  writer.write(num_keys_);
+  if (has_trie()) {
+    trie_->write(writer);
   }
-  trie_->reverse_lookup(agent);
-}
-
-bool Trie::common_prefix_search(Agent &agent) const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  if (!agent.has_state()) {
-    agent.init_state();
-  }
-  return trie_->common_prefix_search(agent);
-}
-
-bool Trie::predictive_search(Agent &agent) const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  if (!agent.has_state()) {
-    agent.init_state();
-  }
-  return trie_->predictive_search(agent);
 }
 
 std::size_t Trie::num_tries() const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  return trie_->num_tries();
-}
-
-std::size_t Trie::num_keys() const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  return trie_->num_keys();
+  return has_trie() ? (trie_->num_tries() + 1) : (louds_.empty() ? 0 : 1);
 }
 
 std::size_t Trie::num_nodes() const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  return trie_->num_nodes();
-}
-
-TailMode Trie::tail_mode() const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  return trie_->tail_mode();
-}
-
-NodeOrder Trie::node_order() const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  return trie_->node_order();
-}
-
-bool Trie::empty() const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  return trie_->empty();
-}
-
-std::size_t Trie::size() const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  return trie_->size();
+  if (louds_.empty()) {
+    return 0;
+  }
+  std::size_t num_nodes = (louds_.size() / 2) - 1;
+  if (has_trie()) {
+    num_nodes += trie_->num_nodes();
+  }
+  return num_nodes;
 }
 
 std::size_t Trie::total_size() const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  return trie_->total_size();
-}
-
-std::size_t Trie::io_size() const {
-  MARISA_THROW_IF(trie_.get() == NULL, MARISA_STATE_ERROR);
-  return trie_->io_size();
+  return louds_.total_size() + labels_.total_size()
+      + terminal_flags_.total_size() + link_flags_.total_size()
+      + links_.total_size() + (has_trie() ? trie_->total_size() : 0)
+      + tail_.total_size() + sizeof(num_first_branches_) + sizeof(num_keys_);
 }
 
 void Trie::clear() {
-  Trie().swap(*this);
+  Trie().swap(this);
 }
 
-void Trie::swap(Trie &rhs) {
-  trie_.swap(rhs.trie_);
-}
-
-}  // namespace marisa
-
-#include <iostream>
-
-namespace marisa {
-
-class TrieIO {
- public:
-  static void fread(std::FILE *file, Trie *trie) {
-    MARISA_THROW_IF(trie == NULL, MARISA_NULL_ERROR);
-
-    scoped_ptr<grimoire::LoudsTrie> temp(
-        new (std::nothrow) grimoire::LoudsTrie);
-    MARISA_THROW_IF(temp.get() == NULL, MARISA_MEMORY_ERROR);
-
-    grimoire::Reader reader;
-    reader.open(file);
-    temp->read(reader);
-    trie->trie_.swap(temp);
-  }
-  static void fwrite(std::FILE *file, const Trie &trie) {
-    MARISA_THROW_IF(file == NULL, MARISA_NULL_ERROR);
-    MARISA_THROW_IF(trie.trie_.get() == NULL, MARISA_STATE_ERROR);
-    grimoire::Writer writer;
-    writer.open(file);
-    trie.trie_->write(writer);
-  }
-
-  static std::istream &read(std::istream &stream, Trie *trie) {
-    MARISA_THROW_IF(trie == NULL, MARISA_NULL_ERROR);
-
-    scoped_ptr<grimoire::LoudsTrie> temp(
-        new (std::nothrow) grimoire::LoudsTrie);
-    MARISA_THROW_IF(temp.get() == NULL, MARISA_MEMORY_ERROR);
-
-    grimoire::Reader reader;
-    reader.open(stream);
-    temp->read(reader);
-    trie->trie_.swap(temp);
-    return stream;
-  }
-  static std::ostream &write(std::ostream &stream, const Trie &trie) {
-    MARISA_THROW_IF(trie.trie_.get() == NULL, MARISA_STATE_ERROR);
-    grimoire::Writer writer;
-    writer.open(stream);
-    trie.trie_->write(writer);
-    return stream;
-  }
-};
-
-void fread(std::FILE *file, Trie *trie) {
-  MARISA_THROW_IF(file == NULL, MARISA_NULL_ERROR);
-  MARISA_THROW_IF(trie == NULL, MARISA_NULL_ERROR);
-  TrieIO::fread(file, trie);
-}
-
-void fwrite(std::FILE *file, const Trie &trie) {
-  MARISA_THROW_IF(file == NULL, MARISA_NULL_ERROR);
-  TrieIO::fwrite(file, trie);
-}
-
-std::istream &read(std::istream &stream, Trie *trie) {
-  MARISA_THROW_IF(trie == NULL, MARISA_NULL_ERROR);
-  return TrieIO::read(stream, trie);
-}
-
-std::ostream &write(std::ostream &stream, const Trie &trie) {
-  return TrieIO::write(stream, trie);
-}
-
-std::istream &operator>>(std::istream &stream, Trie &trie) {
-  return read(stream, &trie);
-}
-
-std::ostream &operator<<(std::ostream &stream, const Trie &trie) {
-  return write(stream, trie);
+void Trie::swap(Trie *rhs) {
+  MARISA_THROW_IF(rhs == NULL, MARISA_PARAM_ERROR);
+  louds_.swap(&rhs->louds_);
+  labels_.swap(&rhs->labels_);
+  terminal_flags_.swap(&rhs->terminal_flags_);
+  link_flags_.swap(&rhs->link_flags_);
+  links_.swap(&rhs->links_);
+  Swap(&trie_, &rhs->trie_);
+  tail_.swap(&rhs->tail_);
+  Swap(&num_first_branches_, &rhs->num_first_branches_);
+  Swap(&num_keys_, &rhs->num_keys_);
 }
 
 }  // namespace marisa
