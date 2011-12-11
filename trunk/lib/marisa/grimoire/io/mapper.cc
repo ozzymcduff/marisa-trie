@@ -1,7 +1,7 @@
 #if (defined _WIN32) || (defined _WIN64)
  #include <sys/types.h>
  #include <sys/stat.h>
- #include <Windows.h>
+ #include <windows.h>
 #else  // (defined _WIN32) || (defined _WIN64)
  #include <sys/mman.h>
  #include <sys/stat.h>
