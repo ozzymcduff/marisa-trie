@@ -25,14 +25,6 @@ void Agent::set_query(const char *ptr, std::size_t length) {
   query_.set_str(ptr, length);
 }
 
-void Agent::set_query(int key_id) {
-  MARISA_THROW_IF(key_id < 0, MARISA_SIZE_ERROR);
-  if (state_.get() != NULL) {
-    state_->reset();
-  }
-  query_.set_id(key_id);
-}
-
 void Agent::set_query(std::size_t key_id) {
   if (state_.get() != NULL) {
     state_->reset();
