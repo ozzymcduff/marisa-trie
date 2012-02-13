@@ -9,7 +9,7 @@ MARISA: Matching Algorithm with Recursively Implemented StorAge
 
 - Version
 
-0.2.0-beta7
+0.2.0
 
 - Description
 
@@ -36,9 +36,9 @@ The biggest advantage of *libmarisa* is that its dictioanry size is considerably
 || *marisa-trie*    ||   *44,172,368* || MARISA trie                 ||
 
  * Documentation
-  * marisa-0.2.0-beta7
-   * [http://marisa-trie.googlecode.com/svn/branches/marisa-0.2.0-beta7/docs/readme.en.html README (English)]
-   * [http://marisa-trie.googlecode.com/svn/branches/marisa-0.2.0-beta7/docs/readme.ja.html README (Japanese)]
+  * marisa-0.2.0
+   * [http://marisa-trie.googlecode.com/svn/trunk/docs/readme.en.html README (English)]
+   * [http://marisa-trie.googlecode.com/svn/trunk/docs/readme.ja.html README (Japanese)]
   * marisa-0.1.4 (Japanese)
    * HowTo
    * ListOfTools

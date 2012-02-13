@@ -1,5 +1,8 @@
 SUBDIRS = lib tools tests
 
+pkgconfigdir = ${libdir}/pkgconfig
+pkgconfig_DATA = marisa.pc
+
 EXTRA_DIST = \
   bindings/Makefile \
   bindings/perl/Makefile.PL \
