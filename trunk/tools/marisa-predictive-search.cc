@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
           std::cerr << "error: option `-n' with an invalid argument: "
               << cmdopt.optarg << std::endl;
         }
-        if ((value == 0) || ((unsigned long)value > MARISA_SIZE_MAX)) {
+        if ((value == 0) || ((unsigned long long)value > MARISA_SIZE_MAX)) {
           max_num_results = MARISA_SIZE_MAX;
         } else {
           max_num_results = (std::size_t)value;
