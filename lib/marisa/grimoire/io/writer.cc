@@ -1,4 +1,3 @@
-#include <limits.h>
 #include <stdio.h>
 
 #ifdef _MSC_VER
@@ -6,6 +5,8 @@
 #else  // _MSC_VER
  #include <unistd.h>
 #endif  // _MSC_VER
+
+#include <limits>
 
 #include "writer.h"
 
@@ -115,10 +116,14 @@ void Writer::write_data(const void *data, std::size_t size) {
   } else if (fd_ != -1) {
     while (size != 0) {
 #ifdef _MSC_VER
-      const unsigned int count = (size < INT_MAX) ? size : INT_MAX;
+      static const std::size_t CHUNK_SIZE =
+          std::numeric_limits<int>::max();
+      const unsigned int count = (size < CHUNK_SIZE) ? size : CHUNK_SIZE;
       const int size_written = ::_write(fd_, data, count);
 #else  // _MSC_VER
-      const ::size_t count = (size < SSIZE_MAX) ? size : SSIZE_MAX;
+      static const std::size_t CHUNK_SIZE =
+          std::numeric_limits< ::ssize_t>::max();
+      const ::size_t count = (size < CHUNK_SIZE) ? size : CHUNK_SIZE;
       const ::ssize_t size_written = ::write(fd_, data, count);
 #endif  // _MSC_VER
       MARISA_THROW_IF(size_written <= 0, MARISA_IO_ERROR);
