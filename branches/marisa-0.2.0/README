@@ -1,0 +1,62 @@
+- Project name
+
+marisa-trie
+http://code.google.com/p/marisa-trie/
+
+- Project summary
+
+MARISA: Matching Algorithm with Recursively Implemented StorAge
+
+- Version
+
+0.2.0
+
+- Description
+
+*Matching Algorithm with Recursively Implemented !StorAge (MARISA)* is a static and space-efficient trie data structure. And *libmarisa* is a C++ library to provide an implementation of MARISA. Also, the package of *libmarisa* contains a set of command line tools for building and operating a MARISA-based dictionary.
+
+A MARISA-based dictionary supports not only lookup but also reverse lookup, common prefix search and predictive search.
+
+ * Lookup is to check whether or not a given string exists in a dictionary.
+ * Reverse lookup is to restore a key from its ID.
+ * Common prefix search is to find keys from prefixes of a given string.
+ * Predictive search is to find keys starting with a given string.
+
+The biggest advantage of *libmarisa* is that its dictioanry size is considerably more compact than others. See below for the dictionary size of other implementations.
+
+ * Input
+  * Source: enwiki-20110405-all-titles-in-ns0.gz
+  * Contents: all page titles of English Wikipedia (Apr. 2011)
+  * Number of keys: 8,472,583
+  * Total size: 171,336,267 bytes (plain) / 47,444,569 bytes (gzipped)
+
+|| *Implementation* || *Size (bytes)* || *Remarks*                   ||
+||  darts-clone     ||   316,065,792  || Compacted double-array trie ||
+||  tx-trie         ||   109,701,170  || LOUDS-based trie            ||
+|| *marisa-trie*    ||   *44,172,368* || MARISA trie                 ||
+
+ * Documentation
+  * marisa-0.2.0
+   * [http://marisa-trie.googlecode.com/svn/branches/marisa-0.2.0/docs/readme.en.html README (English)]
+   * [http://marisa-trie.googlecode.com/svn/branches/marisa-0.2.0/docs/readme.ja.html README (Japanese)]
+  * marisa-0.1.4 (Japanese)
+   * HowTo
+   * ListOfTools
+   * LibraryInterface
+   * BenchmarkResults
+
+- Version control system
+
+Subversion
+
+- Source code license
+
+New BSD License
+
+- Project labels
+
+Patricia
+Trie
+Static
+Dictionary
+CPlusPlus
