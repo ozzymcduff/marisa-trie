@@ -87,9 +87,9 @@ std::size_t BitVector<32>::rank1(std::size_t i) const {
     }
   }
   if (((i / 32) & 1) == 1) {
-    offset += PopCount<32>(units_[(i / 32) - 1]).lo32();
+    offset += PopCount<32>::count(units_[(i / 32) - 1]);
   }
-  offset += PopCount<32>(units_[i / 32] & ((1U << (i % 32)) - 1)).lo32();
+  offset += PopCount<32>::count(units_[i / 32] & ((1U << (i % 32)) - 1));
   return offset;
 }
 
@@ -306,7 +306,7 @@ std::size_t BitVector<64>::rank1(std::size_t i) const {
       break;
     }
   }
-  offset += PopCount<64>(units_[i / 64] & ((1ULL << (i % 64)) - 1)).lo64();
+  offset += PopCount<64>::count(units_[i / 64] & ((1ULL << (i % 64)) - 1));
   return offset;
 }
 
