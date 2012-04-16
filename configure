@@ -741,6 +741,7 @@ enable_fast_install
 with_gnu_ld
 with_sysroot
 enable_libtool_lock
+enable_popcnt
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1382,6 +1383,7 @@ Optional Features:
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
+  --enable-popcnt         use popcnt (SSE4.2) [default=no]
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -14952,6 +14954,23 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 # Checks for typedefs, structures, and compiler characteristics.
 
 # Checks for library functions.
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use popcnt (SSE4.2)" >&5
+$as_echo_n "checking whether to use popcnt (SSE4.2)... " >&6; }
+# Check whether --enable-popcnt was given.
+if test "${enable_popcnt+set}" = set; then :
+  enableval=$enable_popcnt;
+else
+  enable_popcnt="no"
+fi
+
+if test "x${enable_popcnt}" != "xno"
+then
+  CPPFLAGS="$CPPFLAGS -DMARISA_USE_POPCNT -msse4.2"
+  enable_popcnt="yes"
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${enable_popcnt}" >&5
+$as_echo "${enable_popcnt}" >&6; }
 
 ac_config_files="$ac_config_files Makefile marisa.pc lib/Makefile tests/Makefile tools/Makefile"
 

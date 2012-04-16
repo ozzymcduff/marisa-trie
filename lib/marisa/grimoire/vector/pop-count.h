@@ -1,6 +1,12 @@
 #ifndef MARISA_GRIMOIRE_VECTOR_POP_COUNT_H_
 #define MARISA_GRIMOIRE_VECTOR_POP_COUNT_H_
 
+#ifdef MARISA_USE_POPCNT
+ #ifdef _MSC_VER
+  #include <intrin.h>
+ #endif  // _MSC_VER
+#endif  // MARISA_USE_POPCNT
+
 #include "../../base.h"
 
 namespace marisa {
@@ -33,6 +39,18 @@ class PopCount<32> {
   }
   std::size_t lo32() const {
     return (value_ >> 24) & 0xFFU;
+  }
+
+  static std::size_t count(UInt32 x) {
+#ifdef MARISA_USE_POPCNT
+ #ifdef _MSC_VER
+    return ::__popcnt32(x);
+ #else  // _MSC_VER
+    return ::__builtin_popcount(x);
+ #endif  // _MSC_VER
+#else  // MARISA_USE_POPCNT
+    return PopCount(x).lo32();
+#endif  // MARISA_USE_POPCNT
   }
 
  private:
@@ -75,6 +93,22 @@ class PopCount<64> {
   }
   std::size_t lo64() const {
     return (std::size_t)((value_ >> 56) & 0xFFU);
+  }
+
+  static std::size_t count(UInt64 x) {
+#ifdef MARISA_USE_POPCNT
+ #ifdef _MSC_VER
+  #ifdef _WIN64
+    return (std::size_t)::__popcnt64(x);
+  #else  // _WIN64
+    return PopCount(x).lo64();
+  #endif  // _WIN64
+ #else  // _MSC_VER
+    return ::__builtin_popcountll(x);
+ #endif  // _MSC_VER
+#else  // MARISA_USE_POPCNT
+    return PopCount(x).lo64();
+#endif  // MARISA_USE_POPCNT
   }
 
  private:
