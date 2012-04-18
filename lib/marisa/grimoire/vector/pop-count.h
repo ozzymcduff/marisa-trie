@@ -22,9 +22,8 @@ class PopCount<32> {
   explicit PopCount(UInt32 x) : value_() {
     x = (x & 0x55555555U) + ((x & 0xAAAAAAAAU) >> 1);
     x = (x & 0x33333333U) + ((x & 0xCCCCCCCCU) >> 2);
-    x = (x + (x >> 4)) & 0x0F0F0F0FU;
-    x += x << 8;
-    x += x << 16;
+    x = (x & 0x0F0F0F0FU) + ((x & 0xF0F0F0F0U) >> 4);
+    x *= 0x01010101U;
     value_ = x;
   }
 
@@ -63,10 +62,8 @@ class PopCount<64> {
   explicit PopCount(UInt64 x) : value_() {
     x = (x & 0x5555555555555555ULL) + ((x & 0xAAAAAAAAAAAAAAAAULL) >> 1);
     x = (x & 0x3333333333333333ULL) + ((x & 0xCCCCCCCCCCCCCCCCULL) >> 2);
-    x = (x + (x >> 4)) & 0x0F0F0F0F0F0F0F0FULL;
-    x += x << 8;
-    x += x << 16;
-    x += x << 32;
+    x = (x & 0x0F0F0F0F0F0F0F0FULL) + ((x & 0xF0F0F0F0F0F0F0F0ULL) >> 4);
+    x *= 0x0101010101010101ULL;
     value_ = x;
   }
 
