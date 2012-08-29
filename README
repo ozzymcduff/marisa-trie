@@ -22,7 +22,7 @@ A MARISA-based dictionary supports not only lookup but also reverse lookup, comm
  * Common prefix search is to find keys from prefixes of a given string.
  * Predictive search is to find keys starting with a given string.
 
-The biggest advantage of *libmarisa* is that its dictioanry size is considerably more compact than others. See below for the dictionary size of other implementations.
+The biggest advantage of *libmarisa* is that its dictionary size is considerably more compact than others. See below for the dictionary size of other implementations.
 
  * Input
   * Source: enwiki-20110405-all-titles-in-ns0.gz
