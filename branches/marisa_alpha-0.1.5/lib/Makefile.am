@@ -1,9 +1,10 @@
 AM_CXXFLAGS = -Wall -Weffc++
 #AM_CXXFLAGS = -Wall -Weffc++ -D_DEBUG
+ACLOCAL_AMFLAGS = -I m4
 
-lib_LIBRARIES = libmarisa_alpha.a
+lib_LTLIBRARIES = libmarisa_alpha.la
 
-libmarisa_alpha_a_SOURCES = \
+libmarisa_alpha_la_SOURCES = \
   marisa_alpha/base.cc \
   marisa_alpha/progress.cc \
   marisa_alpha/mapper.cc \
