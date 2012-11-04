@@ -4,156 +4,47 @@
 #include <string>
 #include <vector>
 
-#include <marisa/grimoire/vector/pop-count.h>
-#include <marisa/grimoire/vector/rank-index.h>
-#include <marisa/grimoire/vector.h>
+#include <marisa_alpha/vector.h>
+#include <marisa_alpha/intvector.h>
+#include <marisa_alpha/bitvector.h>
 
-#include "marisa-assert.h"
+#include "assert.h"
 
 namespace {
-
-void TestPopCount32() {
-  TEST_START();
-
-  {
-    marisa::grimoire::vector::PopCount<32> count(0);
-    ASSERT(count.lo8() == 0);
-    ASSERT(count.lo16() == 0);
-    ASSERT(count.lo24() == 0);
-    ASSERT(count.lo32() == 0);
-  }
-
-  {
-    marisa::grimoire::vector::PopCount<32> count(0xFFFFFFFFU);
-    ASSERT(count.lo8() == 8);
-    ASSERT(count.lo16() == 16);
-    ASSERT(count.lo24() == 24);
-    ASSERT(count.lo32() == 32);
-  }
-
-  {
-    marisa::grimoire::vector::PopCount<32> count(0xFF3F0F03U);
-    ASSERT(count.lo8() == 2);
-    ASSERT(count.lo16() == 6);
-    ASSERT(count.lo24() == 12);
-    ASSERT(count.lo32() == 20);
-  }
-
-  TEST_END();
-}
-
-void TestPopCount64() {
-  TEST_START();
-
-  {
-    marisa::grimoire::vector::PopCount<64> count(0);
-    ASSERT(count.lo8() == 0);
-    ASSERT(count.lo16() == 0);
-    ASSERT(count.lo24() == 0);
-    ASSERT(count.lo32() == 0);
-    ASSERT(count.lo40() == 0);
-    ASSERT(count.lo48() == 0);
-    ASSERT(count.lo56() == 0);
-    ASSERT(count.lo64() == 0);
-  }
-
-  {
-    marisa::grimoire::vector::PopCount<64> count(0xFFFFFFFFFFFFFFFFULL);
-    ASSERT(count.lo8() == 8);
-    ASSERT(count.lo16() == 16);
-    ASSERT(count.lo24() == 24);
-    ASSERT(count.lo32() == 32);
-    ASSERT(count.lo40() == 40);
-    ASSERT(count.lo48() == 48);
-    ASSERT(count.lo56() == 56);
-    ASSERT(count.lo64() == 64);
-  }
-
-  {
-    marisa::grimoire::vector::PopCount<64> count(0xFF7F3F1F0F070301ULL);
-    ASSERT(count.lo8() == 1);
-    ASSERT(count.lo16() == 3);
-    ASSERT(count.lo24() == 6);
-    ASSERT(count.lo32() == 10);
-    ASSERT(count.lo40() == 15);
-    ASSERT(count.lo48() == 21);
-    ASSERT(count.lo56() == 28);
-    ASSERT(count.lo64() == 36);
-  }
-
-  TEST_END();
-}
-
-void TestRankIndex() {
-  TEST_START();
-
-  marisa::grimoire::vector::RankIndex rank;
-
-  ASSERT(rank.abs() == 0);
-  ASSERT(rank.rel1() == 0);
-  ASSERT(rank.rel2() == 0);
-  ASSERT(rank.rel3() == 0);
-  ASSERT(rank.rel4() == 0);
-  ASSERT(rank.rel5() == 0);
-  ASSERT(rank.rel6() == 0);
-  ASSERT(rank.rel7() == 0);
-
-  rank.set_abs(10000);
-  rank.set_rel1(64);
-  rank.set_rel2(128);
-  rank.set_rel3(192);
-  rank.set_rel4(256);
-  rank.set_rel5(320);
-  rank.set_rel6(384);
-  rank.set_rel7(448);
-
-  ASSERT(rank.abs() == 10000);
-  ASSERT(rank.rel1() == 64);
-  ASSERT(rank.rel2() == 128);
-  ASSERT(rank.rel3() == 192);
-  ASSERT(rank.rel4() == 256);
-  ASSERT(rank.rel5() == 320);
-  ASSERT(rank.rel6() == 384);
-  ASSERT(rank.rel7() == 448);
-
-  TEST_END();
-}
 
 void TestVector() {
   TEST_START();
 
   std::vector<int> values;
-  for (std::size_t i = 0; i < 10000; ++i) {
+  for (std::size_t i = 0; i < 1000; ++i) {
     values.push_back(std::rand());
   }
 
-  marisa::grimoire::Vector<int> vec;
+  marisa_alpha::Vector<int> vec;
 
-  ASSERT(vec.max_size() == (MARISA_SIZE_MAX / sizeof(int)));
+  ASSERT(vec.max_size() == MARISA_ALPHA_UINT32_MAX);
   ASSERT(vec.size() == 0);
   ASSERT(vec.capacity() == 0);
   ASSERT(!vec.fixed());
   ASSERT(vec.empty());
-  ASSERT(vec.total_size() == 0);
-  ASSERT(vec.io_size() == sizeof(marisa::UInt64));
+  ASSERT(vec.total_size() == sizeof(marisa_alpha::UInt32));
 
   for (std::size_t i = 0; i < values.size(); ++i) {
     vec.push_back(values[i]);
     ASSERT(vec[i] == values[i]);
-    ASSERT(static_cast<const marisa::grimoire::Vector<int> &>(vec)[i]
-        == values[i]);
+    ASSERT(static_cast<const marisa_alpha::Vector<int> &>(vec)[i] ==
+        values[i]);
   }
 
   ASSERT(vec.size() == values.size());
   ASSERT(vec.capacity() >= vec.size());
   ASSERT(!vec.empty());
-  ASSERT(vec.total_size() == (sizeof(int) * values.size()));
-  ASSERT(vec.io_size() == sizeof(marisa::UInt64)
+  ASSERT(vec.total_size() == sizeof(marisa_alpha::UInt32)
       + ((sizeof(int) * values.size())));
 
-  ASSERT(static_cast<const marisa::grimoire::Vector<int> &>(vec).front()
+  ASSERT(static_cast<const marisa_alpha::Vector<int> &>(vec).front()
       == values.front());
-  ASSERT(static_cast<const marisa::grimoire::Vector<int> &>(vec).back()
+  ASSERT(static_cast<const marisa_alpha::Vector<int> &>(vec).back()
       == values.back());
   ASSERT(vec.front() == values.front());
   ASSERT(vec.back() == values.back());
@@ -164,59 +55,46 @@ void TestVector() {
   ASSERT(vec.capacity() == vec.size());
   for (std::size_t i = 0; i < values.size(); ++i) {
     ASSERT(vec[i] == values[i]);
-    ASSERT(static_cast<const marisa::grimoire::Vector<int> &>(vec)[i]
-        == values[i]);
+    ASSERT(static_cast<const marisa_alpha::Vector<int> &>(vec)[i] ==
+        values[i]);
   }
 
-  {
-    marisa::grimoire::Writer writer;
-    writer.open("vector-test.dat");
-    vec.write(writer);
-  }
+  vec.save("vector-test.dat");
   vec.clear();
 
   ASSERT(vec.empty());
   ASSERT(vec.capacity() == 0);
 
-  {
-    marisa::grimoire::Mapper mapper;
-    mapper.open("vector-test.dat");
-    vec.map(mapper);
+  marisa_alpha::Mapper mapper;
+  vec.mmap(&mapper, "vector-test.dat");
 
-    ASSERT(vec.size() == values.size());
-    ASSERT(vec.capacity() == 0);
-    ASSERT(vec.fixed());
-    ASSERT(!vec.empty());
-    ASSERT(vec.total_size() == (sizeof(int) * values.size()));
-    ASSERT(vec.io_size() == sizeof(marisa::UInt64)
-        + ((sizeof(int) * values.size())));
+  ASSERT(mapper.is_open());
+  ASSERT(vec.size() == values.size());
+  ASSERT(vec.capacity() == 0);
+  ASSERT(vec.fixed());
+  ASSERT(!vec.empty());
+  ASSERT(vec.total_size() == sizeof(marisa_alpha::UInt32)
+      + ((sizeof(int) * values.size())));
 
-    for (std::size_t i = 0; i < values.size(); ++i) {
-      ASSERT(static_cast<const marisa::grimoire::Vector<int> &>(vec)[i]
-          == values[i]);
-    }
-
-    vec.clear();
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    ASSERT(static_cast<const marisa_alpha::Vector<int> &>(vec)[i] ==
+        values[i]);
   }
 
-  {
-    marisa::grimoire::Reader reader;
-    reader.open("vector-test.dat");
-    vec.read(reader);
-  }
+  vec.clear();
+  vec.load("vector-test.dat");
 
   ASSERT(vec.size() == values.size());
   ASSERT(vec.capacity() == vec.size());
   ASSERT(!vec.fixed());
   ASSERT(!vec.empty());
-  ASSERT(vec.total_size() == (sizeof(int) * values.size()));
-  ASSERT(vec.io_size() == sizeof(marisa::UInt64)
+  ASSERT(vec.total_size() == sizeof(marisa_alpha::UInt32)
       + ((sizeof(int) * values.size())));
 
   for (std::size_t i = 0; i < values.size(); ++i) {
     ASSERT(vec[i] == values[i]);
-    ASSERT(static_cast<const marisa::grimoire::Vector<int> &>(vec)[i]
-        == values[i]);
+    ASSERT(static_cast<const marisa_alpha::Vector<int> &>(vec)[i] ==
+        values[i]);
   }
 
   vec.clear();
@@ -232,59 +110,50 @@ void TestVector() {
   vec.resize(100);
   ASSERT(vec.capacity() == 100);
 
-  EXCEPT(vec.resize(MARISA_SIZE_MAX), MARISA_SIZE_ERROR);
-
   vec.fix();
   ASSERT(vec.fixed());
-  EXCEPT(vec.fix(), MARISA_STATE_ERROR);
-  EXCEPT(vec.push_back(0), MARISA_STATE_ERROR);
-  EXCEPT(vec.resize(0), MARISA_STATE_ERROR);
-  EXCEPT(vec.reserve(0), MARISA_STATE_ERROR);
+  EXCEPT(vec.fix(), MARISA_ALPHA_STATE_ERROR);
+  EXCEPT(vec.push_back(0), MARISA_ALPHA_STATE_ERROR);
+  EXCEPT(vec.resize(0), MARISA_ALPHA_STATE_ERROR);
+  EXCEPT(vec.reserve(0), MARISA_ALPHA_STATE_ERROR);
 
   TEST_END();
 }
 
-template <int T>
-void TestFlatVector() {
-  typedef marisa::grimoire::vector::FlatVector<T> FlatVector;
-
+void TestIntVector() {
   TEST_START();
-  std::cout << "<" << T << ">: ";
 
-  FlatVector vec;
+  marisa_alpha::IntVector vec;
 
-  ASSERT(vec.value_size() == 0);
+  ASSERT(vec.num_bits_per_int() == 0);
   ASSERT(vec.mask() == 0);
   ASSERT(vec.size() == 0);
   ASSERT(vec.empty());
-  ASSERT(vec.total_size() == 0);
-  ASSERT(vec.io_size() == (sizeof(marisa::UInt64) * 3));
+  ASSERT(vec.total_size() == sizeof(marisa_alpha::UInt32) * 4);
 
-  marisa::grimoire::Vector<marisa::UInt32> values;
+  marisa_alpha::Vector<marisa_alpha::UInt32> values;
   vec.build(values);
 
-  ASSERT(vec.value_size() == 0);
-  ASSERT(vec.mask() == 0);
+  ASSERT(vec.num_bits_per_int() == 1);
+  ASSERT(vec.mask() == 1);
   ASSERT(vec.size() == 0);
   ASSERT(vec.empty());
-  ASSERT(vec.total_size() == 0);
-  ASSERT(vec.io_size() == (sizeof(marisa::UInt64) * 3));
+  ASSERT(vec.total_size() == sizeof(marisa_alpha::UInt32) * 4);
 
   values.push_back(0);
   vec.build(values);
 
-  ASSERT(vec.value_size() == 0);
-  ASSERT(vec.mask() == 0);
+  ASSERT(vec.num_bits_per_int() == 1);
+  ASSERT(vec.mask() == 1);
   ASSERT(vec.size() == 1);
   ASSERT(!vec.empty());
-  ASSERT(vec.total_size() == 8);
-  ASSERT(vec.io_size() == (sizeof(marisa::UInt64) * 4));
+  ASSERT(vec.total_size() == sizeof(marisa_alpha::UInt32) * 5);
   ASSERT(vec[0] == 0);
 
   values.push_back(255);
   vec.build(values);
 
-  ASSERT(vec.value_size() == 8);
+  ASSERT(vec.num_bits_per_int() == 8);
   ASSERT(vec.mask() == 0xFF);
   ASSERT(vec.size() == 2);
   ASSERT(vec[0] == 0);
@@ -293,47 +162,35 @@ void TestFlatVector() {
   values.push_back(65536);
   vec.build(values);
 
-  ASSERT(vec.value_size() == 17);
+  ASSERT(vec.num_bits_per_int() == 17);
   ASSERT(vec.mask() == 0x1FFFF);
   ASSERT(vec.size() == 3);
   ASSERT(vec[0] == 0);
   ASSERT(vec[1] == 255);
   ASSERT(vec[2] == 65536);
 
-  {
-    marisa::grimoire::Writer writer;
-    writer.open("vector-test.dat");
-    vec.write(writer);
-  }
-
+  vec.save("vector-test.dat");
   vec.clear();
 
-  ASSERT(vec.value_size() == 0);
+  ASSERT(vec.num_bits_per_int() == 0);
   ASSERT(vec.mask() == 0);
   ASSERT(vec.size() == 0);
 
-  {
-    marisa::grimoire::Mapper mapper;
-    mapper.open("vector-test.dat");
-    vec.map(mapper);
+  marisa_alpha::Mapper mapper;
+  vec.mmap(&mapper, "vector-test.dat");
 
-    ASSERT(vec.value_size() == 17);
-    ASSERT(vec.mask() == 0x1FFFF);
-    ASSERT(vec.size() == 3);
-    ASSERT(vec[0] == 0);
-    ASSERT(vec[1] == 255);
-    ASSERT(vec[2] == 65536);
+  ASSERT(mapper.is_open());
+  ASSERT(vec.num_bits_per_int() == 17);
+  ASSERT(vec.mask() == 0x1FFFF);
+  ASSERT(vec.size() == 3);
+  ASSERT(vec[0] == 0);
+  ASSERT(vec[1] == 255);
+  ASSERT(vec[2] == 65536);
 
-    vec.clear();
-  }
+  vec.clear();
+  vec.load("vector-test.dat");
 
-  {
-    marisa::grimoire::Reader reader;
-    reader.open("vector-test.dat");
-    vec.read(reader);
-  }
-
-  ASSERT(vec.value_size() == 17);
+  ASSERT(vec.num_bits_per_int() == 17);
   ASSERT(vec.mask() == 0x1FFFF);
   ASSERT(vec.size() == 3);
   ASSERT(vec[0] == 0);
@@ -341,7 +198,7 @@ void TestFlatVector() {
   ASSERT(vec[2] == 65536);
 
   values.clear();
-  for (std::size_t i = 0; i < 10000; ++i) {
+  for (std::size_t i = 0; i < 500; ++i) {
     values.push_back(std::rand());
   }
   vec.build(values);
@@ -354,20 +211,16 @@ void TestFlatVector() {
   TEST_END();
 }
 
-template <int T>
-void TestBitVector(std::size_t size) {
-  typedef marisa::grimoire::vector::BitVector<T> BitVector;
-
-  BitVector bv;
+void TestBitVector(marisa_alpha::UInt32 size) {
+  marisa_alpha::BitVector bv;
 
   ASSERT(bv.size() == 0);
   ASSERT(bv.empty());
-  ASSERT(bv.total_size() == 0);
-  ASSERT(bv.io_size() == sizeof(marisa::UInt64) * 5);
+  ASSERT(bv.total_size() == sizeof(marisa_alpha::UInt32) * 5);
 
   std::vector<bool> bits(size);
-  std::vector<std::size_t> zeros, ones;
-  for (std::size_t i = 0; i < size; ++i) {
+  std::vector<marisa_alpha::UInt32> zeros, ones;
+  for (marisa_alpha::UInt32 i = 0; i < size; ++i) {
     const bool bit = (std::rand() % 2) == 0;
     bits[i] = bit;
     bv.push_back(bit);
@@ -378,76 +231,60 @@ void TestBitVector(std::size_t size) {
   ASSERT(bv.size() == bits.size());
   ASSERT((size == 0) || !bv.empty());
 
-  bv.build(true, true);
+  bv.build();
 
-  std::size_t num_zeros = 0, num_ones = 0;
-  for (std::size_t i = 0; i < bits.size(); ++i) {
+  marisa_alpha::UInt32 num_zeros = 0, num_ones = 0;
+  for (marisa_alpha::UInt32 i = 0; i < bits.size(); ++i) {
     ASSERT(bv[i] == bits[i]);
     ASSERT(bv.rank0(i) == num_zeros);
     ASSERT(bv.rank1(i) == num_ones);
     ++(bv[i] ? num_ones : num_zeros);
   }
-  for (std::size_t i = 0; i < zeros.size(); ++i) {
+  for (marisa_alpha::UInt32 i = 0; i < zeros.size(); ++i) {
     ASSERT(bv.select0(i) == zeros[i]);
   }
-  for (std::size_t i = 0; i < ones.size(); ++i) {
+  for (marisa_alpha::UInt32 i = 0; i < ones.size(); ++i) {
     ASSERT(bv.select1(i) == ones[i]);
   }
-  ASSERT(bv.num_0s() == num_zeros);
-  ASSERT(bv.num_1s() == num_ones);
 
   std::stringstream stream;
-  {
-    marisa::grimoire::Writer writer;
-    writer.open(stream);
-    bv.write(writer);
-  }
-
+  bv.write(stream);
   bv.clear();
 
   ASSERT(bv.size() == 0);
   ASSERT(bv.empty());
-  ASSERT(bv.total_size() == 0);
-  ASSERT(bv.io_size() == sizeof(marisa::UInt64) * 5);
+  ASSERT(bv.total_size() == sizeof(marisa_alpha::UInt32) * 5);
 
-  {
-    marisa::grimoire::Reader reader;
-    reader.open(stream);
-    bv.read(reader);
-  }
+  bv.read(stream);
 
   ASSERT(bv.size() == bits.size());
 
   num_zeros = 0, num_ones = 0;
-  for (std::size_t i = 0; i < bits.size(); ++i) {
+  for (marisa_alpha::UInt32 i = 0; i < bits.size(); ++i) {
     ASSERT(bv[i] == bits[i]);
     ASSERT(bv.rank0(i) == num_zeros);
     ASSERT(bv.rank1(i) == num_ones);
     ++(bv[i] ? num_ones : num_zeros);
   }
-  for (std::size_t i = 0; i < zeros.size(); ++i) {
+  for (marisa_alpha::UInt32 i = 0; i < zeros.size(); ++i) {
     ASSERT(bv.select0(i) == zeros[i]);
   }
-  for (std::size_t i = 0; i < ones.size(); ++i) {
+  for (marisa_alpha::UInt32 i = 0; i < ones.size(); ++i) {
     ASSERT(bv.select1(i) == ones[i]);
   }
-  ASSERT(bv.num_0s() == num_zeros);
-  ASSERT(bv.num_1s() == num_ones);
 }
 
-template <int T>
 void TestBitVector() {
   TEST_START();
-  std::cout << "<" << T << ">: ";
 
-  TestBitVector<T>(0);
-  TestBitVector<T>(1);
-  TestBitVector<T>(511);
-  TestBitVector<T>(512);
-  TestBitVector<T>(513);
+  TestBitVector(0);
+  TestBitVector(1);
+  TestBitVector(511);
+  TestBitVector(512);
+  TestBitVector(513);
 
-  for (int i = 0; i < 100; ++i) {
-    TestBitVector<T>(std::rand() % 4096);
+  for (marisa_alpha::UInt32 i = 0; i < 100; ++i) {
+    TestBitVector(std::rand() % 4096);
   }
 
   TEST_END();
@@ -455,21 +292,12 @@ void TestBitVector() {
 
 }  // namespace
 
-int main() try {
-  std::srand((unsigned int)std::time(NULL));
-
-  TestPopCount32();
-  TestPopCount64();
-  TestRankIndex();
+int main() {
+  std::srand((unsigned int)time(NULL));
 
   TestVector();
-  TestFlatVector<32>();
-  TestFlatVector<64>();
-  TestBitVector<32>();
-  TestBitVector<64>();
+  TestIntVector();
+  TestBitVector();
 
   return 0;
-} catch (const marisa::Exception &ex) {
-  std::cerr << ex.what() << std::endl;
-  throw;
 }

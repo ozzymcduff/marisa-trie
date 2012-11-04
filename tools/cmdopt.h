@@ -1,5 +1,5 @@
-#ifndef MARISA_CMDOPT_H_
-#define MARISA_CMDOPT_H_
+#ifndef MARISA_ALPHA_CMDOPT_H_
+#define MARISA_ALPHA_CMDOPT_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,4 +55,4 @@ int cmdopt_get(cmdopt_t *h);
 }  // extern "C"
 #endif
 
-#endif  // MARISA_CMDOPT_H_
+#endif  // MARISA_ALPHA_CMDOPT_H_

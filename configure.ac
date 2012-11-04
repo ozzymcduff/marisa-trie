@@ -2,44 +2,39 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([marisa],
-        [0.2.0],
-        [syata@acm.org])
-AC_CONFIG_SRCDIR([lib/marisa.h])
+AC_INIT([marisa_alpha], [0.1.5], [syata@acm.org])
+AC_CONFIG_SRCDIR([lib/marisa_alpha.h])
 AM_INIT_AUTOMAKE
 
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_RANLIB
-AC_PROG_LIBTOOL
 AC_PROG_INSTALL
-
-AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for libraries.
 
 # Checks for header files.
+AC_CHECK_HEADERS([fcntl.h limits.h stddef.h stdint.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
+AC_HEADER_STDBOOL
+AC_C_INLINE
+AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+AC_TYPE_UINT8_T
 
 # Checks for library functions.
-
-AC_MSG_CHECKING([whether to use popcnt (SSE4.2)])
-AC_ARG_ENABLE([popcnt],
-              [AS_HELP_STRING([--enable-popcnt],
-                              [use popcnt (SSE4.2) [default=no]])],
-              [],
-              [enable_popcnt="no"])
-if test "x${enable_popcnt}" != "xno"
-then
-  CPPFLAGS="$CPPFLAGS -DMARISA_USE_POPCNT -msse4.2"
-  enable_popcnt="yes"
-fi
-AC_MSG_RESULT([${enable_popcnt}])
+AC_FUNC_MALLOC
+AC_FUNC_MMAP
+AC_FUNC_REALLOC
+AC_FUNC_STRTOD
+AC_CHECK_FUNCS([munmap strtol])
 
 AC_CONFIG_FILES([Makefile
-                 marisa.pc
                  lib/Makefile
                  tests/Makefile
                  tools/Makefile])

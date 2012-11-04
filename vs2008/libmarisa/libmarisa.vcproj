@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9.00"
 	Name="libmarisa"
-	ProjectGUID="{3BE97421-D962-4330-815B-AC9B7B799F15}"
+	ProjectGUID="{69872893-89E5-4D16-829E-8B120BACE2AD}"
 	RootNamespace="libmarisa"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MARISA_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -104,7 +104,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MARISA_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
@@ -149,35 +149,43 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\lib\marisa\agent.cc"
+				RelativePath="..\..\lib\marisa\base.cc"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\vector\bit-vector.cc"
+				RelativePath="..\..\lib\marisa\bitvector.cc"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\keyset.cc"
+				RelativePath="..\..\lib\marisa\intvector.cc"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie\louds-trie.cc"
+				RelativePath="..\..\lib\marisa\mapper.cc"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\io\mapper.cc"
+				RelativePath="..\..\lib\marisa\progress.cc"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\vector\precomputed-table.cc"
+				RelativePath="..\..\lib\marisa\reader.cc"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\io\reader.cc"
+				RelativePath="..\..\lib\marisa\tail.cc"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie\tail.cc"
+				RelativePath="..\..\lib\marisa\trie-build.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\lib\marisa\trie-c.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\lib\marisa\trie-search.cc"
 				>
 			</File>
 			<File
@@ -185,7 +193,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\io\writer.cc"
+				RelativePath="..\..\lib\marisa\writer.cc"
 				>
 			</File>
 		</Filter>
@@ -195,59 +203,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\lib\marisa\agent.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\grimoire\algorithm.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\lib\marisa\base.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\vector\bit-vector.h"
+				RelativePath="..\..\lib\marisa\bitvector.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie\cache.h"
+				RelativePath="..\..\lib\marisa\cell.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie\config.h"
+				RelativePath="..\..\lib\marisa\container.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie\entry.h"
+				RelativePath="..\..\lib\marisa\intvector.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\exception.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\grimoire\vector\flat-vector.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie\header.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie\history.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\grimoire\io.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\iostream.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie\key.h"
+				RelativePath="..\..\lib\marisa\io.h"
 				>
 			</File>
 			<File
@@ -255,15 +231,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\keyset.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie\louds-trie.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\grimoire\io\mapper.h"
+				RelativePath="..\..\lib\marisa\mapper.h"
 				>
 			</File>
 			<File
@@ -271,11 +239,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\vector\pop-count.h"
+				RelativePath="..\..\lib\marisa\popcount.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\vector\precomputed-table.h"
+				RelativePath="..\..\lib\marisa\progress.h"
 				>
 			</File>
 			<File
@@ -283,43 +251,27 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie\range.h"
+				RelativePath="..\..\lib\marisa\range.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\vector\rank-index.h"
+				RelativePath="..\..\lib\marisa\rank.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\io\reader.h"
+				RelativePath="..\..\lib\marisa\reader.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\scoped-array.h"
+				RelativePath="..\..\lib\marisa\string.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\scoped-ptr.h"
+				RelativePath="..\..\lib\marisa\tail.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\algorithm\sort.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie\state.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\stdio.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie\tail.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\grimoire\trie.h"
+				RelativePath="..\..\lib\marisa\trie-inline.h"
 				>
 			</File>
 			<File
@@ -327,15 +279,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\vector.h"
+				RelativePath="..\..\lib\marisa\vector-inline.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\vector\vector.h"
+				RelativePath="..\..\lib\marisa\vector.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\io\writer.h"
+				RelativePath="..\..\lib\marisa\writer.h"
 				>
 			</File>
 		</Filter>

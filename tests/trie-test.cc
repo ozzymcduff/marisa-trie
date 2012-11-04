@@ -1,507 +1,665 @@
-#include <algorithm>
-#include <cstring>
 #include <sstream>
 
-#include <marisa/grimoire/trie/config.h>
-#include <marisa/grimoire/trie/header.h>
-#include <marisa/grimoire/trie/key.h>
-#include <marisa/grimoire/trie/range.h>
-#include <marisa/grimoire/trie/tail.h>
-#include <marisa/grimoire/trie/state.h>
+#include <marisa_alpha.h>
 
-#include "marisa-assert.h"
+#include "assert.h"
 
 namespace {
 
-void TestConfig() {
+class FindCallback {
+ public:
+  FindCallback(std::vector<marisa_alpha::UInt32> *key_ids,
+      std::vector<std::size_t> *key_lengths)
+      : key_ids_(key_ids), key_lengths_(key_lengths) {}
+  FindCallback(const FindCallback &callback)
+      : key_ids_(callback.key_ids_), key_lengths_(callback.key_lengths_) {}
+
+  bool operator()(marisa_alpha::UInt32 key_id, std::size_t key_length) const {
+    key_ids_->push_back(key_id);
+    key_lengths_->push_back(key_length);
+    return true;
+  }
+
+ private:
+  std::vector<marisa_alpha::UInt32> *key_ids_;
+  std::vector<std::size_t> *key_lengths_;
+
+  // Disallows assignment.
+  FindCallback &operator=(const FindCallback &);
+};
+
+class PredictCallback {
+ public:
+  PredictCallback(std::vector<marisa_alpha::UInt32> *key_ids,
+      std::vector<std::string> *keys)
+      : key_ids_(key_ids), keys_(keys) {}
+  PredictCallback(const PredictCallback &callback)
+      : key_ids_(callback.key_ids_), keys_(callback.keys_) {}
+
+  bool operator()(marisa_alpha::UInt32 key_id, const std::string &key) const {
+    key_ids_->push_back(key_id);
+    keys_->push_back(key);
+    return true;
+  }
+
+ private:
+  std::vector<marisa_alpha::UInt32> *key_ids_;
+  std::vector<std::string> *keys_;
+
+  // Disallows assignment.
+  PredictCallback &operator=(const PredictCallback &);
+};
+
+void TestTrie() {
   TEST_START();
 
-  marisa::grimoire::trie::Config config;
+  marisa_alpha::Trie trie;
 
-  ASSERT(config.num_tries() == MARISA_DEFAULT_NUM_TRIES);
-  ASSERT(config.tail_mode() == MARISA_DEFAULT_TAIL);
-  ASSERT(config.node_order() == MARISA_DEFAULT_ORDER);
-  ASSERT(config.cache_level() == MARISA_DEFAULT_CACHE);
+  ASSERT(trie.num_tries() == 0);
+  ASSERT(trie.num_keys() == 0);
+  ASSERT(trie.num_nodes() == 0);
+  ASSERT(trie.total_size() == (sizeof(marisa_alpha::UInt32) * 23));
 
-  config.parse(10 | MARISA_BINARY_TAIL | MARISA_LABEL_ORDER |
-      MARISA_TINY_CACHE);
+  std::vector<std::string> keys;
+  trie.build(keys);
+  ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 0);
+  ASSERT(trie.num_nodes() == 1);
 
-  ASSERT(config.num_tries() == 10);
-  ASSERT(config.tail_mode() == MARISA_BINARY_TAIL);
-  ASSERT(config.node_order() == MARISA_LABEL_ORDER);
-  ASSERT(config.cache_level() == MARISA_TINY_CACHE);
+  keys.push_back("apple");
+  keys.push_back("and");
+  keys.push_back("Bad");
+  keys.push_back("apple");
+  keys.push_back("app");
 
-  config.parse(0);
+  std::vector<marisa_alpha::UInt32> key_ids;
+  trie.build(keys, &key_ids,
+      1 | MARISA_ALPHA_WITHOUT_TAIL | MARISA_ALPHA_LABEL_ORDER);
 
-  ASSERT(config.num_tries() == MARISA_DEFAULT_NUM_TRIES);
-  ASSERT(config.tail_mode() == MARISA_DEFAULT_TAIL);
-  ASSERT(config.node_order() == MARISA_DEFAULT_ORDER);
-  ASSERT(config.cache_level() == MARISA_DEFAULT_CACHE);
+  ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 11);
+
+  ASSERT(key_ids.size() == 5);
+  ASSERT(key_ids[0] == 3);
+  ASSERT(key_ids[1] == 1);
+  ASSERT(key_ids[2] == 0);
+  ASSERT(key_ids[3] == 3);
+  ASSERT(key_ids[4] == 2);
+
+  char key_buf[256];
+  std::size_t key_length;
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
+
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
+  }
+
+  trie.clear();
+
+  ASSERT(trie.num_tries() == 0);
+  ASSERT(trie.num_keys() == 0);
+  ASSERT(trie.num_nodes() == 0);
+  ASSERT(trie.total_size() == (sizeof(marisa_alpha::UInt32) * 23));
+
+  trie.build(keys, &key_ids,
+      1 | MARISA_ALPHA_WITHOUT_TAIL | MARISA_ALPHA_WEIGHT_ORDER);
+
+  ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 11);
+
+  ASSERT(key_ids.size() == 5);
+  ASSERT(key_ids[0] == 3);
+  ASSERT(key_ids[1] == 1);
+  ASSERT(key_ids[2] == 2);
+  ASSERT(key_ids[3] == 3);
+  ASSERT(key_ids[4] == 0);
+
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+  }
+
+  ASSERT(trie["appl"] == trie.notfound());
+  ASSERT(trie["applex"] == trie.notfound());
+  ASSERT(trie.find_first("ap") == trie.notfound());
+  ASSERT(trie.find_first("applex") == trie["app"]);
+  ASSERT(trie.find_last("ap") == trie.notfound());
+  ASSERT(trie.find_last("applex") == trie["apple"]);
+
+  std::vector<marisa_alpha::UInt32> ids;
+  ASSERT(trie.find("ap", &ids) == 0);
+  ASSERT(trie.find("applex", &ids) == 2);
+  ASSERT(ids.size() == 2);
+  ASSERT(ids[0] == trie["app"]);
+  ASSERT(ids[1] == trie["apple"]);
+
+  std::vector<std::size_t> lengths;
+  ASSERT(trie.find("Baddie", &ids, &lengths) == 1);
+  ASSERT(ids.size() == 3);
+  ASSERT(ids[2] == trie["Bad"]);
+  ASSERT(lengths.size() == 1);
+  ASSERT(lengths[0] == 3);
+
+  ASSERT(trie.find_callback("anderson", FindCallback(&ids, &lengths)) == 1);
+  ASSERT(ids.size() == 4);
+  ASSERT(ids[3] == trie["and"]);
+  ASSERT(lengths.size() == 2);
+  ASSERT(lengths[1] == 3);
+
+  ASSERT(trie.predict("") == 4);
+  ASSERT(trie.predict("a") == 3);
+  ASSERT(trie.predict("ap") == 2);
+  ASSERT(trie.predict("app") == 2);
+  ASSERT(trie.predict("appl") == 1);
+  ASSERT(trie.predict("apple") == 1);
+  ASSERT(trie.predict("appleX") == 0);
+  ASSERT(trie.predict("X") == 0);
+
+  ids.clear();
+  ASSERT(trie.predict("a", &ids) == 3);
+  ASSERT(ids.size() == 3);
+  ASSERT(ids[0] == trie["app"]);
+  ASSERT(ids[1] == trie["and"]);
+  ASSERT(ids[2] == trie["apple"]);
+
+  std::vector<std::string> strs;
+  ASSERT(trie.predict("a", &ids, &strs) == 3);
+  ASSERT(ids.size() == 6);
+  ASSERT(ids[3] == trie["app"]);
+  ASSERT(ids[4] == trie["apple"]);
+  ASSERT(ids[5] == trie["and"]);
+  ASSERT(strs[0] == "app");
+  ASSERT(strs[1] == "apple");
+  ASSERT(strs[2] == "and");
 
   TEST_END();
 }
 
-void TestHeader() {
+void TestPrefixTrie() {
   TEST_START();
 
-  marisa::grimoire::trie::Header header;
+  std::vector<std::string> keys;
+  keys.push_back("after");
+  keys.push_back("bar");
+  keys.push_back("car");
+  keys.push_back("caster");
+
+  marisa_alpha::Trie trie;
+  std::vector<marisa_alpha::UInt32> key_ids;
+  trie.build(keys, &key_ids, 1 | MARISA_ALPHA_PREFIX_TRIE
+      | MARISA_ALPHA_TEXT_TAIL | MARISA_ALPHA_LABEL_ORDER);
+
+  ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 7);
+
+  char key_buf[256];
+  std::size_t key_length;
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
+
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
+  }
+
+  key_length = trie.restore(key_ids[0], NULL, 0);
+
+  ASSERT(key_length == keys[0].length());
+  EXCEPT(trie.restore(key_ids[0], NULL, 5), MARISA_ALPHA_PARAM_ERROR);
+
+  key_length = trie.restore(key_ids[0], key_buf, 5);
+
+  ASSERT(key_length == keys[0].length());
+
+  key_length = trie.restore(key_ids[0], key_buf, 6);
+
+  ASSERT(key_length == keys[0].length());
+
+  trie.build(keys, &key_ids, 2 | MARISA_ALPHA_PREFIX_TRIE
+      | MARISA_ALPHA_WITHOUT_TAIL | MARISA_ALPHA_WEIGHT_ORDER);
+
+  ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 16);
+
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
+
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
+  }
+
+  key_length = trie.restore(key_ids[0], NULL, 0);
+
+  ASSERT(key_length == keys[0].length());
+  EXCEPT(trie.restore(key_ids[0], NULL, 5), MARISA_ALPHA_PARAM_ERROR);
+
+  key_length = trie.restore(key_ids[0], key_buf, 5);
+
+  ASSERT(key_length == keys[0].length());
+
+  key_length = trie.restore(key_ids[0], key_buf, 6);
+
+  ASSERT(key_length == keys[0].length());
+
+  trie.build(keys, &key_ids, 2 | MARISA_ALPHA_PREFIX_TRIE
+      | MARISA_ALPHA_TEXT_TAIL | MARISA_ALPHA_LABEL_ORDER);
+
+  ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 14);
+
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
+
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
+  }
+
+  trie.save("trie-test.dat");
+  trie.clear();
+  marisa_alpha::Mapper mapper;
+  trie.mmap(&mapper, "trie-test.dat");
+
+  ASSERT(mapper.is_open());
+  ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 14);
+
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
+
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
+  }
+
+  std::stringstream stream;
+  trie.write(stream);
+  trie.clear();
+  trie.read(stream);
+
+  ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 14);
+
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
+
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
+  }
+
+  trie.build(keys, &key_ids, 3 | MARISA_ALPHA_PREFIX_TRIE
+      | MARISA_ALPHA_WITHOUT_TAIL | MARISA_ALPHA_WEIGHT_ORDER);
+
+  ASSERT(trie.num_tries() == 3);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 19);
+
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
+
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
+  }
+
+  ASSERT(trie["ca"] == trie.notfound());
+  ASSERT(trie["card"] == trie.notfound());
+
+  std::size_t length = 0;
+  ASSERT(trie.find_first("ca") == trie.notfound());
+  ASSERT(trie.find_first("car") == trie["car"]);
+  ASSERT(trie.find_first("card", &length) == trie["car"]);
+  ASSERT(length == 3);
+
+  ASSERT(trie.find_last("afte") == trie.notfound());
+  ASSERT(trie.find_last("after") == trie["after"]);
+  ASSERT(trie.find_last("afternoon", &length) == trie["after"]);
+  ASSERT(length == 5);
 
   {
-    marisa::grimoire::Writer writer;
-    writer.open("trie-test.dat");
-    header.write(writer);
+    std::vector<marisa_alpha::UInt32> ids;
+    std::vector<std::size_t> lengths;
+    ASSERT(trie.find("card", &ids, &lengths) == 1);
+    ASSERT(ids.size() == 1);
+    ASSERT(ids[0] == trie["car"]);
+    ASSERT(lengths.size() == 1);
+    ASSERT(lengths[0] == 3);
+
+    ASSERT(trie.predict("ca", &ids) == 2);
+    ASSERT(ids.size() == 3);
+    ASSERT(ids[1] == trie["car"]);
+    ASSERT(ids[2] == trie["caster"]);
+
+    ASSERT(trie.predict("ca", &ids, NULL, 1) == 1);
+    ASSERT(ids.size() == 4);
+    ASSERT(ids[3] == trie["car"]);
+
+    std::vector<std::string> strs;
+    ASSERT(trie.predict("ca", &ids, &strs, 1) == 1);
+    ASSERT(ids.size() == 5);
+    ASSERT(ids[4] == trie["car"]);
+    ASSERT(strs.size() == 1);
+    ASSERT(strs[0] == "car");
+
+    ASSERT(trie.predict_callback("", PredictCallback(&ids, &strs)) == 4);
+    ASSERT(ids.size() == 9);
+    ASSERT(ids[5] == trie["car"]);
+    ASSERT(ids[6] == trie["caster"]);
+    ASSERT(ids[7] == trie["after"]);
+    ASSERT(ids[8] == trie["bar"]);
+    ASSERT(strs.size() == 5);
+    ASSERT(strs[1] == "car");
+    ASSERT(strs[2] == "caster");
+    ASSERT(strs[3] == "after");
+    ASSERT(strs[4] == "bar");
   }
 
   {
-    marisa::grimoire::Mapper mapper;
-    mapper.open("trie-test.dat");
-    header.map(mapper);
+    marisa_alpha::UInt32 ids[10];
+    std::size_t lengths[10];
+    ASSERT(trie.find("card", ids, lengths, 10) == 1);
+    ASSERT(ids[0] == trie["car"]);
+    ASSERT(lengths[0] == 3);
+
+    ASSERT(trie.predict("ca", ids, NULL, 10) == 2);
+    ASSERT(ids[0] == trie["car"]);
+    ASSERT(ids[1] == trie["caster"]);
+
+    ASSERT(trie.predict("ca", ids, NULL, 1) == 1);
+    ASSERT(ids[0] == trie["car"]);
+
+    std::string strs[10];
+    ASSERT(trie.predict("ca", ids, strs, 1) == 1);
+    ASSERT(ids[0] == trie["car"]);
+    ASSERT(strs[0] == "car");
+
+    ASSERT(trie.predict("", ids, strs, 10) == 4);
+    ASSERT(ids[0] == trie["car"]);
+    ASSERT(ids[1] == trie["caster"]);
+    ASSERT(ids[2] == trie["after"]);
+    ASSERT(ids[3] == trie["bar"]);
+    ASSERT(strs[0] == "car");
+    ASSERT(strs[1] == "caster");
+    ASSERT(strs[2] == "after");
+    ASSERT(strs[3] == "bar");
   }
 
-  {
-    marisa::grimoire::Reader reader;
-    reader.open("trie-test.dat");
-    header.read(reader);
-  }
-
-  TEST_END();
-}
-
-void TestKey() {
-  TEST_START();
-
-  marisa::grimoire::trie::Key key;
-
-  ASSERT(key.ptr() == NULL);
-  ASSERT(key.length() == 0);
-  ASSERT(key.id() == 0);
-  ASSERT(key.terminal() == 0);
-
-  const char *str = "xyz";
-
-  key.set_str(str, 3);
-  key.set_weight(10.0F);
-  key.set_id(20);
-
-
-  ASSERT(key.ptr() == str);
-  ASSERT(key.length() == 3);
-  ASSERT(key[0] == 'x');
-  ASSERT(key[1] == 'y');
-  ASSERT(key[2] == 'z');
-  ASSERT(key.weight() == 10.0F);
-  ASSERT(key.id() == 20);
-
-  key.set_terminal(30);
-  ASSERT(key.terminal() == 30);
-
-  key.substr(1, 2);
-
-  ASSERT(key.ptr() == str + 1);
-  ASSERT(key.length() == 2);
-  ASSERT(key[0] == 'y');
-  ASSERT(key[1] == 'z');
-
-  marisa::grimoire::trie::Key key2;
-  key2.set_str("abc", 3);
-
-  ASSERT(key == key);
-  ASSERT(key != key2);
-  ASSERT(key > key2);
-  ASSERT(key2 < key);
-
-  marisa::grimoire::trie::ReverseKey r_key;
-
-  ASSERT(r_key.ptr() == NULL);
-  ASSERT(r_key.length() == 0);
-  ASSERT(r_key.id() == 0);
-  ASSERT(r_key.terminal() == 0);
-
-  r_key.set_str(str, 3);
-  r_key.set_weight(100.0F);
-  r_key.set_id(200);
-
-  ASSERT(r_key.ptr() == str);
-  ASSERT(r_key.length() == 3);
-  ASSERT(r_key[0] == 'z');
-  ASSERT(r_key[1] == 'y');
-  ASSERT(r_key[2] == 'x');
-  ASSERT(r_key.weight() == 100.0F);
-  ASSERT(r_key.id() == 200);
-
-  r_key.set_terminal(300);
-  ASSERT(r_key.terminal() == 300);
-
-  r_key.substr(1, 2);
-
-  ASSERT(r_key.ptr() == str);
-  ASSERT(r_key.length() == 2);
-  ASSERT(r_key[0] == 'y');
-  ASSERT(r_key[1] == 'x');
-
-  marisa::grimoire::trie::ReverseKey r_key2;
-  r_key2.set_str("abc", 3);
-
-  ASSERT(r_key == r_key);
-  ASSERT(r_key != r_key2);
-  ASSERT(r_key > r_key2);
-  ASSERT(r_key2 < r_key);
-
-  TEST_END();
-}
-
-void TestRange() {
-  TEST_START();
-
-  marisa::grimoire::trie::Range range;
-
-  ASSERT(range.begin() == 0);
-  ASSERT(range.end() == 0);
-  ASSERT(range.key_pos() == 0);
-
-  range.set_begin(1);
-  range.set_end(2);
-  range.set_key_pos(3);
-
-  ASSERT(range.begin() == 1);
-  ASSERT(range.end() == 2);
-  ASSERT(range.key_pos() == 3);
-
-  range = marisa::grimoire::trie::make_range(10, 20, 30);
-
-  ASSERT(range.begin() == 10);
-  ASSERT(range.end() == 20);
-  ASSERT(range.key_pos() == 30);
-
-  marisa::grimoire::trie::WeightedRange w_range;
-
-  ASSERT(w_range.begin() == 0);
-  ASSERT(w_range.end() == 0);
-  ASSERT(w_range.key_pos() == 0);
-  ASSERT(w_range.weight() == 0.0F);
-
-  w_range.set_begin(10);
-  w_range.set_end(20);
-  w_range.set_key_pos(30);
-  w_range.set_weight(40.0F);
-
-  ASSERT(w_range.begin() == 10);
-  ASSERT(w_range.end() == 20);
-  ASSERT(w_range.key_pos() == 30);
-  ASSERT(w_range.weight() == 40.0F);
-
-  marisa::grimoire::trie::WeightedRange w_range2 =
-      marisa::grimoire::trie::make_weighted_range(100, 200, 300, 400.0F);
-
-  ASSERT(w_range2.begin() == 100);
-  ASSERT(w_range2.end() == 200);
-  ASSERT(w_range2.key_pos() == 300);
-  ASSERT(w_range2.weight() == 400.0F);
-
-  ASSERT(w_range < w_range2);
-  ASSERT(w_range2 > w_range);
-
-  TEST_END();
-}
-
-void TestEntry() {
-  TEST_START();
-
-  marisa::grimoire::trie::Entry entry;
-
-  ASSERT(entry.ptr() == NULL);
-  ASSERT(entry.length() == 0);
-  ASSERT(entry.id() == 0);
-
-  const char *str = "XYZ";
-
-  entry.set_str(str, 3);
-  entry.set_id(123);
-
-  ASSERT(entry.ptr() == str);
-  ASSERT(entry.length() == 3);
-  ASSERT(entry[0] == 'Z');
-  ASSERT(entry[1] == 'Y');
-  ASSERT(entry[2] == 'X');
-  ASSERT(entry.id() == 123);
-
-  TEST_END();
-}
-
-void TestTextTail() {
-  TEST_START();
-
-  marisa::grimoire::trie::Tail tail;
-  marisa::grimoire::Vector<marisa::grimoire::trie::Entry> entries;
-  marisa::grimoire::Vector<marisa::UInt32> offsets;
-  tail.build(entries, &offsets, MARISA_TEXT_TAIL);
-
-  ASSERT(tail.mode() == MARISA_TEXT_TAIL);
-  ASSERT(tail.size() == 0);
-  ASSERT(tail.empty());
-  ASSERT(tail.total_size() == tail.size());
-  ASSERT(tail.io_size() == (sizeof(marisa::UInt64) * 6));
-
-  ASSERT(offsets.empty());
-
-  marisa::grimoire::trie::Entry entry;
-  entry.set_str("X", 1);
-  entries.push_back(entry);
-
-  tail.build(entries, &offsets, MARISA_TEXT_TAIL);
-
-  ASSERT(tail.mode() == MARISA_TEXT_TAIL);
-  ASSERT(tail.size() == 2);
-  ASSERT(!tail.empty());
-  ASSERT(tail.total_size() == tail.size());
-  ASSERT(tail.io_size() == (sizeof(marisa::UInt64) * 7));
-
-  ASSERT(offsets.size() == entries.size());
-  ASSERT(offsets[0] == 0);
-  ASSERT(tail[offsets[0]] == 'X');
-  ASSERT(tail[offsets[0] + 1] == '\0');
-
-  entries.clear();
-  entry.set_str("abc", 3);
-  entries.push_back(entry);
-  entry.set_str("bc", 2);
-  entries.push_back(entry);
-  entry.set_str("abc", 3);
-  entries.push_back(entry);
-  entry.set_str("c", 1);
-  entries.push_back(entry);
-  entry.set_str("ABC", 3);
-  entries.push_back(entry);
-  entry.set_str("AB", 2);
-  entries.push_back(entry);
-
-  tail.build(entries, &offsets, MARISA_TEXT_TAIL);
-  std::sort(entries.begin(), entries.end(),
-      marisa::grimoire::trie::Entry::IDComparer());
-
-  ASSERT(tail.size() == 11);
-  ASSERT(offsets.size() == entries.size());
-  for (std::size_t i = 0; i < entries.size(); ++i) {
-    const char * const ptr = &tail[offsets[i]];
-    ASSERT(std::strlen(ptr) == entries[i].length());
-    ASSERT(std::strcmp(ptr, entries[i].ptr()) == 0);
-  }
-
-  {
-    marisa::grimoire::Writer writer;
-    writer.open("trie-test.dat");
-    tail.write(writer);
-  }
-
-  tail.clear();
-
-  ASSERT(tail.size() == 0);
-  ASSERT(tail.total_size() == tail.size());
-
-  {
-    marisa::grimoire::Mapper mapper;
-    mapper.open("trie-test.dat");
-    tail.map(mapper);
-
-    ASSERT(tail.mode() == MARISA_TEXT_TAIL);
-    ASSERT(tail.size() == 11);
-    for (std::size_t i = 0; i < entries.size(); ++i) {
-      const char * const ptr = &tail[offsets[i]];
-    ASSERT(std::strlen(ptr) == entries[i].length());
-    ASSERT(std::strcmp(ptr, entries[i].ptr()) == 0);
-    }
-    tail.clear();
-  }
-
-  {
-    marisa::grimoire::Reader reader;
-    reader.open("trie-test.dat");
-    tail.read(reader);
-  }
-
-  ASSERT(tail.size() == 11);
-  ASSERT(offsets.size() == entries.size());
-  for (std::size_t i = 0; i < entries.size(); ++i) {
-    const char * const ptr = &tail[offsets[i]];
-    ASSERT(std::strlen(ptr) == entries[i].length());
-    ASSERT(std::strcmp(ptr, entries[i].ptr()) == 0);
-  }
-
-  {
-    std::stringstream stream;
-    marisa::grimoire::Writer writer;
-    writer.open(stream);
-    tail.write(writer);
-    tail.clear();
-    marisa::grimoire::Reader reader;
-    reader.open(stream);
-    tail.read(reader);
-  }
-
-  ASSERT(tail.size() == 11);
-  ASSERT(offsets.size() == entries.size());
-  for (std::size_t i = 0; i < entries.size(); ++i) {
-    const char * const ptr = &tail[offsets[i]];
-    ASSERT(std::strlen(ptr) == entries[i].length());
-    ASSERT(std::strcmp(ptr, entries[i].ptr()) == 0);
+  std::string trie_data = stream.str();
+  trie.map(trie_data.c_str(), trie_data.length());
+
+  ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 14);
+
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
+
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
   }
 
   TEST_END();
 }
 
-void TestBinaryTail() {
+void TestPatriciaTrie() {
   TEST_START();
 
-  marisa::grimoire::trie::Tail tail;
-  marisa::grimoire::Vector<marisa::grimoire::trie::Entry> entries;
-  marisa::grimoire::Vector<marisa::UInt32> offsets;
-  tail.build(entries, &offsets, MARISA_BINARY_TAIL);
+  std::vector<std::string> keys;
+  keys.push_back("bach");
+  keys.push_back("bet");
+  keys.push_back("chat");
+  keys.push_back("check");
+  keys.push_back("check");
 
-  ASSERT(tail.mode() == MARISA_TEXT_TAIL);
-  ASSERT(tail.size() == 0);
-  ASSERT(tail.empty());
-  ASSERT(tail.total_size() == tail.size());
-  ASSERT(tail.io_size() == (sizeof(marisa::UInt64) * 6));
+  marisa_alpha::Trie trie;
+  std::vector<marisa_alpha::UInt32> key_ids;
+  trie.build(keys, &key_ids, 1);
 
-  ASSERT(offsets.empty());
+  ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 7);
 
-  marisa::grimoire::trie::Entry entry;
-  entry.set_str("X", 1);
-  entries.push_back(entry);
+  ASSERT(key_ids.size() == 5);
+  ASSERT(key_ids[0] == 2);
+  ASSERT(key_ids[1] == 3);
+  ASSERT(key_ids[2] == 1);
+  ASSERT(key_ids[3] == 0);
+  ASSERT(key_ids[4] == 0);
 
-  tail.build(entries, &offsets, MARISA_BINARY_TAIL);
+  char key_buf[256];
+  std::size_t key_length;
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
 
-  ASSERT(tail.mode() == MARISA_BINARY_TAIL);
-  ASSERT(tail.size() == 1);
-  ASSERT(!tail.empty());
-  ASSERT(tail.total_size() == (tail.size() + sizeof(marisa::UInt64)));
-  ASSERT(tail.io_size() == (sizeof(marisa::UInt64) * 8));
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
+  }
 
-  ASSERT(offsets.size() == entries.size());
-  ASSERT(offsets[0] == 0);
+  trie.build(keys, &key_ids, 2 | MARISA_ALPHA_WITHOUT_TAIL);
 
-  const char binary_entry[] = { 'N', 'P', '\0', 'T', 'r', 'i', 'e' };
-  entries[0].set_str(binary_entry, sizeof(binary_entry));
+  ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 17);
 
-  tail.build(entries, &offsets, MARISA_TEXT_TAIL);
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
 
-  ASSERT(tail.mode() == MARISA_BINARY_TAIL);
-  ASSERT(tail.size() == entries[0].length());
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
+  }
 
-  ASSERT(offsets.size() == entries.size());
-  ASSERT(offsets[0] == 0);
+  trie.build(keys, &key_ids, 2);
 
-  entries.clear();
-  entry.set_str("abc", 3);
-  entries.push_back(entry);
-  entry.set_str("bc", 2);
-  entries.push_back(entry);
-  entry.set_str("abc", 3);
-  entries.push_back(entry);
-  entry.set_str("c", 1);
-  entries.push_back(entry);
-  entry.set_str("ABC", 3);
-  entries.push_back(entry);
-  entry.set_str("AB", 2);
-  entries.push_back(entry);
+  ASSERT(trie.num_tries() == 2);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 14);
 
-  tail.build(entries, &offsets, MARISA_BINARY_TAIL);
-  std::sort(entries.begin(), entries.end(),
-      marisa::grimoire::trie::Entry::IDComparer());
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
 
-  ASSERT(tail.mode() == MARISA_BINARY_TAIL);
-  ASSERT(tail.size() == 8);
-  ASSERT(offsets.size() == entries.size());
-  for (std::size_t i = 0; i < entries.size(); ++i) {
-    const char * const ptr = &tail[offsets[i]];
-    ASSERT(std::memcmp(ptr, entries[i].ptr(), entries[i].length()) == 0);
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
+  }
+
+  trie.build(keys, &key_ids, 3 | MARISA_ALPHA_WITHOUT_TAIL);
+
+  ASSERT(trie.num_tries() == 3);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 20);
+
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
+
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
+  }
+
+  std::stringstream stream;
+  trie.write(stream);
+  trie.clear();
+  trie.read(stream);
+
+  ASSERT(trie.num_tries() == 3);
+  ASSERT(trie.num_keys() == 4);
+  ASSERT(trie.num_nodes() == 20);
+
+  for (std::size_t i = 0; i < keys.size(); ++i) {
+    key_length = trie.restore(key_ids[i], key_buf, sizeof(key_buf));
+
+    ASSERT(trie[keys[i]] == key_ids[i]);
+    ASSERT(trie[key_ids[i]] == keys[i]);
+    ASSERT(key_length == keys[i].length());
+    ASSERT(keys[i] == key_buf);
   }
 
   TEST_END();
 }
 
-void TestHistory() {
+void TestEmptyString() {
   TEST_START();
 
-  marisa::grimoire::trie::History history;
+  std::vector<std::string> keys;
+  keys.push_back("");
 
-  ASSERT(history.node_id() == 0);
-  ASSERT(history.louds_pos() == 0);
-  ASSERT(history.key_pos() == 0);
-  ASSERT(history.link_id() == MARISA_INVALID_LINK_ID);
-  ASSERT(history.key_id() == MARISA_INVALID_KEY_ID);
+  marisa_alpha::Trie trie;
+  std::vector<marisa_alpha::UInt32> key_ids;
+  trie.build(keys, &key_ids);
 
-  history.set_node_id(100);
-  history.set_louds_pos(200);
-  history.set_key_pos(300);
-  history.set_link_id(400);
-  history.set_key_id(500);
+  ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 1);
+  ASSERT(trie.num_nodes() == 1);
 
-  ASSERT(history.node_id() == 100);
-  ASSERT(history.louds_pos() == 200);
-  ASSERT(history.key_pos() == 300);
-  ASSERT(history.link_id() == 400);
-  ASSERT(history.key_id() == 500);
+  ASSERT(key_ids.size() == 1);
+  ASSERT(key_ids[0] == 0);
+
+  ASSERT(trie[""] == 0);
+  ASSERT(trie[(marisa_alpha::UInt32)0] == "");
+
+  ASSERT(trie["x"] == trie.notfound());
+  ASSERT(trie.find_first("") == 0);
+  ASSERT(trie.find_first("x") == 0);
+  ASSERT(trie.find_last("") == 0);
+  ASSERT(trie.find_last("x") == 0);
+
+  std::vector<marisa_alpha::UInt32> ids;
+  ASSERT(trie.find("xyz", &ids) == 1);
+  ASSERT(ids.size() == 1);
+  ASSERT(ids[0] == trie[""]);
+
+  std::vector<std::size_t> lengths;
+  ASSERT(trie.find("xyz", &ids, &lengths) == 1);
+  ASSERT(ids.size() == 2);
+  ASSERT(ids[0] == trie[""]);
+  ASSERT(ids[1] == trie[""]);
+  ASSERT(lengths.size() == 1);
+  ASSERT(lengths[0] == 0);
+
+  ASSERT(trie.find_callback("xyz", FindCallback(&ids, &lengths)) == 1);
+  ASSERT(ids.size() == 3);
+  ASSERT(ids[2] == trie[""]);
+  ASSERT(lengths.size() == 2);
+  ASSERT(lengths[1] == 0);
+
+  ASSERT(trie.predict("xyz", &ids) == 0);
+
+  ASSERT(trie.predict("", &ids) == 1);
+  ASSERT(ids.size() == 4);
+  ASSERT(ids[3] == trie[""]);
+
+  std::vector<std::string> strs;
+  ASSERT(trie.predict("", &ids, &strs) == 1);
+  ASSERT(ids.size() == 5);
+  ASSERT(ids[4] == trie[""]);
+  ASSERT(strs[0] == "");
 
   TEST_END();
 }
 
-void TestState() {
+void TestBinaryKey() {
   TEST_START();
 
-  marisa::grimoire::trie::State state;
+  std::string binary_key = "NP";
+  binary_key += '\0';
+  binary_key += "Trie";
 
-  ASSERT(state.key_buf().empty());
-  ASSERT(state.history().empty());
-  ASSERT(state.node_id() == 0);
-  ASSERT(state.query_pos() == 0);
-  ASSERT(state.history_pos() == 0);
-  ASSERT(state.status_code() == marisa::grimoire::trie::MARISA_READY_TO_ALL);
+  std::vector<std::string> keys;
+  keys.push_back(binary_key);
 
-  state.set_node_id(10);
-  state.set_query_pos(100);
-  state.set_history_pos(1000);
-  state.set_status_code(
-      marisa::grimoire::trie::MARISA_END_OF_PREDICTIVE_SEARCH);
+  marisa_alpha::Trie trie;
+  std::vector<marisa_alpha::UInt32> key_ids;
+  trie.build(keys, &key_ids, 1 | MARISA_ALPHA_WITHOUT_TAIL);
 
-  ASSERT(state.node_id() == 10);
-  ASSERT(state.query_pos() == 100);
-  ASSERT(state.history_pos() == 1000);
-  ASSERT(state.status_code() ==
-      marisa::grimoire::trie::MARISA_END_OF_PREDICTIVE_SEARCH);
+  ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 1);
+  ASSERT(trie.num_nodes() == 8);
+  ASSERT(key_ids.size() == 1);
 
-  state.lookup_init();
-  ASSERT(state.status_code() == marisa::grimoire::trie::MARISA_READY_TO_ALL);
+  char key_buf[256];
+  std::size_t key_length;
+  key_length = trie.restore(0, key_buf, sizeof(key_buf));
 
-  state.reverse_lookup_init();
-  ASSERT(state.status_code() == marisa::grimoire::trie::MARISA_READY_TO_ALL);
+  ASSERT(trie[keys[0]] == key_ids[0]);
+  ASSERT(trie[key_ids[0]] == keys[0]);
+  ASSERT(std::string(key_buf, key_length) == keys[0]);
 
-  state.common_prefix_search_init();
-  ASSERT(state.status_code() ==
-      marisa::grimoire::trie::MARISA_READY_TO_COMMON_PREFIX_SEARCH);
+  trie.build(keys, &key_ids,
+      1 | MARISA_ALPHA_PREFIX_TRIE | MARISA_ALPHA_BINARY_TAIL);
 
-  state.predictive_search_init();
-  ASSERT(state.status_code() ==
-      marisa::grimoire::trie::MARISA_READY_TO_PREDICTIVE_SEARCH);
+  ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 1);
+  ASSERT(trie.num_nodes() == 2);
+  ASSERT(key_ids.size() == 1);
+
+  key_length = trie.restore(0, key_buf, sizeof(key_buf));
+
+  ASSERT(trie[keys[0]] == key_ids[0]);
+  ASSERT(trie[key_ids[0]] == keys[0]);
+  ASSERT(std::string(key_buf, key_length) == keys[0]);
+
+  trie.build(keys, &key_ids,
+      1 | MARISA_ALPHA_PREFIX_TRIE | MARISA_ALPHA_TEXT_TAIL);
+
+  ASSERT(trie.num_tries() == 1);
+  ASSERT(trie.num_keys() == 1);
+  ASSERT(trie.num_nodes() == 2);
+  ASSERT(key_ids.size() == 1);
+
+  key_length = trie.restore(0, key_buf, sizeof(key_buf));
+
+  ASSERT(trie[keys[0]] == key_ids[0]);
+  ASSERT(trie[key_ids[0]] == keys[0]);
+  ASSERT(std::string(key_buf, key_length) == keys[0]);
+
+  std::vector<marisa_alpha::UInt32> ids;
+  ASSERT(trie.predict_breadth_first("", &ids) == 1);
+  ASSERT(ids.size() == 1);
+  ASSERT(ids[0] == key_ids[0]);
+
+  std::vector<std::string> strs;
+  ASSERT(trie.predict_depth_first("NP", &ids, &strs) == 1);
+  ASSERT(ids.size() == 2);
+  ASSERT(ids[1] == key_ids[0]);
+  ASSERT(strs[0] == keys[0]);
 
   TEST_END();
 }
 
 }  // namespace
 
-int main() try {
-  TestConfig();
-  TestHeader();
-  TestKey();
-  TestRange();
-  TestEntry();
-  TestTextTail();
-  TestBinaryTail();
-  TestHistory();
-  TestState();
+int main() {
+  TestTrie();
+  TestPrefixTrie();
+  TestPatriciaTrie();
+  TestEmptyString();
+  TestBinaryKey();
 
   return 0;
-} catch (const marisa::Exception &ex) {
-  std::cerr << ex.what() << std::endl;
-  throw;
 }

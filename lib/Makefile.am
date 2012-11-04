@@ -1,59 +1,44 @@
-AM_CXXFLAGS = -Wall -Weffc++ -Wextra
-#AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG
-ACLOCAL_AMFLAGS = -I m4
+AM_CXXFLAGS = -Wall -Weffc++
+#AM_CXXFLAGS = -Wall -Weffc++ -D_DEBUG
 
-lib_LTLIBRARIES = libmarisa.la
+lib_LIBRARIES = libmarisa_alpha.a
 
-libmarisa_la_SOURCES = \
-  marisa/keyset.cc \
-  marisa/agent.cc \
-  marisa/trie.cc \
-  marisa/grimoire/io/mapper.cc \
-  marisa/grimoire/io/reader.cc \
-  marisa/grimoire/io/writer.cc \
-  marisa/grimoire/vector/precomputed-table.cc \
-  marisa/grimoire/vector/bit-vector.cc \
-  marisa/grimoire/trie/tail.cc \
-  marisa/grimoire/trie/louds-trie.cc
+libmarisa_alpha_a_SOURCES = \
+  marisa_alpha/base.cc \
+  marisa_alpha/progress.cc \
+  marisa_alpha/mapper.cc \
+  marisa_alpha/reader.cc \
+  marisa_alpha/writer.cc \
+  marisa_alpha/intvector.cc \
+  marisa_alpha/bitvector.cc \
+  marisa_alpha/tail.cc \
+  marisa_alpha/trie.cc \
+  marisa_alpha/trie-build.cc \
+  marisa_alpha/trie-search.cc \
+  marisa_alpha/trie-c.cc
 
-include_HEADERS = marisa.h
+include_HEADERS = marisa_alpha.h
 
-libmarisa_includedir = ${includedir}/marisa
-libmarisa_include_HEADERS = \
-  marisa/base.h \
-  marisa/exception.h \
-  marisa/scoped-ptr.h \
-  marisa/scoped-array.h \
-  marisa/key.h \
-  marisa/keyset.h \
-  marisa/query.h \
-  marisa/agent.h \
-  marisa/stdio.h \
-  marisa/iostream.h \
-  marisa/trie.h
-
-noinst_HEADERS = \
-  marisa/grimoire/io.h \
-  marisa/grimoire/io/mapper.h \
-  marisa/grimoire/io/reader.h \
-  marisa/grimoire/io/writer.h \
-  marisa/grimoire/vector.h \
-  marisa/grimoire/vector/pop-count.h \
-  marisa/grimoire/vector/rank-index.h \
-  marisa/grimoire/vector/precomputed-table.h \
-  marisa/grimoire/vector/vector.h \
-  marisa/grimoire/vector/flat-vector.h \
-  marisa/grimoire/vector/bit-vector.h \
-  marisa/grimoire/algorithm.h \
-  marisa/grimoire/algorithm/sort.h \
-  marisa/grimoire/trie.h \
-  marisa/grimoire/trie/config.h \
-  marisa/grimoire/trie/header.h \
-  marisa/grimoire/trie/key.h \
-  marisa/grimoire/trie/range.h \
-  marisa/grimoire/trie/entry.h \
-  marisa/grimoire/trie/tail.h \
-  marisa/grimoire/trie/cache.h \
-  marisa/grimoire/trie/history.h \
-  marisa/grimoire/trie/state.h \
-  marisa/grimoire/trie/louds-trie.h
+libmarisa_alpha_includedir = ${includedir}/marisa_alpha
+libmarisa_alpha_include_HEADERS = \
+  marisa_alpha/base.h \
+  marisa_alpha/popcount.h \
+  marisa_alpha/rank.h \
+  marisa_alpha/string.h \
+  marisa_alpha/key.h \
+  marisa_alpha/progress.h \
+  marisa_alpha/range.h \
+  marisa_alpha/query.h \
+  marisa_alpha/container.h \
+  marisa_alpha/cell.h \
+  marisa_alpha/mapper.h \
+  marisa_alpha/reader.h \
+  marisa_alpha/writer.h \
+  marisa_alpha/io.h \
+  marisa_alpha/vector.h \
+  marisa_alpha/vector-inline.h \
+  marisa_alpha/intvector.h \
+  marisa_alpha/bitvector.h \
+  marisa_alpha/tail.h \
+  marisa_alpha/trie.h \
+  marisa_alpha/trie-inline.h
