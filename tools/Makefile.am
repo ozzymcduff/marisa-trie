@@ -11,16 +11,16 @@ bin_PROGRAMS = \
 noinst_HEADERS = cmdopt.h
 
 marisa_alpha_build_SOURCES = marisa-alpha-build.cc cmdopt.c
-marisa_alpha_build_LDADD = ../lib/libmarisa_alpha.a
+marisa_alpha_build_LDADD = ../lib/libmarisa_alpha.la
 
 marisa_alpha_lookup_SOURCES = marisa-alpha-lookup.cc cmdopt.c
-marisa_alpha_lookup_LDADD = ../lib/libmarisa_alpha.a
+marisa_alpha_lookup_LDADD = ../lib/libmarisa_alpha.la
 
 marisa_alpha_find_SOURCES = marisa-alpha-find.cc cmdopt.c
-marisa_alpha_find_LDADD = ../lib/libmarisa_alpha.a
+marisa_alpha_find_LDADD = ../lib/libmarisa_alpha.la
 
 marisa_alpha_predict_SOURCES = marisa-alpha-predict.cc cmdopt.c
-marisa_alpha_predict_LDADD = ../lib/libmarisa_alpha.a
+marisa_alpha_predict_LDADD = ../lib/libmarisa_alpha.la
 
 marisa_alpha_benchmark_SOURCES = marisa-alpha-benchmark.cc cmdopt.c
-marisa_alpha_benchmark_LDADD = ../lib/libmarisa_alpha.a
+marisa_alpha_benchmark_LDADD = ../lib/libmarisa_alpha.la

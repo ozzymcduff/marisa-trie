@@ -2,7 +2,9 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([marisa_alpha], [0.1.5], [syata@acm.org])
+AC_INIT([marisa_alpha],
+        [0.1.5],
+        [syata@acm.org])
 AC_CONFIG_SRCDIR([lib/marisa_alpha.h])
 AM_INIT_AUTOMAKE
 
@@ -10,7 +12,10 @@ AM_INIT_AUTOMAKE
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_RANLIB
+AC_PROG_LIBTOOL
 AC_PROG_INSTALL
+
+AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for libraries.
 
@@ -35,6 +40,7 @@ AC_FUNC_STRTOD
 AC_CHECK_FUNCS([munmap strtol])
 
 AC_CONFIG_FILES([Makefile
+                 marisa_alpha.pc
                  lib/Makefile
                  tests/Makefile
                  tools/Makefile])
