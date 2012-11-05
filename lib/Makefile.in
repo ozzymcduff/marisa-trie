@@ -33,6 +33,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
+build_triplet = @build@
+host_triplet = @host@
 subdir = lib
 DIST_COMMON = $(include_HEADERS) $(libmarisa_alpha_include_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in
@@ -72,34 +74,34 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)" \
 	"$(DESTDIR)$(libmarisa_alpha_includedir)"
-LIBRARIES = $(lib_LIBRARIES)
-AR = ar
-ARFLAGS = cru
-libmarisa_alpha_a_AR = $(AR) $(ARFLAGS)
-libmarisa_alpha_a_LIBADD =
-am_libmarisa_alpha_a_OBJECTS = base.$(OBJEXT) progress.$(OBJEXT) \
-	mapper.$(OBJEXT) reader.$(OBJEXT) writer.$(OBJEXT) \
-	intvector.$(OBJEXT) bitvector.$(OBJEXT) tail.$(OBJEXT) \
-	trie.$(OBJEXT) trie-build.$(OBJEXT) trie-search.$(OBJEXT) \
-	trie-c.$(OBJEXT)
-libmarisa_alpha_a_OBJECTS = $(am_libmarisa_alpha_a_OBJECTS)
+LTLIBRARIES = $(lib_LTLIBRARIES)
+libmarisa_alpha_la_LIBADD =
+am_libmarisa_alpha_la_OBJECTS = base.lo progress.lo mapper.lo \
+	reader.lo writer.lo intvector.lo bitvector.lo tail.lo trie.lo \
+	trie-build.lo trie-search.lo trie-c.lo
+libmarisa_alpha_la_OBJECTS = $(am_libmarisa_alpha_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
-CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
-	-o $@
-SOURCES = $(libmarisa_alpha_a_SOURCES)
-DIST_SOURCES = $(libmarisa_alpha_a_SOURCES)
+CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+SOURCES = $(libmarisa_alpha_la_SOURCES)
+DIST_SOURCES = $(libmarisa_alpha_la_SOURCES)
 HEADERS = $(include_HEADERS) $(libmarisa_alpha_include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
+AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -110,29 +112,44 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
+CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DLLTOOL = @DLLTOOL@
+DSYMUTIL = @DSYMUTIL@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+FGREP = @FGREP@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBTOOL = @LIBTOOL@
+LIPO = @LIPO@
+LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
+NM = @NM@
+NMEDIT = @NMEDIT@
+OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -143,6 +160,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 POW_LIB = @POW_LIB@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -151,22 +169,32 @@ abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
+build = @build@
 build_alias = @build_alias@
+build_cpu = @build_cpu@
+build_os = @build_os@
+build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
+host = @host@
 host_alias = @host_alias@
+host_cpu = @host_cpu@
+host_os = @host_os@
+host_vendor = @host_vendor@
 htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
@@ -192,8 +220,9 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CXXFLAGS = -Wall -Weffc++
 #AM_CXXFLAGS = -Wall -Weffc++ -D_DEBUG
-lib_LIBRARIES = libmarisa_alpha.a
-libmarisa_alpha_a_SOURCES = \
+ACLOCAL_AMFLAGS = -I m4
+lib_LTLIBRARIES = libmarisa_alpha.la
+libmarisa_alpha_la_SOURCES = \
   marisa_alpha/base.cc \
   marisa_alpha/progress.cc \
   marisa_alpha/mapper.cc \
@@ -235,7 +264,7 @@ libmarisa_alpha_include_HEADERS = \
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .cc .o .obj
+.SUFFIXES: .cc .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -266,40 +295,39 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-install-libLIBRARIES: $(lib_LIBRARIES)
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
 	test -z "$(libdir)" || $(MKDIR_P) "$(DESTDIR)$(libdir)"
-	@list='$(lib_LIBRARIES)'; test -n "$(libdir)" || list=; \
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
 	list2=; for p in $$list; do \
 	  if test -f $$p; then \
 	    list2="$$list2 $$p"; \
 	  else :; fi; \
 	done; \
 	test -z "$$list2" || { \
-	  echo " $(INSTALL_DATA) $$list2 '$(DESTDIR)$(libdir)'"; \
-	  $(INSTALL_DATA) $$list2 "$(DESTDIR)$(libdir)" || exit $$?; }
-	@$(POST_INSTALL)
-	@list='$(lib_LIBRARIES)'; test -n "$(libdir)" || list=; \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(libdir)'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 "$(DESTDIR)$(libdir)"; \
+	}
+
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
 	for p in $$list; do \
-	  if test -f $$p; then \
-	    $(am__strip_dir) \
-	    echo " ( cd '$(DESTDIR)$(libdir)' && $(RANLIB) $$f )"; \
-	    ( cd "$(DESTDIR)$(libdir)" && $(RANLIB) $$f ) || exit $$?; \
-	  else :; fi; \
+	  $(am__strip_dir) \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$f'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$f"; \
 	done
 
-uninstall-libLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@list='$(lib_LIBRARIES)'; test -n "$(libdir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(libdir)'; $(am__uninstall_files_from_dir)
-
-clean-libLIBRARIES:
-	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
-libmarisa_alpha.a: $(libmarisa_alpha_a_OBJECTS) $(libmarisa_alpha_a_DEPENDENCIES) $(EXTRA_libmarisa_alpha_a_DEPENDENCIES) 
-	-rm -f libmarisa_alpha.a
-	$(libmarisa_alpha_a_AR) libmarisa_alpha.a $(libmarisa_alpha_a_OBJECTS) $(libmarisa_alpha_a_LIBADD)
-	$(RANLIB) libmarisa_alpha.a
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test "$$dir" != "$$p" || dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
+libmarisa_alpha.la: $(libmarisa_alpha_la_OBJECTS) $(libmarisa_alpha_la_DEPENDENCIES) $(EXTRA_libmarisa_alpha_la_DEPENDENCIES) 
+	$(CXXLINK) -rpath $(libdir) $(libmarisa_alpha_la_OBJECTS) $(libmarisa_alpha_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -307,18 +335,18 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitvector.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intvector.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mapper.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/progress.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reader.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tail.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie-build.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie-c.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie-search.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/writer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitvector.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intvector.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mapper.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/progress.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reader.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tail.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie-build.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie-c.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie-search.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trie.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/writer.Plo@am__quote@
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -334,173 +362,102 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
-base.o: marisa_alpha/base.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base.o -MD -MP -MF $(DEPDIR)/base.Tpo -c -o base.o `test -f 'marisa_alpha/base.cc' || echo '$(srcdir)/'`marisa_alpha/base.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/base.Tpo $(DEPDIR)/base.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/base.cc' object='base.o' libtool=no @AMDEPBACKSLASH@
+.cc.lo:
+@am__fastdepCXX_TRUE@	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base.o `test -f 'marisa_alpha/base.cc' || echo '$(srcdir)/'`marisa_alpha/base.cc
+@am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
 
-base.obj: marisa_alpha/base.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base.obj -MD -MP -MF $(DEPDIR)/base.Tpo -c -o base.obj `if test -f 'marisa_alpha/base.cc'; then $(CYGPATH_W) 'marisa_alpha/base.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/base.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/base.Tpo $(DEPDIR)/base.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/base.cc' object='base.obj' libtool=no @AMDEPBACKSLASH@
+base.lo: marisa_alpha/base.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base.lo -MD -MP -MF $(DEPDIR)/base.Tpo -c -o base.lo `test -f 'marisa_alpha/base.cc' || echo '$(srcdir)/'`marisa_alpha/base.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/base.Tpo $(DEPDIR)/base.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/base.cc' object='base.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base.obj `if test -f 'marisa_alpha/base.cc'; then $(CYGPATH_W) 'marisa_alpha/base.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/base.cc'; fi`
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base.lo `test -f 'marisa_alpha/base.cc' || echo '$(srcdir)/'`marisa_alpha/base.cc
 
-progress.o: marisa_alpha/progress.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT progress.o -MD -MP -MF $(DEPDIR)/progress.Tpo -c -o progress.o `test -f 'marisa_alpha/progress.cc' || echo '$(srcdir)/'`marisa_alpha/progress.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/progress.Tpo $(DEPDIR)/progress.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/progress.cc' object='progress.o' libtool=no @AMDEPBACKSLASH@
+progress.lo: marisa_alpha/progress.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT progress.lo -MD -MP -MF $(DEPDIR)/progress.Tpo -c -o progress.lo `test -f 'marisa_alpha/progress.cc' || echo '$(srcdir)/'`marisa_alpha/progress.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/progress.Tpo $(DEPDIR)/progress.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/progress.cc' object='progress.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o progress.o `test -f 'marisa_alpha/progress.cc' || echo '$(srcdir)/'`marisa_alpha/progress.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o progress.lo `test -f 'marisa_alpha/progress.cc' || echo '$(srcdir)/'`marisa_alpha/progress.cc
 
-progress.obj: marisa_alpha/progress.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT progress.obj -MD -MP -MF $(DEPDIR)/progress.Tpo -c -o progress.obj `if test -f 'marisa_alpha/progress.cc'; then $(CYGPATH_W) 'marisa_alpha/progress.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/progress.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/progress.Tpo $(DEPDIR)/progress.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/progress.cc' object='progress.obj' libtool=no @AMDEPBACKSLASH@
+mapper.lo: marisa_alpha/mapper.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT mapper.lo -MD -MP -MF $(DEPDIR)/mapper.Tpo -c -o mapper.lo `test -f 'marisa_alpha/mapper.cc' || echo '$(srcdir)/'`marisa_alpha/mapper.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/mapper.Tpo $(DEPDIR)/mapper.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/mapper.cc' object='mapper.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o progress.obj `if test -f 'marisa_alpha/progress.cc'; then $(CYGPATH_W) 'marisa_alpha/progress.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/progress.cc'; fi`
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o mapper.lo `test -f 'marisa_alpha/mapper.cc' || echo '$(srcdir)/'`marisa_alpha/mapper.cc
 
-mapper.o: marisa_alpha/mapper.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT mapper.o -MD -MP -MF $(DEPDIR)/mapper.Tpo -c -o mapper.o `test -f 'marisa_alpha/mapper.cc' || echo '$(srcdir)/'`marisa_alpha/mapper.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/mapper.Tpo $(DEPDIR)/mapper.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/mapper.cc' object='mapper.o' libtool=no @AMDEPBACKSLASH@
+reader.lo: marisa_alpha/reader.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT reader.lo -MD -MP -MF $(DEPDIR)/reader.Tpo -c -o reader.lo `test -f 'marisa_alpha/reader.cc' || echo '$(srcdir)/'`marisa_alpha/reader.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/reader.Tpo $(DEPDIR)/reader.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/reader.cc' object='reader.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o mapper.o `test -f 'marisa_alpha/mapper.cc' || echo '$(srcdir)/'`marisa_alpha/mapper.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o reader.lo `test -f 'marisa_alpha/reader.cc' || echo '$(srcdir)/'`marisa_alpha/reader.cc
 
-mapper.obj: marisa_alpha/mapper.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT mapper.obj -MD -MP -MF $(DEPDIR)/mapper.Tpo -c -o mapper.obj `if test -f 'marisa_alpha/mapper.cc'; then $(CYGPATH_W) 'marisa_alpha/mapper.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/mapper.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/mapper.Tpo $(DEPDIR)/mapper.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/mapper.cc' object='mapper.obj' libtool=no @AMDEPBACKSLASH@
+writer.lo: marisa_alpha/writer.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT writer.lo -MD -MP -MF $(DEPDIR)/writer.Tpo -c -o writer.lo `test -f 'marisa_alpha/writer.cc' || echo '$(srcdir)/'`marisa_alpha/writer.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/writer.Tpo $(DEPDIR)/writer.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/writer.cc' object='writer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o mapper.obj `if test -f 'marisa_alpha/mapper.cc'; then $(CYGPATH_W) 'marisa_alpha/mapper.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/mapper.cc'; fi`
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o writer.lo `test -f 'marisa_alpha/writer.cc' || echo '$(srcdir)/'`marisa_alpha/writer.cc
 
-reader.o: marisa_alpha/reader.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT reader.o -MD -MP -MF $(DEPDIR)/reader.Tpo -c -o reader.o `test -f 'marisa_alpha/reader.cc' || echo '$(srcdir)/'`marisa_alpha/reader.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/reader.Tpo $(DEPDIR)/reader.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/reader.cc' object='reader.o' libtool=no @AMDEPBACKSLASH@
+intvector.lo: marisa_alpha/intvector.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT intvector.lo -MD -MP -MF $(DEPDIR)/intvector.Tpo -c -o intvector.lo `test -f 'marisa_alpha/intvector.cc' || echo '$(srcdir)/'`marisa_alpha/intvector.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/intvector.Tpo $(DEPDIR)/intvector.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/intvector.cc' object='intvector.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o reader.o `test -f 'marisa_alpha/reader.cc' || echo '$(srcdir)/'`marisa_alpha/reader.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o intvector.lo `test -f 'marisa_alpha/intvector.cc' || echo '$(srcdir)/'`marisa_alpha/intvector.cc
 
-reader.obj: marisa_alpha/reader.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT reader.obj -MD -MP -MF $(DEPDIR)/reader.Tpo -c -o reader.obj `if test -f 'marisa_alpha/reader.cc'; then $(CYGPATH_W) 'marisa_alpha/reader.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/reader.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/reader.Tpo $(DEPDIR)/reader.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/reader.cc' object='reader.obj' libtool=no @AMDEPBACKSLASH@
+bitvector.lo: marisa_alpha/bitvector.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT bitvector.lo -MD -MP -MF $(DEPDIR)/bitvector.Tpo -c -o bitvector.lo `test -f 'marisa_alpha/bitvector.cc' || echo '$(srcdir)/'`marisa_alpha/bitvector.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/bitvector.Tpo $(DEPDIR)/bitvector.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/bitvector.cc' object='bitvector.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o reader.obj `if test -f 'marisa_alpha/reader.cc'; then $(CYGPATH_W) 'marisa_alpha/reader.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/reader.cc'; fi`
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o bitvector.lo `test -f 'marisa_alpha/bitvector.cc' || echo '$(srcdir)/'`marisa_alpha/bitvector.cc
 
-writer.o: marisa_alpha/writer.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT writer.o -MD -MP -MF $(DEPDIR)/writer.Tpo -c -o writer.o `test -f 'marisa_alpha/writer.cc' || echo '$(srcdir)/'`marisa_alpha/writer.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/writer.Tpo $(DEPDIR)/writer.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/writer.cc' object='writer.o' libtool=no @AMDEPBACKSLASH@
+tail.lo: marisa_alpha/tail.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT tail.lo -MD -MP -MF $(DEPDIR)/tail.Tpo -c -o tail.lo `test -f 'marisa_alpha/tail.cc' || echo '$(srcdir)/'`marisa_alpha/tail.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/tail.Tpo $(DEPDIR)/tail.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/tail.cc' object='tail.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o writer.o `test -f 'marisa_alpha/writer.cc' || echo '$(srcdir)/'`marisa_alpha/writer.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o tail.lo `test -f 'marisa_alpha/tail.cc' || echo '$(srcdir)/'`marisa_alpha/tail.cc
 
-writer.obj: marisa_alpha/writer.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT writer.obj -MD -MP -MF $(DEPDIR)/writer.Tpo -c -o writer.obj `if test -f 'marisa_alpha/writer.cc'; then $(CYGPATH_W) 'marisa_alpha/writer.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/writer.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/writer.Tpo $(DEPDIR)/writer.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/writer.cc' object='writer.obj' libtool=no @AMDEPBACKSLASH@
+trie.lo: marisa_alpha/trie.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie.lo -MD -MP -MF $(DEPDIR)/trie.Tpo -c -o trie.lo `test -f 'marisa_alpha/trie.cc' || echo '$(srcdir)/'`marisa_alpha/trie.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie.Tpo $(DEPDIR)/trie.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/trie.cc' object='trie.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o writer.obj `if test -f 'marisa_alpha/writer.cc'; then $(CYGPATH_W) 'marisa_alpha/writer.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/writer.cc'; fi`
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie.lo `test -f 'marisa_alpha/trie.cc' || echo '$(srcdir)/'`marisa_alpha/trie.cc
 
-intvector.o: marisa_alpha/intvector.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT intvector.o -MD -MP -MF $(DEPDIR)/intvector.Tpo -c -o intvector.o `test -f 'marisa_alpha/intvector.cc' || echo '$(srcdir)/'`marisa_alpha/intvector.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/intvector.Tpo $(DEPDIR)/intvector.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/intvector.cc' object='intvector.o' libtool=no @AMDEPBACKSLASH@
+trie-build.lo: marisa_alpha/trie-build.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie-build.lo -MD -MP -MF $(DEPDIR)/trie-build.Tpo -c -o trie-build.lo `test -f 'marisa_alpha/trie-build.cc' || echo '$(srcdir)/'`marisa_alpha/trie-build.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie-build.Tpo $(DEPDIR)/trie-build.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/trie-build.cc' object='trie-build.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o intvector.o `test -f 'marisa_alpha/intvector.cc' || echo '$(srcdir)/'`marisa_alpha/intvector.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie-build.lo `test -f 'marisa_alpha/trie-build.cc' || echo '$(srcdir)/'`marisa_alpha/trie-build.cc
 
-intvector.obj: marisa_alpha/intvector.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT intvector.obj -MD -MP -MF $(DEPDIR)/intvector.Tpo -c -o intvector.obj `if test -f 'marisa_alpha/intvector.cc'; then $(CYGPATH_W) 'marisa_alpha/intvector.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/intvector.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/intvector.Tpo $(DEPDIR)/intvector.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/intvector.cc' object='intvector.obj' libtool=no @AMDEPBACKSLASH@
+trie-search.lo: marisa_alpha/trie-search.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie-search.lo -MD -MP -MF $(DEPDIR)/trie-search.Tpo -c -o trie-search.lo `test -f 'marisa_alpha/trie-search.cc' || echo '$(srcdir)/'`marisa_alpha/trie-search.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie-search.Tpo $(DEPDIR)/trie-search.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/trie-search.cc' object='trie-search.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o intvector.obj `if test -f 'marisa_alpha/intvector.cc'; then $(CYGPATH_W) 'marisa_alpha/intvector.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/intvector.cc'; fi`
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie-search.lo `test -f 'marisa_alpha/trie-search.cc' || echo '$(srcdir)/'`marisa_alpha/trie-search.cc
 
-bitvector.o: marisa_alpha/bitvector.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT bitvector.o -MD -MP -MF $(DEPDIR)/bitvector.Tpo -c -o bitvector.o `test -f 'marisa_alpha/bitvector.cc' || echo '$(srcdir)/'`marisa_alpha/bitvector.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/bitvector.Tpo $(DEPDIR)/bitvector.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/bitvector.cc' object='bitvector.o' libtool=no @AMDEPBACKSLASH@
+trie-c.lo: marisa_alpha/trie-c.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie-c.lo -MD -MP -MF $(DEPDIR)/trie-c.Tpo -c -o trie-c.lo `test -f 'marisa_alpha/trie-c.cc' || echo '$(srcdir)/'`marisa_alpha/trie-c.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie-c.Tpo $(DEPDIR)/trie-c.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/trie-c.cc' object='trie-c.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o bitvector.o `test -f 'marisa_alpha/bitvector.cc' || echo '$(srcdir)/'`marisa_alpha/bitvector.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie-c.lo `test -f 'marisa_alpha/trie-c.cc' || echo '$(srcdir)/'`marisa_alpha/trie-c.cc
 
-bitvector.obj: marisa_alpha/bitvector.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT bitvector.obj -MD -MP -MF $(DEPDIR)/bitvector.Tpo -c -o bitvector.obj `if test -f 'marisa_alpha/bitvector.cc'; then $(CYGPATH_W) 'marisa_alpha/bitvector.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/bitvector.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/bitvector.Tpo $(DEPDIR)/bitvector.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/bitvector.cc' object='bitvector.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o bitvector.obj `if test -f 'marisa_alpha/bitvector.cc'; then $(CYGPATH_W) 'marisa_alpha/bitvector.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/bitvector.cc'; fi`
+mostlyclean-libtool:
+	-rm -f *.lo
 
-tail.o: marisa_alpha/tail.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT tail.o -MD -MP -MF $(DEPDIR)/tail.Tpo -c -o tail.o `test -f 'marisa_alpha/tail.cc' || echo '$(srcdir)/'`marisa_alpha/tail.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/tail.Tpo $(DEPDIR)/tail.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/tail.cc' object='tail.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o tail.o `test -f 'marisa_alpha/tail.cc' || echo '$(srcdir)/'`marisa_alpha/tail.cc
-
-tail.obj: marisa_alpha/tail.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT tail.obj -MD -MP -MF $(DEPDIR)/tail.Tpo -c -o tail.obj `if test -f 'marisa_alpha/tail.cc'; then $(CYGPATH_W) 'marisa_alpha/tail.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/tail.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/tail.Tpo $(DEPDIR)/tail.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/tail.cc' object='tail.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o tail.obj `if test -f 'marisa_alpha/tail.cc'; then $(CYGPATH_W) 'marisa_alpha/tail.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/tail.cc'; fi`
-
-trie.o: marisa_alpha/trie.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie.o -MD -MP -MF $(DEPDIR)/trie.Tpo -c -o trie.o `test -f 'marisa_alpha/trie.cc' || echo '$(srcdir)/'`marisa_alpha/trie.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie.Tpo $(DEPDIR)/trie.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/trie.cc' object='trie.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie.o `test -f 'marisa_alpha/trie.cc' || echo '$(srcdir)/'`marisa_alpha/trie.cc
-
-trie.obj: marisa_alpha/trie.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie.obj -MD -MP -MF $(DEPDIR)/trie.Tpo -c -o trie.obj `if test -f 'marisa_alpha/trie.cc'; then $(CYGPATH_W) 'marisa_alpha/trie.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/trie.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie.Tpo $(DEPDIR)/trie.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/trie.cc' object='trie.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie.obj `if test -f 'marisa_alpha/trie.cc'; then $(CYGPATH_W) 'marisa_alpha/trie.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/trie.cc'; fi`
-
-trie-build.o: marisa_alpha/trie-build.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie-build.o -MD -MP -MF $(DEPDIR)/trie-build.Tpo -c -o trie-build.o `test -f 'marisa_alpha/trie-build.cc' || echo '$(srcdir)/'`marisa_alpha/trie-build.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie-build.Tpo $(DEPDIR)/trie-build.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/trie-build.cc' object='trie-build.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie-build.o `test -f 'marisa_alpha/trie-build.cc' || echo '$(srcdir)/'`marisa_alpha/trie-build.cc
-
-trie-build.obj: marisa_alpha/trie-build.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie-build.obj -MD -MP -MF $(DEPDIR)/trie-build.Tpo -c -o trie-build.obj `if test -f 'marisa_alpha/trie-build.cc'; then $(CYGPATH_W) 'marisa_alpha/trie-build.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/trie-build.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie-build.Tpo $(DEPDIR)/trie-build.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/trie-build.cc' object='trie-build.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie-build.obj `if test -f 'marisa_alpha/trie-build.cc'; then $(CYGPATH_W) 'marisa_alpha/trie-build.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/trie-build.cc'; fi`
-
-trie-search.o: marisa_alpha/trie-search.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie-search.o -MD -MP -MF $(DEPDIR)/trie-search.Tpo -c -o trie-search.o `test -f 'marisa_alpha/trie-search.cc' || echo '$(srcdir)/'`marisa_alpha/trie-search.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie-search.Tpo $(DEPDIR)/trie-search.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/trie-search.cc' object='trie-search.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie-search.o `test -f 'marisa_alpha/trie-search.cc' || echo '$(srcdir)/'`marisa_alpha/trie-search.cc
-
-trie-search.obj: marisa_alpha/trie-search.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie-search.obj -MD -MP -MF $(DEPDIR)/trie-search.Tpo -c -o trie-search.obj `if test -f 'marisa_alpha/trie-search.cc'; then $(CYGPATH_W) 'marisa_alpha/trie-search.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/trie-search.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie-search.Tpo $(DEPDIR)/trie-search.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/trie-search.cc' object='trie-search.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie-search.obj `if test -f 'marisa_alpha/trie-search.cc'; then $(CYGPATH_W) 'marisa_alpha/trie-search.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/trie-search.cc'; fi`
-
-trie-c.o: marisa_alpha/trie-c.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie-c.o -MD -MP -MF $(DEPDIR)/trie-c.Tpo -c -o trie-c.o `test -f 'marisa_alpha/trie-c.cc' || echo '$(srcdir)/'`marisa_alpha/trie-c.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie-c.Tpo $(DEPDIR)/trie-c.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/trie-c.cc' object='trie-c.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie-c.o `test -f 'marisa_alpha/trie-c.cc' || echo '$(srcdir)/'`marisa_alpha/trie-c.cc
-
-trie-c.obj: marisa_alpha/trie-c.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT trie-c.obj -MD -MP -MF $(DEPDIR)/trie-c.Tpo -c -o trie-c.obj `if test -f 'marisa_alpha/trie-c.cc'; then $(CYGPATH_W) 'marisa_alpha/trie-c.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/trie-c.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/trie-c.Tpo $(DEPDIR)/trie-c.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='marisa_alpha/trie-c.cc' object='trie-c.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o trie-c.obj `if test -f 'marisa_alpha/trie-c.cc'; then $(CYGPATH_W) 'marisa_alpha/trie-c.cc'; else $(CYGPATH_W) '$(srcdir)/marisa_alpha/trie-c.cc'; fi`
+clean-libtool:
+	-rm -rf .libs _libs
 install-includeHEADERS: $(include_HEADERS)
 	@$(NORMAL_INSTALL)
 	test -z "$(includedir)" || $(MKDIR_P) "$(DESTDIR)$(includedir)"
@@ -622,7 +579,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LIBRARIES) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)" "$(DESTDIR)$(libmarisa_alpha_includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
@@ -659,7 +616,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libLIBRARIES mostlyclean-am
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+	mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -686,7 +644,7 @@ install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-libLIBRARIES
+install-exec-am: install-libLTLIBRARIES
 
 install-html: install-html-am
 
@@ -715,7 +673,8 @@ maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-compile mostlyclean-generic
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool
 
 pdf: pdf-am
 
@@ -725,25 +684,26 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-includeHEADERS uninstall-libLIBRARIES \
+uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES \
 	uninstall-libmarisa_alpha_includeHEADERS
 
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libLIBRARIES ctags distclean distclean-compile \
-	distclean-generic distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am \
-	install-includeHEADERS install-info install-info-am \
-	install-libLIBRARIES install-libmarisa_alpha_includeHEADERS \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
-	ps ps-am tags uninstall uninstall-am uninstall-includeHEADERS \
-	uninstall-libLIBRARIES \
+	clean-libLTLIBRARIES clean-libtool ctags distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-includeHEADERS install-info \
+	install-info-am install-libLTLIBRARIES \
+	install-libmarisa_alpha_includeHEADERS install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-includeHEADERS \
+	uninstall-libLTLIBRARIES \
 	uninstall-libmarisa_alpha_includeHEADERS
 
 
