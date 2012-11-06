@@ -1,6 +1,6 @@
 - Project name
 
-marisa-trie-alpha
+marisa_alpha-trie
 http://code.google.com/p/marisa-trie/
 
 - Project summary
@@ -13,12 +13,12 @@ Matching Algorithms with Recursively Implemented StorAge (alpha)
 
 - Description
 
-This project *marisa-trie-alpha* provides a C++ library *libmarisa_alpha* and command line tools *`marisa-alpha-*`* for building and operating nesting patricia tries. The brand-new dictionary structure is designed to be static and space efficient. Also, *marisa-trie-alpha* enables not only simple lookups but also prefix searches and predictive searches.
+This project *marisa_alpha-trie* provides a C++ library *libmarisa_alpha* and command line tools *`marisa_alpha-*`* for building and operating nesting patricia tries. The brand-new dictionary structure is designed to be static and space efficient. Also, *marisa_alpha-trie* enables not only simple lookups but also prefix searches and predictive searches.
 
  * Prefix searches are to find keys from prefixes of a given query.
  * Predictive searches are to find keys starting with a given query.
 
-The biggest advantage of *marisa-trie-alpha* is that it can build a considerably compact dictionary. See below for the size of dictionaries built with various trie implementations.
+The biggest advantage of *marisa_alpha-trie* is that it can build a considerably compact dictionary. See below for the size of dictionaries built with various trie implementations.
 
  * Input
   * Source: enwiki-20110115-all-titles-in-ns0.gz
@@ -29,7 +29,7 @@ The biggest advantage of *marisa-trie-alpha* is that it can build a considerably
 || *Implementation*       || *Size (bytes)* || *Remarks*                   ||
 ||  darts-clone           ||   316,065,792  || Compacted double-array trie ||
 ||  tx-trie               ||   107,119,864  || LOUDS-based trie            ||
-|| *marisa-trie-alpha*    ||   *42,688,271* || Marisa trie (alpha)         ||
+|| *marisa_alpha-trie*    ||   *42,688,271* || MARISA (alpha) trie         ||
 
  * Documentation (in Japanese)
   * HowTo
