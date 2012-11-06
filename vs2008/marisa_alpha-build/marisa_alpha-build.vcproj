@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="marisa-build"
+	Name="marisa_alpha-build"
 	ProjectGUID="{104CFCC9-11DF-4894-894B-BFE5F5C13DCA}"
-	RootNamespace="marisabuild"
+	RootNamespace="marisaalphabuild"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -177,7 +177,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\tools\marisa-build.cc"
+				RelativePath="..\..\tools\marisa_alpha-build.cc"
 				>
 			</File>
 		</Filter>

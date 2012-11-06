@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="marisa-find"
-	ProjectGUID="{C59566AA-D2C9-40CF-897F-EA7C3F839FA1}"
-	RootNamespace="marisafind"
+	Name="marisa_alpha-predict"
+	ProjectGUID="{C8070F3E-843A-4FEE-BB34-5C05C54750AB}"
+	RootNamespace="marisaalphapredict"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -177,7 +177,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\tools\marisa-find.cc"
+				RelativePath="..\..\tools\marisa_alpha-predict.cc"
 				>
 			</File>
 		</Filter>
