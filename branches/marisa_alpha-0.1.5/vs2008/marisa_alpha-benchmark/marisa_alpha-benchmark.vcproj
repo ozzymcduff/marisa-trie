@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="marisa-predict"
-	ProjectGUID="{C8070F3E-843A-4FEE-BB34-5C05C54750AB}"
-	RootNamespace="marisapredict"
+	Name="marisa_alpha-benchmark"
+	ProjectGUID="{85E7F33D-2053-47AD-AEA4-4DB8B754BCD7}"
+	RootNamespace="marisaalphabenchmark"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -177,7 +177,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\tools\marisa-predict.cc"
+				RelativePath="..\..\tools\marisa_alpha-benchmark.cc"
 				>
 			</File>
 		</Filter>

@@ -1,29 +1,29 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmarisa", "libmarisa\libmarisa.vcproj", "{69872893-89E5-4D16-829E-8B120BACE2AD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmarisa_alpha", "libmarisa_alpha\libmarisa_alpha.vcproj", "{69872893-89E5-4D16-829E-8B120BACE2AD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-benchmark", "marisa-benchmark\marisa-benchmark.vcproj", "{85E7F33D-2053-47AD-AEA4-4DB8B754BCD7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa_alpha-benchmark", "marisa_alpha-benchmark\marisa_alpha-benchmark.vcproj", "{85E7F33D-2053-47AD-AEA4-4DB8B754BCD7}"
 	ProjectSection(ProjectDependencies) = postProject
 		{69872893-89E5-4D16-829E-8B120BACE2AD} = {69872893-89E5-4D16-829E-8B120BACE2AD}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-build", "marisa-build\marisa-build.vcproj", "{104CFCC9-11DF-4894-894B-BFE5F5C13DCA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa_alpha-build", "marisa_alpha-build\marisa_alpha-build.vcproj", "{104CFCC9-11DF-4894-894B-BFE5F5C13DCA}"
 	ProjectSection(ProjectDependencies) = postProject
 		{69872893-89E5-4D16-829E-8B120BACE2AD} = {69872893-89E5-4D16-829E-8B120BACE2AD}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-lookup", "marisa-lookup\marisa-lookup.vcproj", "{98C25734-1D4B-48A7-B8B2-D6559410FF3F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa_alpha-lookup", "marisa_alpha-lookup\marisa_alpha-lookup.vcproj", "{98C25734-1D4B-48A7-B8B2-D6559410FF3F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{69872893-89E5-4D16-829E-8B120BACE2AD} = {69872893-89E5-4D16-829E-8B120BACE2AD}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-find", "marisa-find\marisa-find.vcproj", "{C59566AA-D2C9-40CF-897F-EA7C3F839FA1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa_alpha-find", "marisa_alpha-find\marisa_alpha-find.vcproj", "{C59566AA-D2C9-40CF-897F-EA7C3F839FA1}"
 	ProjectSection(ProjectDependencies) = postProject
 		{69872893-89E5-4D16-829E-8B120BACE2AD} = {69872893-89E5-4D16-829E-8B120BACE2AD}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-predict", "marisa-predict\marisa-predict.vcproj", "{C8070F3E-843A-4FEE-BB34-5C05C54750AB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa_alpha-predict", "marisa_alpha-predict\marisa_alpha-predict.vcproj", "{C8070F3E-843A-4FEE-BB34-5C05C54750AB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{69872893-89E5-4D16-829E-8B120BACE2AD} = {69872893-89E5-4D16-829E-8B120BACE2AD}
 	EndProjectSection

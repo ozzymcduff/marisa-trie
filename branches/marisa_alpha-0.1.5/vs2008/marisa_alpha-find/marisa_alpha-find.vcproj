@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="marisa-benchmark"
-	ProjectGUID="{85E7F33D-2053-47AD-AEA4-4DB8B754BCD7}"
-	RootNamespace="marisabenchmark"
+	Name="marisa_alpha-find"
+	ProjectGUID="{C59566AA-D2C9-40CF-897F-EA7C3F839FA1}"
+	RootNamespace="marisaalphafind"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -177,7 +177,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\tools\marisa-benchmark.cc"
+				RelativePath="..\..\tools\marisa_alpha-find.cc"
 				>
 			</File>
 		</Filter>
