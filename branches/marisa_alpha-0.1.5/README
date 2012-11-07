@@ -21,21 +21,26 @@ This project *marisa_alpha-trie* provides a C++ library *libmarisa_alpha* and co
 The biggest advantage of *marisa_alpha-trie* is that it can build a considerably compact dictionary. See below for the size of dictionaries built with various trie implementations.
 
  * Input
-  * Source: enwiki-20110115-all-titles-in-ns0.gz
-  * Contents: all page titles of English Wikipedia (Jan. 2011)
-  * Number of keys: 8,279,325
-  * Total size: 167,223,035 bytes (plain) / 46,344,646 bytes (gzipped)
+  * Source: enwiki-20121101-all-titles-in-ns0.gz
+  * Contents: all page titles of English Wikipedia (Nov. 2012)
+  * Number of keys: 9,805,576
+  * Total size: 200,435,403 bytes (plain) / 54,933,690 bytes (gzipped)
 
-|| *Implementation*       || *Size (bytes)* || *Remarks*                   ||
-||  darts-clone           ||   316,065,792  || Compacted double-array trie ||
-||  tx-trie               ||   107,119,864  || LOUDS-based trie            ||
-|| *marisa_alpha-trie*    ||   *42,688,271* || MARISA (alpha) trie         ||
+|| *Implementation*    || *Size (bytes)* || *Remarks*                   ||
+||  darts-clone        ||   316,065,792  || Compacted double-array trie ||
+||  tx-trie            ||   109,701,170  || LOUDS-based trie            ||
+|| *marisa_alpha-trie* ||   *50,237,009* || MARISA (alpha) trie         ||
+||  marisa-trie        ||    50,753,560  || MARISA trie                 ||
 
- * Documentation (in Japanese)
-  * HowTo
-  * ListOfTools
-  * LibraryInterface
-  * BenchmarkResults
+ * Documentation
+  * marisa_alpha-0.1.5 (Japanese)
+   * HowTo
+   * ListOfTools
+   * LibraryInterface
+   * BenchmarkResults
+  * marisa-0.2.x
+   * [http://marisa-trie.googlecode.com/svn/trunk/docs/readme.en.html README (English)]
+   * [http://marisa-trie.googlecode.com/svn/trunk/docs/readme.ja.html README (Japanese)]
 
 - Version control system
 
@@ -47,7 +52,6 @@ New BSD License
 
 - Project labels
 
-Nesting
 Patricia
 Trie
 Static
