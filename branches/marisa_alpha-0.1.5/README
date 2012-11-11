@@ -27,20 +27,20 @@ The biggest advantage of *marisa_alpha-trie* is that it can build a considerably
   * Total size: 200,435,403 bytes (plain) / 54,933,690 bytes (gzipped)
 
 || *Implementation*    || *Size (bytes)* || *Remarks*                   ||
-||  darts-clone        ||   316,065,792  || Compacted double-array trie ||
-||  tx-trie            ||   109,701,170  || LOUDS-based trie            ||
+||  darts-clone        ||   376,613,888  || Compacted double-array trie ||
+||  tx-trie            ||   127,727,058  || LOUDS-based trie            ||
 || *marisa_alpha-trie* ||   *50,237,009* || MARISA (alpha) trie         ||
 ||  marisa-trie        ||    50,753,560  || MARISA trie                 ||
 
  * Documentation
-  * marisa_alpha-0.1.5 (Japanese)
+  * marisa-0.2.x
+   * [http://marisa-trie.googlecode.com/svn/trunk/docs/readme.en.html README (English)]
+   * [http://marisa-trie.googlecode.com/svn/trunk/docs/readme.ja.html README (Japanese)]
+  * marisa-0.1.5, marisa_alpha-0.1.5 (Japanese)
    * HowTo
    * ListOfTools
    * LibraryInterface
    * BenchmarkResults
-  * marisa-0.2.x
-   * [http://marisa-trie.googlecode.com/svn/trunk/docs/readme.en.html README (English)]
-   * [http://marisa-trie.googlecode.com/svn/trunk/docs/readme.ja.html README (Japanese)]
 
 - Version control system
 
