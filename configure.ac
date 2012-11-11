@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.67])
 AC_INIT([marisa],
-        [0.2.0],
+        [0.2.1],
         [syata@acm.org])
 AC_CONFIG_SRCDIR([lib/marisa.h])
 AM_INIT_AUTOMAKE
