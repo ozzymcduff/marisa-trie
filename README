@@ -9,7 +9,7 @@ MARISA: Matching Algorithm with Recursively Implemented StorAge
 
 - Version
 
-0.2.0
+0.2.1
 
 - Description
 
@@ -25,21 +25,21 @@ A MARISA-based dictionary supports not only lookup but also reverse lookup, comm
 The biggest advantage of *libmarisa* is that its dictionary size is considerably more compact than others. See below for the dictionary size of other implementations.
 
  * Input
-  * Source: enwiki-20110405-all-titles-in-ns0.gz
-  * Contents: all page titles of English Wikipedia (Apr. 2011)
-  * Number of keys: 8,472,583
-  * Total size: 171,336,267 bytes (plain) / 47,444,569 bytes (gzipped)
+  * Source: enwiki-20121101-all-titles-in-ns0.gz
+  * Contents: all page titles of English Wikipedia (Nov. 2012)
+  * Number of keys: 9,805,576
+  * Total size: 200,435,403 bytes (plain) / 54,933,690 bytes (gzipped)
 
 || *Implementation* || *Size (bytes)* || *Remarks*                   ||
-||  darts-clone     ||   316,065,792  || Compacted double-array trie ||
-||  tx-trie         ||   109,701,170  || LOUDS-based trie            ||
-|| *marisa-trie*    ||   *44,172,368* || MARISA trie                 ||
+||  darts-clone     ||   376,613,888  || Compacted double-array trie ||
+||  tx-trie         ||   127,727,058  || LOUDS-based trie            ||
+|| *marisa-trie*    ||    50,753,560  || MARISA trie                 ||
 
  * Documentation
-  * marisa-0.2.0
-   * [http://marisa-trie.googlecode.com/svn/branches/marisa-0.2.0/docs/readme.en.html README (English)]
-   * [http://marisa-trie.googlecode.com/svn/branches/marisa-0.2.0/docs/readme.ja.html README (Japanese)]
-  * marisa-0.1.4 (Japanese)
+  * marisa-0.2.1
+   * [http://marisa-trie.googlecode.com/svn/trunk/docs/readme.en.html README (English)]
+   * [http://marisa-trie.googlecode.com/svn/trunk/docs/readme.ja.html README (Japanese)]
+  * marisa-0.1.5 (Japanese)
    * HowTo
    * ListOfTools
    * LibraryInterface
