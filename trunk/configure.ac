@@ -2,17 +2,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([marisa],
-        [0.2.1],
-        [syata@acm.org])
+AC_INIT([marisa], [0.2.1], [syata@acm.org])
 AC_CONFIG_SRCDIR([lib/marisa.h])
 AM_INIT_AUTOMAKE
 
 # Checks for programs.
+LT_INIT
 AC_PROG_CXX
-AC_PROG_CC
-AC_PROG_RANLIB
-AC_PROG_LIBTOOL
 AC_PROG_INSTALL
 
 AC_CONFIG_MACRO_DIR([m4])
