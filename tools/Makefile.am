@@ -14,6 +14,7 @@ bin_PROGRAMS = \
   marisa-reverse-lookup \
   marisa-common-prefix-search \
   marisa-predictive-search \
+  marisa-dump \
   marisa-benchmark
 
 marisa_build_SOURCES = marisa-build.cc
@@ -30,6 +31,9 @@ marisa_common_prefix_search_LDADD = ../lib/libmarisa.la libcmdopt.la
 
 marisa_predictive_search_SOURCES = marisa-predictive-search.cc
 marisa_predictive_search_LDADD = ../lib/libmarisa.la libcmdopt.la
+
+marisa_dump_SOURCES = marisa-dump.cc
+marisa_dump_LDADD = ../lib/libmarisa.la libcmdopt.la
 
 marisa_benchmark_SOURCES = marisa-benchmark.cc
 marisa_benchmark_LDADD = ../lib/libmarisa.la libcmdopt.la
