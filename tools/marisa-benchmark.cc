@@ -50,7 +50,7 @@ void print_help(const char *cmd) {
       "  -b, --binary-tail    build a dictionary with binary TAIL\n"
       "  -w, --weight-order   arrange siblings in weight order (default)\n"
       "  -l, --label-order    arrange siblings in label order\n"
-      "  -c, --cache-level=[N]    specifies the cache size"
+      "  -c, --cache-level=[N]    specify the cache size"
       " [1, 5] (default: 3)\n"
       "  -P, --with-predict       include predictive search (default)\n"
       "  -p, --without-predict    skip predictive search\n"
