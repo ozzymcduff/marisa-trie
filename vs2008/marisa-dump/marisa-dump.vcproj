@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="marisa-lookup"
-	ProjectGUID="{98C25734-1D4B-48A7-B8B2-D6559410FF3F}"
-	RootNamespace="marisalookup"
+	Name="marisa-dump"
+	ProjectGUID="{2B7CDB51-C796-4CD2-82ED-F782C7952204}"
+	RootNamespace="marisadump"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -177,7 +177,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\tools\marisa-lookup.cc"
+				RelativePath="..\..\tools\marisa-dump.cc"
 				>
 			</File>
 		</Filter>
