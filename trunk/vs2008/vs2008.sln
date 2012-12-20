@@ -58,6 +58,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-predictive-search", 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmarisa", "libmarisa\libmarisa.vcproj", "{3BE97421-D962-4330-815B-AC9B7B799F15}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marisa-dump", "marisa-dump\marisa-dump.vcproj", "{2B7CDB51-C796-4CD2-82ED-F782C7952204}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3BE97421-D962-4330-815B-AC9B7B799F15} = {3BE97421-D962-4330-815B-AC9B7B799F15}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -107,6 +112,10 @@ Global
 		{3BE97421-D962-4330-815B-AC9B7B799F15}.Debug|Win32.Build.0 = Debug|Win32
 		{3BE97421-D962-4330-815B-AC9B7B799F15}.Release|Win32.ActiveCfg = Release|Win32
 		{3BE97421-D962-4330-815B-AC9B7B799F15}.Release|Win32.Build.0 = Release|Win32
+		{2B7CDB51-C796-4CD2-82ED-F782C7952204}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2B7CDB51-C796-4CD2-82ED-F782C7952204}.Debug|Win32.Build.0 = Debug|Win32
+		{2B7CDB51-C796-4CD2-82ED-F782C7952204}.Release|Win32.ActiveCfg = Release|Win32
+		{2B7CDB51-C796-4CD2-82ED-F782C7952204}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
