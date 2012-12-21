@@ -1,3 +1,8 @@
+#ifdef _WIN32
+ #include <fcntl.h>
+ #include <io.h>
+#endif  // _WIN32
+
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -92,6 +97,9 @@ int build(const char * const *args, std::size_t num_args) {
     }
   } else {
     try {
+#ifdef _WIN32
+      ::_setmode(::_fileno(stdout), _O_BINARY);
+#endif  // _WIN32
       std::cout << trie;
     } catch (const marisa::Exception &ex) {
       std::cerr << ex.what()
