@@ -1,6 +1,7 @@
 #ifdef _WIN32
  #include <fcntl.h>
  #include <io.h>
+ #include <stdio.h>
 #endif  // _WIN32
 
 #include <cstdlib>

@@ -1,3 +1,9 @@
+#ifdef _WIN32
+ #include <fcntl.h>
+ #include <io.h>
+ #include <stdio.h>
+#endif  // _WIN32
+
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -67,7 +73,10 @@ int dump(const char *filename) {
     }
   } else {
     std::cerr << "input: <stdin>" << std::endl;
-    marisa::read(std::cin, &trie);
+#ifdef _WIN32
+    ::_setmode(::_fileno(stdin), _O_BINARY);
+#endif  // _WIN32
+    std::cin >> trie;
   }
   return dump(trie);
 }
