@@ -8,7 +8,7 @@
  <body>
   <div id="header">
    <div class="left">MARISA: Matching Algorithm with Recursively Implemented StorAge</div>
-   <div class="right">Last modified: 29 August 2012</div>
+   <div class="right">Last modified: 22 December 2012</div>
    <div class="end"></div>
   </div><!-- header -->
   <div id="body" style="text-align: justify">
@@ -82,7 +82,7 @@
       </li>
       <li>Source
        <ul>
-        <li><a href="http://marisa-trie.googlecode.com/files/marisa-0.2.0.tar.gz">marisa-0.2.0.tar.gz</a></li>
+        <li><a href="http://marisa-trie.googlecode.com/files/marisa-0.2.1.tar.gz">marisa-0.2.1.tar.gz</a></li>
        </ul>
       </li>
      </ul>
@@ -92,10 +92,10 @@
    <div class="section">
     <h2><a name="install">Installation</a></h2>
     <div class="subsection">
-     <h3><a name="gcc">GCC</a></h3>
+     <h3><a name="gcc">GCC &amp; Clang</a></h3>
      <div class="float">
-      <pre class="console">$ tar zxf marisa-0.2.0.tar.gz
-$ cd marisa-0.2.0
+      <pre class="console">$ tar zxf marisa-0.2.1.tar.gz
+$ cd marisa-0.2.1
 $ ./configure
 $ make
 $ make check
@@ -105,7 +105,7 @@ $ make install</pre>
       Users can install libmarisa by using <kbd>configure</kbd> and <kbd>make</kbd>. <kbd>make install</kbd> might require <kbd>sudo</kbd> to install libmarisa as the root user. Additionally, <kbd>ldconfig</kbd> might be required because libmarisa is installed as a shared library in default settings.
      </p>
      <p>
-      If you need a static library, specify <kbd>--enable-static</kbd> when you run <kbd>configure</kbd>. For other options, see <kbd>./configure --help</kbd>.
+      If SSE4.2 is available on your environment, you can specify <kbd>--enable-popcnt</kbd>, when you run <kbd>configure</kbd>, to generate a faster library. Also, if you need a static library, specify <kbd>--enable-static</kbd> to <kbd>configure</kbd>. For other options, see <kbd>./configure --help</kbd>.
      </p>
     </div><!-- subsection -->
     <div class="subsection">
@@ -163,9 +163,9 @@ $ make install</pre>
      <h3><a name="marisa-build">marisa-build</a></h3>
      <div class="float">
       <pre class="console">$ marisa-build &lt; keyset.txt &gt; keyset.dic
-#keys: 8472583
-#nodes: 11562531
-size: 44172368</pre>
+#keys: 9864459
+#nodes: 13473881
+size: 51044424</pre>
      </div><!-- float -->
      <p>
       <kbd>marisa-build</kbd> is a tool to build a dictionary from a set of keys. This tool takes as input newline-delimited keys and writes the dictionary to the standard output.
@@ -182,7 +182,7 @@ size: 44172368</pre>
      <div class="float">
       <pre class="console">$ marisa-lookup keyset.dic
 Marisa
-827280	Marisa
+915465	Marisa
 What's_uuup
 -1	What's_uuup</pre>
      </div><!-- float -->
@@ -197,8 +197,8 @@ What's_uuup
      <h3><a name="marisa-reverse-lookup">marisa-reverse-lookup</a></h3>
      <div class="float">
       <pre class="console">$ marisa-reverse-lookup keyset.dic
-7000000
-7000000	United_New_Zealand</pre>
+1234567
+1234567	Goma_International_Airport</pre>
      </div><!-- float -->
      <p>
       <kbd>marisa-reverse-lookup</kbd> is a tool to test reverse lookup. If a given ID is not out-of-range, this tool restores the associated key and prints it. The available ID is <var>0</var> to <var>(n - 1)</var>, where <var>n</var> is the number of keys. Note that an out-of-range ID causes an error.
@@ -214,8 +214,8 @@ What's_uuup
 USA
 3 found
 20	U	USA
-1521	US	USA
-35386	USA	USA</pre>
+1526	US	USA
+37471	USA	USA</pre>
      </div><!-- float -->
      <p>
       <kbd>marisa-common-prefix-search</kbd> is a tool to test common prefix search.  This tool searches keys from the possible prefixes of a query string and then prints the first <var>m</var> keys, where <var>m</var> is one of the parameters.
@@ -229,9 +229,9 @@ USA
      <div class="float">
       <pre class="console">$ marisa-predictive-search keyset.dic -n 2
 Touhou
-13 found
-877558	Touhou	Touhou
-4833422	Touhou_Hisotensoku	Touhou</pre>
+15 found
+975378	Touhou	Touhou
+5508004	Touhou_Hisotensoku	Touhou</pre>
      </div><!-- float -->
      <p>
       <kbd>marisa-predictive-search</kbd> is a tool to test predictive search. This tool searches keys starting with a query string and then prints the first <var>m</var> keys, where <var>m</var> is one of the parameters.
@@ -248,18 +248,18 @@ Number of tries: 1 - 5
 TAIL mode: Text mode
 Node order: Descending weight order
 Cache level: Normal cache
-Number of keys: 8472583
-Total length: 162863684
+Number of keys: 9864459
+Total length: 191858227
 ------+----------+--------+--------+--------+--------+--------
 #tries       size    build   lookup  reverse   prefix  predict
                                       lookup   search   search
           [bytes]    [K/s]    [K/s]    [K/s]    [K/s]    [K/s]
 ------+----------+--------+--------+--------+--------+--------
-     1   60483160   364.73  1321.78  1178.38  1073.84   571.70
-     2   46440776   308.99   759.19   710.19   658.83   234.18
-     3   44172368   303.57   686.04   645.78   602.17   203.52
-     4   43474712   302.48   665.04   630.40   582.71   196.03
-     5   43219544   301.62   657.30   625.74   578.33   192.47
+     1   69905816   334.84  1368.16  1304.82  1080.44   605.92
+     2   53635744   284.03   762.91   773.68   662.04   244.35
+     3   51044424   278.89   688.86   703.60   604.44   212.00
+     4   50309000   277.01   669.23   680.78   588.57   204.23
+     5   50042232   275.93   636.83   674.26   562.08   199.48
 ------+----------+--------+--------+--------+--------+--------</pre>
      </div><!-- float -->
      <p>
@@ -270,6 +270,22 @@ Total length: 162863684
      </p>
      <p>
       See <kbd>marisa-benchmark -h</kbd> for the list of options.
+     </p>
+    </div><!-- subsection -->
+    <div class="subsection">
+     <h3><a name="marisa-dump">marisa-dump</a></h3>
+     <div class="float">
+      <pre class="console">$ marisa-dump keyset.dic | head -3
+input: keyset.dic
+S
+St
+Sta</pre>
+     </div><!-- float -->
+     <p>
+      <kbd>marisa-build</kbd> is a tool to dump a dictionary. This tool prints all the keys in a given dictionary.
+     </p>
+     <p>
+      Users can specify the delimiter through command line options. See <kbd>marisa-dump -h</kbd> for the list of options.
      </p>
     </div><!-- subsection -->
    </div><!-- section -->
@@ -309,7 +325,7 @@ app: 1
 apple: 2</pre>
      </div><!-- float -->
      <p>
-      libmarisa provides <kbd>marisa.h</kbd> in which all the headers are <code>#include</code>d. Also, libmarisa uses <code>namespace marisa</code>. All the classes and functions except enumeration types are given as members of this namespace. Note that <code>using namespace marisa</code> may cause a critical error. Finally, <kbd>gcc</kbd> requires an option, <kbd>-lmarisa</kbd>, to link libmarisa with an application.
+      libmarisa provides <kbd>marisa.h</kbd> in which all the headers are <code>#include</code>d. Also, libmarisa uses <code>namespace marisa</code>. All the classes and functions except enumeration types are given as members of this namespace. Note that <code>using namespace marisa</code> may cause a critical error. Finally, <kbd>gcc</kbd> and <kbd>clang</kbd> require an option, <kbd>-lmarisa</kbd>, to link libmarisa with an application.
      </p>
      <p>
       The core components of libmarisa are <a href="#keyset">Keyset</a>, <a href="#agent">Agent</a>, and <a href="#trie">Trie</a>. In addition, libmarisa provides an exception class, <a href="#exception">Exception</a>, and two more classes, <a href="#key">Key</a> and <a href="#query">Query</a>, as members of <code>Keyset</code> and <code>Agent</code>.
