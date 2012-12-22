@@ -74,9 +74,24 @@ int dump(const char *filename) {
   } else {
     std::cerr << "input: <stdin>" << std::endl;
 #ifdef _WIN32
-    ::_setmode(::_fileno(stdin), _O_BINARY);
+    const int stdin_fileno = ::_fileno(stdin);
+    if (stdin_fileno < 0) {
+      std::cerr << "error: failed to get the file descriptor of "
+          "standard input" << std::endl;
+      return 20;
+    }
+    if (::_setmode(stdin_fileno, _O_BINARY) == -1) {
+      std::cerr << "error: failed to set binary mode" << std::endl;
+      return 21;
+    }
 #endif  // _WIN32
-    std::cin >> trie;
+    try {
+      std::cin >> trie;
+    } catch (const marisa::Exception &ex) {
+      std::cerr << ex.what()
+          << ": failed to read a dictionary from standard input" << std::endl;
+      return 22;
+    }
   }
   return dump(trie);
 }

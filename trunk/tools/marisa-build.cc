@@ -97,15 +97,24 @@ int build(const char * const *args, std::size_t num_args) {
       return 30;
     }
   } else {
-    try {
 #ifdef _WIN32
-      ::_setmode(::_fileno(stdout), _O_BINARY);
+    const int stdout_fileno = ::_fileno(stdout);
+    if (stdout_fileno < 0) {
+      std::cerr << "error: failed to get the file descriptor of "
+          "standard output" << std::endl;
+      return 31;
+    }
+    if (::_setmode(stdout_fileno, _O_BINARY) == -1) {
+      std::cerr << "error: failed to set binary mode" << std::endl;
+      return 32;
+    }
 #endif  // _WIN32
+    try {
       std::cout << trie;
     } catch (const marisa::Exception &ex) {
       std::cerr << ex.what()
           << ": failed to write a dictionary to standard output" << std::endl;
-      return 31;
+      return 33;
     }
   }
   return 0;
