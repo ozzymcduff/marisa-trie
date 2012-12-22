@@ -8,7 +8,7 @@
  <body>
   <div id="header">
    <div class="left">MARISA: Matching Algorithm with Recursively Implemented StorAge</div>
-   <div class="right">Last modified: 29 August 2012</div>
+   <div class="right">Last modified: 22 December 2012</div>
    <div class="end"></div>
   </div><!-- header -->
   <div id="body">
@@ -82,7 +82,7 @@
       </li>
       <li>ソースコード
        <ul>
-        <li><a href="http://marisa-trie.googlecode.com/files/marisa-0.2.0.tar.gz">marisa-0.2.0.tar.gz</a></li>
+        <li><a href="http://marisa-trie.googlecode.com/files/marisa-0.2.1.tar.gz">marisa-0.2.1.tar.gz</a></li>
        </ul>
       </li>
      </ul>
@@ -92,10 +92,10 @@
    <div class="section">
     <h2><a name="install">インストール</a></h2>
     <div class="subsection">
-     <h3><a name="gcc">GCC</a></h3>
+     <h3><a name="gcc">GCC &amp; Clang</a></h3>
      <div class="float">
-      <pre class="console">$ tar zxf marisa-0.2.0.tar.gz
-$ cd marisa-0.2.0
+      <pre class="console">$ tar zxf marisa-0.2.1.tar.gz
+$ cd marisa-0.2.1
 $ ./configure
 $ make
 $ make check
@@ -105,7 +105,7 @@ $ make install</pre>
       <kbd>configure</kbd> と <kbd>make</kbd> によりインストールできるようになっています．<kbd>make install</kbd> については，必要に応じて <kbd>sudo</kbd> を付けてご利用ください．また，特に指定がなければ libmarisa は共有ライブラリとしてインストールされるので，<kbd>ldconfig</kbd> が必要になるかもしれません．
      </p>
      <p>
-      スタティックライブラリが必要なときは，<kbd>configure</kbd> に <kbd>--enable-static</kbd> を渡すようにしてください．その他，<kbd>configure</kbd> のオプションについては <kbd>./configure --help</kbd> をご覧ください．
+      SSE4.2 が使える環境では，<kbd>configure</kbd> に <kbd>--enable-popcnt</kbd> を渡すことで，少し高速化することができます．また，スタティックライブラリが必要なときは，<kbd>configure</kbd> に <kbd>--enable-static</kbd> を渡すようにしてください．その他，<kbd>configure</kbd> のオプションについては <kbd>./configure --help</kbd> をご覧ください．
      </p>
     </div><!-- subsection -->
     <div class="subsection">
@@ -166,9 +166,9 @@ $ make install</pre>
      <h3><a name="marisa-build">marisa-build</a></h3>
      <div class="float">
       <pre class="console">$ marisa-build &lt; keyset.txt &gt; keyset.dic
-#keys: 1174430
-#nodes: 1602151
-size: 6806464</pre>
+#keys: 1342099
+#nodes: 1832373
+size: 7841664</pre>
      </div><!-- float -->
      <p>
       <kbd>marisa-build</kbd> は辞書を構築するツールです．改行を区切りとして文字列を受け取り，構築した辞書を標準出力に書き出すようになっています．
@@ -185,7 +185,7 @@ size: 6806464</pre>
      <div class="float">
       <pre class="console">$ marisa-lookup keyset.dic
 東方
-160623	東方
+174385	東方
 とうほう
 -1	とうほう</pre>
      </div><!-- float -->
@@ -200,8 +200,8 @@ size: 6806464</pre>
      <h3><a name="marisa-reverse-lookup">marisa-reverse-lookup</a></h3>
      <div class="float">
       <pre class="console">$ marisa-reverse-lookup keyset.dic
-1000000
-1000000	コルト・ブローニングM1895重機関銃</pre>
+800000
+800000	紀元前475年</pre>
      </div><!-- float -->
      <p>
       <kbd>marisa-reverse-lookup</kbd> は辞書に登録されている文字列を ID から復元するツールです．登録文字列には <var>0</var> から順に固有の ID が割り当てられるので，指定できる値は <var>0</var> 以上で<var>登録文字列数</var>より小さい整数となります．範囲外の値を入力するとエラーになるので注意してください．
@@ -216,8 +216,8 @@ size: 6806464</pre>
       <pre class="console">$ marisa-common-prefix-search keyset.dic
 東方
 2 found
-3431	東	東方
-160623	東方	東方</pre>
+3542	東	東方
+174385	東方	東方</pre>
      </div><!-- float -->
      <p>
       <kbd>marisa-common-prefix-search</kbd> は Common Prefix Search をおこなうツールです．入力された文字列の前半部分に一致する登録文字列を ID とともに出力します．
@@ -231,9 +231,9 @@ size: 6806464</pre>
      <div class="float">
       <pre class="console">$ marisa-predictive-search keyset.dic -n 2
 東方
-185 found
-160623	東方	東方
-575102	東方文花帖	東方</pre>
+200 found
+174385	東方	東方
+639679	東方文花帖	東方</pre>
      </div><!-- float -->
      <p>
       <kbd>marisa-predictive-search</kbd> は Predictive Search をおこなうツールです．入力された文字列で始まる登録文字列を ID とともに出力します．
@@ -250,18 +250,18 @@ Number of tries: 1 - 5
 TAIL mode: Text mode
 Node order: Descending weight order
 Cache level: Normal cache
-Number of keys: 1174430
-Total length: 24438317
+Number of keys: 1342099
+Total length: 28308027
 ------+----------+--------+--------+--------+--------+--------
 #tries       size    build   lookup  reverse   prefix  predict
                                       lookup   search   search
           [bytes]    [K/s]    [K/s]    [K/s]    [K/s]    [K/s]
 ------+----------+--------+--------+--------+--------+--------
-     1   10123544   508.41  1210.75  1162.80  1107.95   720.51
-     2    7417256   417.95   734.02   694.93   690.84   335.55
-     3    6874072   400.83   641.77   614.88   605.38   279.63
-     4    6697968   394.10   618.12   590.17   584.29   265.11
-     5    6622296   390.18   611.68   587.22   578.54   260.41
+     1   11588904   506.45  1187.70  1109.17  1040.39   596.49
+     2    8467920   424.71   699.01   677.83   636.07   300.25
+     3    7841664   405.47   615.64   601.84   563.91   254.67
+     4    7633584   399.43   593.85   583.52   545.57   242.69
+     5    7548584   395.90   526.31   563.91   504.55   236.70
 ------+----------+--------+--------+--------+--------+--------</pre>
      </div><!-- float -->
      <p>
@@ -272,6 +272,22 @@ Total length: 24438317
      </p>
      <p>
       オプションの一覧は <kbd>marisa-benchmark -h</kbd> により確認できます．
+     </p>
+    </div><!-- subsection -->
+    <div class="subsection">
+     <h3><a name="marisa-dump">marisa-dump</a></h3>
+     <div class="float">
+      <pre class="console">$ marisa-dump keyset.dic | head -3
+input: keyset.dic
+フ
+ファ
+ファン</pre>
+     </div><!-- float -->
+     <p>
+      <kbd>marisa-dump</kbd> は辞書に登録されている文字列をすべて出力するツールです．デフォルトの区切り文字は改行（LF）ですが，オプションにより変更することができます．
+     </p>
+     <p>
+      オプションの一覧は <kbd>marisa-dump -h</kbd> により確認できます．
      </p>
     </div><!-- subsection -->
    </div><!-- section -->
@@ -311,7 +327,7 @@ app: 1
 apple: 2</pre>
      </div><!-- float -->
      <p>
-      libmarisa のヘッダは <kbd>marisa.h</kbd> です．名前空間には <code>marisa</code> を使っています．危険なので，<code>using namespace marisa</code> とするのは避けてください．最後に，<kbd>gcc</kbd> によるリンクでは <kbd>-lmarisa</kbd> が必要となることに注意してください．
+      libmarisa のヘッダは <kbd>marisa.h</kbd> です．名前空間には <code>marisa</code> を使っています．危険なので，<code>using namespace marisa</code> とするのは避けてください．最後に，<kbd>gcc</kbd> や <kbd>clang</kbd> によるリンクでは <kbd>-lmarisa</kbd> が必要となることに注意してください．
      </p>
      <p>
       libmarisa の主要なクラスは <a href="#keyset">Keyset</a>, <a href="#agent">Agent</a>, <a href="#trie">Trie</a> の 3 つです．サンプルコードでは明示的に使っていませんが，例外のクラスとして <a href="#exception">Exception</a> があるほか，<code>Keyset</code>, <code>Agent</code> のメンバとして <a href="#key">Key</a> や <a href="#query">Query</a> が存在します．
