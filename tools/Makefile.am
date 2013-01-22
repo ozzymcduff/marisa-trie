@@ -1,6 +1,6 @@
 AM_CFLAGS = -Wall -Wextra
-AM_CXXFLAGS = -Wall -Weffc++ -Wextra -I../lib
-#AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG -I../lib
+AM_CXXFLAGS = -Wall -Weffc++ -Wextra -I${top_srcdir}/lib
+#AM_CXXFLAGS = -Wall -Weffc++ -Wextra -D_DEBUG -I${top_srcdir}/lib
 
 noinst_LTLIBRARIES = libcmdopt.la
 
