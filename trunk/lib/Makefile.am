@@ -10,7 +10,6 @@ libmarisa_la_SOURCES = \
   marisa/grimoire/io/mapper.cc \
   marisa/grimoire/io/reader.cc \
   marisa/grimoire/io/writer.cc \
-  marisa/grimoire/vector/precomputed-table.cc \
   marisa/grimoire/vector/bit-vector.cc \
   marisa/grimoire/trie/tail.cc \
   marisa/grimoire/trie/louds-trie.cc
@@ -32,6 +31,7 @@ libmarisa_include_HEADERS = \
   marisa/trie.h
 
 noinst_HEADERS = \
+  marisa/grimoire/intrin.h \
   marisa/grimoire/io.h \
   marisa/grimoire/io/mapper.h \
   marisa/grimoire/io/reader.h \
@@ -39,7 +39,6 @@ noinst_HEADERS = \
   marisa/grimoire/vector.h \
   marisa/grimoire/vector/pop-count.h \
   marisa/grimoire/vector/rank-index.h \
-  marisa/grimoire/vector/precomputed-table.h \
   marisa/grimoire/vector/vector.h \
   marisa/grimoire/vector/flat-vector.h \
   marisa/grimoire/vector/bit-vector.h \
