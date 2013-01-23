@@ -169,10 +169,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\marisa\grimoire\vector\precomputed-table.cc"
-				>
-			</File>
-			<File
 				RelativePath="..\..\lib\marisa\grimoire\io\reader.cc"
 				>
 			</File>
@@ -239,6 +235,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\lib\marisa\grimoire\intrin.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\lib\marisa\grimoire\io.h"
 				>
 			</File>
@@ -272,10 +272,6 @@
 			</File>
 			<File
 				RelativePath="..\..\lib\marisa\grimoire\vector\pop-count.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\marisa\grimoire\vector\precomputed-table.h"
 				>
 			</File>
 			<File
