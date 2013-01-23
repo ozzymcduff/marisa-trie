@@ -192,7 +192,7 @@ std::size_t select_bit(std::size_t i, std::size_t bit_id,
  #ifdef MARISA_X86_SSSE3
     __m128i lower_nibbles = ::_mm_set1_epi8(0x0F);
     lower_nibbles = ::_mm_and_si128(lower_nibbles, unit);
-    __m128i upper_nibbles = ::_mm_set1_epi8(0xF0);
+    __m128i upper_nibbles = ::_mm_set1_epi8((UInt8)0xF0);
     upper_nibbles = ::_mm_and_si128(upper_nibbles, unit);
     upper_nibbles = ::_mm_srli_epi32(upper_nibbles, 4);
 
@@ -241,7 +241,7 @@ std::size_t select_bit(std::size_t i, std::size_t bit_id,
 
   UInt8 skip;
   {
-    __m128i x = ::_mm_set1_epi8(i + 1);
+    __m128i x = ::_mm_set1_epi8((UInt8)(i + 1));
     x = ::_mm_cmpgt_epi8(x, accumulated_counts);
     skip = POPCNT_TABLE[::_mm_movemask_epi8(x)];
   }
@@ -306,7 +306,7 @@ std::size_t select_bit(std::size_t i, std::size_t bit_id, UInt64 unit) {
     __m128i y = ::_mm_cvtsi64_si128(accumulated_counts);
     x = ::_mm_cmpgt_epi8(x, y);
  #ifdef MARISA_X64_SSE4_2
-    skip = static_cast<UInt8>(::_mm_popcnt_u64(::_mm_cvtsi128_si64(x)));
+    skip = (UInt8)::_mm_popcnt_u64(::_mm_cvtsi128_si64(x));
  #else  // MARISA_X64_SSE4_2
     skip = POPCNT_TABLE[::_mm_movemask_epi8(x)];
  #endif  // MARISA_X64_SSE4_2
