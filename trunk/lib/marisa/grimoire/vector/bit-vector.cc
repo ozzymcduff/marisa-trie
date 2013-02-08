@@ -1,8 +1,6 @@
 #include "pop-count.h"
 #include "bit-vector.h"
 
-#include <iostream>  // For debugging.
-
 namespace marisa {
 namespace grimoire {
 namespace vector {
@@ -174,90 +172,88 @@ const UInt8 POPCNT_TABLE[256] = {
   24, 32, 32, 40, 32, 40, 40, 48, 32, 40, 40, 48, 40, 48, 48, 56,
   32, 40, 40, 48, 40, 48, 48, 56, 40, 48, 48, 56, 48, 56, 56, 64
 };
-#endif  // MARISA_USE_SSE2
 
-#ifdef MARISA_X86_SSE2
 std::size_t select_bit(std::size_t i, std::size_t bit_id,
     UInt32 unit_lo, UInt32 unit_hi) {
   __m128i unit;
   {
-    __m128i lower_dword = ::_mm_cvtsi32_si128(unit_lo);
-    __m128i upper_dword = ::_mm_cvtsi32_si128(unit_hi);
-    upper_dword = ::_mm_slli_si128(upper_dword, 4);
-    unit = ::_mm_or_si128(lower_dword, upper_dword);
+    __m128i lower_dword = _mm_cvtsi32_si128(unit_lo);
+    __m128i upper_dword = _mm_cvtsi32_si128(unit_hi);
+    upper_dword = _mm_slli_si128(upper_dword, 4);
+    unit = _mm_or_si128(lower_dword, upper_dword);
   }
 
   __m128i counts;
   {
- #ifdef MARISA_X86_SSSE3
-    __m128i lower_nibbles = ::_mm_set1_epi8(0x0F);
-    lower_nibbles = ::_mm_and_si128(lower_nibbles, unit);
-    __m128i upper_nibbles = ::_mm_set1_epi8((UInt8)0xF0);
-    upper_nibbles = ::_mm_and_si128(upper_nibbles, unit);
-    upper_nibbles = ::_mm_srli_epi32(upper_nibbles, 4);
+ #ifdef MARISA_USE_SSSE3
+    __m128i lower_nibbles = _mm_set1_epi8(0x0F);
+    lower_nibbles = _mm_and_si128(lower_nibbles, unit);
+    __m128i upper_nibbles = _mm_set1_epi8((UInt8)0xF0);
+    upper_nibbles = _mm_and_si128(upper_nibbles, unit);
+    upper_nibbles = _mm_srli_epi32(upper_nibbles, 4);
 
     __m128i lower_counts =
-        ::_mm_set_epi8(4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
-    lower_counts = ::_mm_shuffle_epi8(lower_counts, lower_nibbles);
+        _mm_set_epi8(4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
+    lower_counts = _mm_shuffle_epi8(lower_counts, lower_nibbles);
     __m128i upper_counts =
-        ::_mm_set_epi8(4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
-    upper_counts = ::_mm_shuffle_epi8(upper_counts, upper_nibbles);
+        _mm_set_epi8(4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
+    upper_counts = _mm_shuffle_epi8(upper_counts, upper_nibbles);
 
-    counts = ::_mm_add_epi8(lower_counts, upper_counts);
- #else  // MARISA_X86_SSSE3
-    __m128i x = ::_mm_srli_epi32(unit, 1);
-    x = ::_mm_and_si128(x, ::_mm_set1_epi8(0x55));
-    x = ::_mm_sub_epi8(unit, x);
+    counts = _mm_add_epi8(lower_counts, upper_counts);
+ #else  // MARISA_USE_SSSE3
+    __m128i x = _mm_srli_epi32(unit, 1);
+    x = _mm_and_si128(x, _mm_set1_epi8(0x55));
+    x = _mm_sub_epi8(unit, x);
 
-    __m128i y = ::_mm_srli_epi32(x, 2);
-    y = ::_mm_and_si128(y, ::_mm_set1_epi8(0x33));
-    x = ::_mm_and_si128(x, ::_mm_set1_epi8(0x33));
-    x = ::_mm_add_epi8(x, y);
+    __m128i y = _mm_srli_epi32(x, 2);
+    y = _mm_and_si128(y, _mm_set1_epi8(0x33));
+    x = _mm_and_si128(x, _mm_set1_epi8(0x33));
+    x = _mm_add_epi8(x, y);
 
-    y = ::_mm_srli_epi32(x, 4);
-    x = ::_mm_add_epi8(x, y);
-    counts = ::_mm_and_si128(x, ::_mm_set1_epi8(0x0F));
- #endif  // MARISA_X86_SSSE3
+    y = _mm_srli_epi32(x, 4);
+    x = _mm_add_epi8(x, y);
+    counts = _mm_and_si128(x, _mm_set1_epi8(0x0F));
+ #endif  // MARISA_USE_SSSE3
   }
 
   __m128i accumulated_counts;
   {
     __m128i x = counts;
-    x = ::_mm_slli_si128(x, 1);
+    x = _mm_slli_si128(x, 1);
     __m128i y = counts;
-    y = ::_mm_add_epi32(y, x);
+    y = _mm_add_epi32(y, x);
 
     x = y;
-    y = ::_mm_slli_si128(y, 2);
-    x = ::_mm_add_epi32(x, y);
+    y = _mm_slli_si128(y, 2);
+    x = _mm_add_epi32(x, y);
 
     y = x;
-    x = ::_mm_slli_si128(x, 4);
-    y = ::_mm_add_epi32(y, x);
+    x = _mm_slli_si128(x, 4);
+    y = _mm_add_epi32(y, x);
 
-    accumulated_counts = ::_mm_set_epi32(0x7F7F7F7FU, 0x7F7F7F7FU, 0, 0);
-    accumulated_counts = ::_mm_or_si128(accumulated_counts, y);
+    accumulated_counts = _mm_set_epi32(0x7F7F7F7FU, 0x7F7F7F7FU, 0, 0);
+    accumulated_counts = _mm_or_si128(accumulated_counts, y);
   }
 
   UInt8 skip;
   {
-    __m128i x = ::_mm_set1_epi8((UInt8)(i + 1));
-    x = ::_mm_cmpgt_epi8(x, accumulated_counts);
-    skip = POPCNT_TABLE[::_mm_movemask_epi8(x)];
+    __m128i x = _mm_set1_epi8((UInt8)(i + 1));
+    x = _mm_cmpgt_epi8(x, accumulated_counts);
+    skip = POPCNT_TABLE[_mm_movemask_epi8(x)];
   }
 
   UInt8 byte;
   {
-#ifdef _MSC_VER
+ #ifdef _MSC_VER
     __declspec(align(16)) UInt8 unit_bytes[16];
     __declspec(align(16)) UInt8 accumulated_counts_bytes[16];
-#else  // _MSC_VER
+ #else  // _MSC_VER
     UInt8 unit_bytes[16] __attribute__ ((aligned (16)));
     UInt8 accumulated_counts_bytes[16] __attribute__ ((aligned (16)));
-#endif  // _MSC_VER
-    accumulated_counts = ::_mm_slli_si128(accumulated_counts, 1);
-    ::_mm_store_si128(reinterpret_cast<__m128i *>(unit_bytes), unit);
-    ::_mm_store_si128(reinterpret_cast<__m128i *>(accumulated_counts_bytes),
+ #endif  // _MSC_VER
+    accumulated_counts = _mm_slli_si128(accumulated_counts, 1);
+    _mm_store_si128(reinterpret_cast<__m128i *>(unit_bytes), unit);
+    _mm_store_si128(reinterpret_cast<__m128i *>(accumulated_counts_bytes),
         accumulated_counts);
 
     bit_id += skip;
@@ -267,9 +263,9 @@ std::size_t select_bit(std::size_t i, std::size_t bit_id,
 
   return bit_id + SELECT_TABLE[i][byte];
 }
-#endif  // MARISA_X86_SSE2
+#endif  // MARISA_USE_SSE2
 
-#ifdef MARISA_X64_SSE2
+#if defined(MARISA_X64) && defined(MARISA_USE_SSE2)
 const UInt64 MASK_55 = 0x5555555555555555ULL;
 const UInt64 MASK_33 = 0x3333333333333333ULL;
 const UInt64 MASK_0F = 0x0F0F0F0F0F0F0F0FULL;
@@ -278,38 +274,38 @@ const UInt64 MASK_01 = 0x0101010101010101ULL;
 std::size_t select_bit(std::size_t i, std::size_t bit_id, UInt64 unit) {
   UInt64 counts;
   {
- #ifdef MARISA_X64_SSSE3
-    __m128i lower_nibbles = ::_mm_cvtsi64_si128(unit & 0x0F0F0F0F0F0F0F0FULL);
-    __m128i upper_nibbles = ::_mm_cvtsi64_si128(unit & 0xF0F0F0F0F0F0F0F0ULL);
-    upper_nibbles = ::_mm_srli_epi32(upper_nibbles, 4);
+ #ifdef MARISA_USE_SSSE3
+    __m128i lower_nibbles = _mm_cvtsi64_si128(unit & 0x0F0F0F0F0F0F0F0FULL);
+    __m128i upper_nibbles = _mm_cvtsi64_si128(unit & 0xF0F0F0F0F0F0F0F0ULL);
+    upper_nibbles = _mm_srli_epi32(upper_nibbles, 4);
 
     __m128i lower_counts =
-        ::_mm_set_epi8(4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
-    lower_counts = ::_mm_shuffle_epi8(lower_counts, lower_nibbles);
+        _mm_set_epi8(4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
+    lower_counts = _mm_shuffle_epi8(lower_counts, lower_nibbles);
     __m128i upper_counts =
-        ::_mm_set_epi8(4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
-    upper_counts = ::_mm_shuffle_epi8(upper_counts, upper_nibbles);
+        _mm_set_epi8(4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
+    upper_counts = _mm_shuffle_epi8(upper_counts, upper_nibbles);
 
-    counts = ::_mm_cvtsi128_si64(::_mm_add_epi8(lower_counts, upper_counts));
- #else  // MARISA_X64_SSSE3
+    counts = _mm_cvtsi128_si64(_mm_add_epi8(lower_counts, upper_counts));
+ #else  // MARISA_USE_SSSE3
     counts = unit - ((unit >> 1) & MASK_55);
     counts = (counts & MASK_33) + ((counts >> 2) & MASK_33);
     counts = (counts + (counts >> 4)) & MASK_0F;
- #endif  // MARISA_X64_SSSE3
+ #endif  // MARISA_USE_SSSE3
   }
 
   const UInt64 accumulated_counts = counts * MASK_01;
 
   UInt8 skip;
   {
-    __m128i x = ::_mm_cvtsi64_si128((i + 1) * MASK_01);
-    __m128i y = ::_mm_cvtsi64_si128(accumulated_counts);
-    x = ::_mm_cmpgt_epi8(x, y);
- #ifdef MARISA_X64_SSE4_2
-    skip = (UInt8)::_mm_popcnt_u64(::_mm_cvtsi128_si64(x));
- #else  // MARISA_X64_SSE4_2
-    skip = POPCNT_TABLE[::_mm_movemask_epi8(x)];
- #endif  // MARISA_X64_SSE4_2
+    __m128i x = _mm_cvtsi64_si128((i + 1) * MASK_01);
+    __m128i y = _mm_cvtsi64_si128(accumulated_counts);
+    x = _mm_cmpgt_epi8(x, y);
+ #ifdef MARISA_USE_POPCNT
+    skip = (UInt8)PopCount<64>::count(_mm_cvtsi128_si64(x));
+ #else  // MARISA_USE_POPCNT
+    skip = POPCNT_TABLE[_mm_movemask_epi8(x)];
+ #endif  // MARISA_USE_POPCNT
   }
 
   bit_id += skip;
@@ -318,7 +314,7 @@ std::size_t select_bit(std::size_t i, std::size_t bit_id, UInt64 unit) {
 
   return bit_id + SELECT_TABLE[i][unit & 0xFF];
 }
-#else  // defined(MARISA_X64_SSE2)
+#else  // defined(MARISA_X64) && defined(MARISA_USE_SSE2)
 std::size_t select_bit(std::size_t i, std::size_t bit_id, UInt64 unit) {
   const PopCount<64> count(unit);
   if (i < count.lo32()) {
@@ -358,7 +354,7 @@ std::size_t select_bit(std::size_t i, std::size_t bit_id, UInt64 unit) {
   }
   return bit_id + SELECT_TABLE[i][unit & 0xFF];
 }
-#endif  // MARISA_X64_SSE2
+#endif  // defined(MARISA_X64) && defined(MARISA_USE_SSE2)
 
 }  // namespace
 
@@ -466,9 +462,9 @@ std::size_t BitVector<32>::select0(std::size_t i) const {
     i -= 448 - rank.rel7();
   }
 
-#ifdef MARISA_X86_SSE2
+#ifdef MARISA_USE_SSE2
   return select_bit(i, unit_id * 32, ~units_[unit_id], ~units_[unit_id + 1]);
-#else  // MARISA_X86_SSE2
+#else  // MARISA_USE_SSE2
   UInt32 unit = ~units_[unit_id];
   PopCount<32> count(unit);
   if (i >= count.lo32()) {
@@ -495,7 +491,7 @@ std::size_t BitVector<32>::select0(std::size_t i) const {
     i -= count.lo24();
   }
   return bit_id + SELECT_TABLE[i][unit & 0xFF];
-#endif  // MARISA_X86_SSE2
+#endif  // MARISA_USE_SSE2
 }
 
 template <>
@@ -558,9 +554,9 @@ std::size_t BitVector<32>::select1(std::size_t i) const {
     i -= rank.rel7();
   }
 
-#ifdef MARISA_X86_SSE2
+#ifdef MARISA_USE_SSE2
   return select_bit(i, unit_id * 32, units_[unit_id], units_[unit_id + 1]);
-#else  // MARISA_X86_SSE2
+#else  // MARISA_USE_SSE2
   UInt32 unit = units_[unit_id];
   PopCount<32> count(unit);
   if (i >= count.lo32()) {
@@ -587,7 +583,7 @@ std::size_t BitVector<32>::select1(std::size_t i) const {
     i -= count.lo24();
   }
   return bit_id + SELECT_TABLE[i][unit & 0xFF];
-#endif  // MARISA_X86_SSE2
+#endif  // MARISA_USE_SSE2
 }
 
 template <>
