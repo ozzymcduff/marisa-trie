@@ -12,41 +12,12 @@
 
 namespace {
 
-void TestPopCount32() {
+#if MARISA_WORD_SIZE == 64
+void TestPopCount() {
   TEST_START();
 
   {
-    marisa::grimoire::vector::PopCount<32> count(0);
-    ASSERT(count.lo8() == 0);
-    ASSERT(count.lo16() == 0);
-    ASSERT(count.lo24() == 0);
-    ASSERT(count.lo32() == 0);
-  }
-
-  {
-    marisa::grimoire::vector::PopCount<32> count(0xFFFFFFFFU);
-    ASSERT(count.lo8() == 8);
-    ASSERT(count.lo16() == 16);
-    ASSERT(count.lo24() == 24);
-    ASSERT(count.lo32() == 32);
-  }
-
-  {
-    marisa::grimoire::vector::PopCount<32> count(0xFF3F0F03U);
-    ASSERT(count.lo8() == 2);
-    ASSERT(count.lo16() == 6);
-    ASSERT(count.lo24() == 12);
-    ASSERT(count.lo32() == 20);
-  }
-
-  TEST_END();
-}
-
-void TestPopCount64() {
-  TEST_START();
-
-  {
-    marisa::grimoire::vector::PopCount<64> count(0);
+    marisa::grimoire::vector::PopCount count(0);
     ASSERT(count.lo8() == 0);
     ASSERT(count.lo16() == 0);
     ASSERT(count.lo24() == 0);
@@ -58,7 +29,7 @@ void TestPopCount64() {
   }
 
   {
-    marisa::grimoire::vector::PopCount<64> count(0xFFFFFFFFFFFFFFFFULL);
+    marisa::grimoire::vector::PopCount count(0xFFFFFFFFFFFFFFFFULL);
     ASSERT(count.lo8() == 8);
     ASSERT(count.lo16() == 16);
     ASSERT(count.lo24() == 24);
@@ -70,7 +41,7 @@ void TestPopCount64() {
   }
 
   {
-    marisa::grimoire::vector::PopCount<64> count(0xFF7F3F1F0F070301ULL);
+    marisa::grimoire::vector::PopCount count(0xFF7F3F1F0F070301ULL);
     ASSERT(count.lo8() == 1);
     ASSERT(count.lo16() == 3);
     ASSERT(count.lo24() == 6);
@@ -83,6 +54,37 @@ void TestPopCount64() {
 
   TEST_END();
 }
+#else  // MARISA_WORD_SIZE == 64
+void TestPopCount() {
+  TEST_START();
+
+  {
+    marisa::grimoire::vector::PopCount count(0);
+    ASSERT(count.lo8() == 0);
+    ASSERT(count.lo16() == 0);
+    ASSERT(count.lo24() == 0);
+    ASSERT(count.lo32() == 0);
+  }
+
+  {
+    marisa::grimoire::vector::PopCount count(0xFFFFFFFFU);
+    ASSERT(count.lo8() == 8);
+    ASSERT(count.lo16() == 16);
+    ASSERT(count.lo24() == 24);
+    ASSERT(count.lo32() == 32);
+  }
+
+  {
+    marisa::grimoire::vector::PopCount count(0xFF3F0F03U);
+    ASSERT(count.lo8() == 2);
+    ASSERT(count.lo16() == 6);
+    ASSERT(count.lo24() == 12);
+    ASSERT(count.lo32() == 20);
+  }
+
+  TEST_END();
+}
+#endif  // MARISA_WORD_SIZE == 64
 
 void TestRankIndex() {
   TEST_START();
@@ -244,14 +246,10 @@ void TestVector() {
   TEST_END();
 }
 
-template <int T>
 void TestFlatVector() {
-  typedef marisa::grimoire::vector::FlatVector<T> FlatVector;
-
   TEST_START();
-  std::cout << "<" << T << ">: ";
 
-  FlatVector vec;
+  marisa::grimoire::FlatVector vec;
 
   ASSERT(vec.value_size() == 0);
   ASSERT(vec.mask() == 0);
@@ -354,11 +352,8 @@ void TestFlatVector() {
   TEST_END();
 }
 
-template <int T>
 void TestBitVector(std::size_t size) {
-  typedef marisa::grimoire::vector::BitVector<T> BitVector;
-
-  BitVector bv;
+  marisa::grimoire::BitVector bv;
 
   ASSERT(bv.size() == 0);
   ASSERT(bv.empty());
@@ -435,19 +430,17 @@ void TestBitVector(std::size_t size) {
   ASSERT(bv.num_1s() == num_ones);
 }
 
-template <int T>
 void TestBitVector() {
   TEST_START();
-  std::cout << "<" << T << ">: ";
 
-  TestBitVector<T>(0);
-  TestBitVector<T>(1);
-  TestBitVector<T>(511);
-  TestBitVector<T>(512);
-  TestBitVector<T>(513);
+  TestBitVector(0);
+  TestBitVector(1);
+  TestBitVector(511);
+  TestBitVector(512);
+  TestBitVector(513);
 
   for (int i = 0; i < 100; ++i) {
-    TestBitVector<T>(std::rand() % 4096);
+    TestBitVector(std::rand() % 4096);
   }
 
   TEST_END();
@@ -458,15 +451,13 @@ void TestBitVector() {
 int main() try {
   std::srand((unsigned int)std::time(NULL));
 
-  TestPopCount32();
-  TestPopCount64();
+  TestPopCount();
+  TestPopCount();
   TestRankIndex();
 
   TestVector();
-  TestFlatVector<32>();
-  TestFlatVector<64>();
-  TestBitVector<32>();
-  TestBitVector<64>();
+  TestFlatVector();
+  TestBitVector();
 
   return 0;
 } catch (const marisa::Exception &ex) {

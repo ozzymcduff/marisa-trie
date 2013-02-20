@@ -100,4 +100,14 @@
  #include <emmintrin.h>
 #endif  // MARISA_USE_SSE2
 
+#ifdef _MSC_VER
+ #if MARISA_WORD_SIZE == 64
+  #include <intrin.h>
+  #pragma intrinsic(_BitScanForward64)
+ #else  // MARISA_WORD_SIZE == 64
+  #include <intrin.h>
+  #pragma intrinsic(_BitScanForward)
+ #endif  // MARISA_WORD_SIZE == 64
+#endif  // _MSC_VER
+
 #endif  // MARISA_GRIMOIRE_INTRIN_H_
