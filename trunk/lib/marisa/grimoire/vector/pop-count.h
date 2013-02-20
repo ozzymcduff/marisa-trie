@@ -1,7 +1,6 @@
 #ifndef MARISA_GRIMOIRE_VECTOR_POP_COUNT_H_
 #define MARISA_GRIMOIRE_VECTOR_POP_COUNT_H_
 
-#include "../../base.h"
 #include "../intrin.h"
 
 namespace marisa {
