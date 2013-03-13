@@ -8,7 +8,7 @@
  <body>
   <div id="header">
    <div class="left">MARISA: Matching Algorithm with Recursively Implemented StorAge</div>
-   <div class="right">Last modified: 8 March 2013</div>
+   <div class="right">Last modified: 13 March 2013</div>
    <div class="end"></div>
   </div><!-- header -->
   <div id="body">
@@ -707,6 +707,13 @@ std::ostream &amp;operator<<(std::ostream &amp;stream, const Trie &amp;trie);</p
       <code>std::iostream</code> を用いる関数は <kbd>marisa/iostream.h</kbd> で宣言されています．<code>#include &lt;iosfwd&gt;</code> を入れたくないときは，<kbd>marisa.h</kbd> の代わりに <kbd>marisa/trie.h</kbd> を使ってください．
      </p>
     </div><!-- subsection -->
+   </div><!-- section -->
+
+   <div class="section">
+    <h2><a name="compatibility">辞書の互換性</a></h2>
+    <p>
+     libmarisa により構築される辞書の書式はアーキテクチャに依存します．Little Endian な環境で構築した辞書は，Big Endian な環境では使えません．あらためて構築しなおす必要があります．また，Little Endian 形式の辞書は 32/64-bit 環境における互換性があるのに対し，Big Endian 形式の辞書は 32/64-bit 環境における互換性がありません．
+    </p>
    </div><!-- section -->
 
    <div class="section">
