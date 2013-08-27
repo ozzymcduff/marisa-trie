@@ -1,8 +1,8 @@
 #ifndef MARISA_TRIE_H_
 #define MARISA_TRIE_H_
 
-#include "keyset.h"
-#include "agent.h"
+#include "marisa/keyset.h"
+#include "marisa/agent.h"
 
 namespace marisa {
 namespace grimoire {

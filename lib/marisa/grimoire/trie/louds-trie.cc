@@ -1,11 +1,11 @@
 #include <algorithm>
 #include <queue>
 
-#include "../algorithm.h"
-#include "header.h"
-#include "range.h"
-#include "state.h"
-#include "louds-trie.h"
+#include "marisa/grimoire/algorithm.h"
+#include "marisa/grimoire/trie/header.h"
+#include "marisa/grimoire/trie/range.h"
+#include "marisa/grimoire/trie/state.h"
+#include "marisa/grimoire/trie/louds-trie.h"
 
 namespace marisa {
 namespace grimoire {

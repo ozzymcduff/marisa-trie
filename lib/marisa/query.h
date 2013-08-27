@@ -1,7 +1,7 @@
 #ifndef MARISA_QUERY_H_
 #define MARISA_QUERY_H_
 
-#include "base.h"
+#include "marisa/base.h"
 
 namespace marisa {
 

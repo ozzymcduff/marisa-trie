@@ -3,7 +3,7 @@
 
 #include <exception>
 
-#include "base.h"
+#include "marisa/base.h"
 
 namespace marisa {
 

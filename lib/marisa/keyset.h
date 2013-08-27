@@ -1,7 +1,7 @@
 #ifndef MARISA_KEYSET_H_
 #define MARISA_KEYSET_H_
 
-#include "key.h"
+#include "marisa/key.h"
 
 namespace marisa {
 
