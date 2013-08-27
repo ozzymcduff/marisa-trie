@@ -185,9 +185,9 @@ inline void swap(T &lhs, T &rhs) {
 #endif  // __cplusplus
 
 #ifdef __cplusplus
- #include "exception.h"
- #include "scoped-ptr.h"
- #include "scoped-array.h"
+ #include "marisa/exception.h"
+ #include "marisa/scoped-ptr.h"
+ #include "marisa/scoped-array.h"
 #endif  // __cplusplus
 
 #endif  // MARISA_BASE_H_

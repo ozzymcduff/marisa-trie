@@ -1,5 +1,5 @@
-#include "pop-count.h"
-#include "bit-vector.h"
+#include "marisa/grimoire/vector/pop-count.h"
+#include "marisa/grimoire/vector/bit-vector.h"
 
 namespace marisa {
 namespace grimoire {

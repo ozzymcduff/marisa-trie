@@ -1,7 +1,7 @@
 #ifndef MARISA_SCOPED_ARRAY_H_
 #define MARISA_SCOPED_ARRAY_H_
 
-#include "base.h"
+#include "marisa/base.h"
 
 namespace marisa {
 
